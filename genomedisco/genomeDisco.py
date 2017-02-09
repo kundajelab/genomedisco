@@ -9,8 +9,8 @@ from time import gmtime, strftime
 import processing
 import data_operations
 import visualization
-from DiscoRandomWalks import DiscoRandomWalks
-from DiscoRandomWalks_binarizedMatrices import DiscoRandomWalks_binarizedMatrices
+from comparison_types.DiscoRandomWalks import DiscoRandomWalks
+from comparison_types.DiscoRandomWalks_binarizedMatrices import DiscoRandomWalks_binarizedMatrices
 
 def main():
     parser = argparse.ArgumentParser(description='Compute reproducibility of 3D genome data')
