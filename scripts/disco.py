@@ -6,11 +6,9 @@ import re
 import os
 from time import gmtime, strftime
 
-import processing
-import data_operations
-import visualization
-from comparison_types.DiscoRandomWalks import DiscoRandomWalks
-from comparison_types.DiscoRandomWalks_binarizedMatrices import DiscoRandomWalks_binarizedMatrices
+from genomedisco import data_operations, processing, visualization
+from genomedisco.comparison_types.disco_random_walks import DiscoRandomWalks
+from genomedisco.comparison_types.disco_random_walks_binarized_matrices import DiscoRandomWalks_binarizedMatrices
 
 def main():
     parser = argparse.ArgumentParser(description='Compute reproducibility of 3D genome data')
