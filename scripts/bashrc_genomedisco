@@ -1,4 +1,4 @@
-CODEDIR=/srv/gsfs0/projects/snyder/oursu/software/git/new_genomedisco/GenomeDisco
+CODEDIR=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco
 #change CODEDIR to wherever you downloaded genomeDisco
 #===========================================================
 
@@ -6,7 +6,7 @@ mypython=/srv/gsfs0/projects/snyder/oursu/software/anaconda2/mypython/bin/python
 #change mypython to the path of your python library
 #===========================================================
 
-export PYTHONPATH="${PYTHONPATH}:${CODEDIR}/:${CODEDIR}/DiscoClasses"
+export PYTHONPATH="${PYTHONPATH}:${CODEDIR}/genomedisco/:${CODEDIR}/genomedisco/comparison_types/"
 
 #add bedtools
 module load bedtools/2.26.0

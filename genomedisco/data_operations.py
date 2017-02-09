@@ -3,6 +3,39 @@ import copy
 import random
 import numpy as np
 from scipy.sparse import csr_matrix
+import math
+
+#todo: add bait vs not bait information
+def get_distance_dep_using_nodes_capturec(m,nodes,nodes_idx,approximation=10000):
+    assert m.shape[0]==m.shape[1]
+    dcounts={}
+    pcounts={}
+    total_reads=0.0
+    marray=copy.deepcopy(m).toarray()
+    entries_per_key={}
+    
+    include=set()
+    for node in nodes:
+        if nodes[node]['include']=='included':
+            include.add(nodes[node]['idx'])
+    for i in include:
+        for j in range(m.shape[0]):
+            if j in include:
+                continue
+            v=m[i,j]
+            istart=int(nodes[nodes_idx[i]]['start'])
+            jstart=int(nodes[nodes_idx[j]]['start'])
+            di=math.ceil(1.0*abs(istart-jstart)*1.0/approximation)
+            if di not in dcounts:
+                dcounts[di]=0.0
+                pcounts[di]=0.0
+                entries_per_key[di]=0.0
+            dcounts[di]+=v
+            entries_per_key[di]+=1
+            total_reads+=m[i,j]
+    for di in dcounts:
+        pcounts[di]=1.0*dcounts[di]/(total_reads*entries_per_key[di])
+    return pcounts
 
 def get_distance_dep(m):
     assert m.shape[0]==m.shape[1]

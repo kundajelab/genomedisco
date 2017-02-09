@@ -28,6 +28,8 @@ def read_nodes_from_bed(bedfile):
         start=items[1]
         end=items[2]
         node=items[3]
+        if len(items)>4:
+            include=items[4]
         
         if node in nodes.keys():
             logging.error("Error: Genomic region appears multiple times in your file. One such example is "+node+". Please make sure all genomic regions are unique and re-run")
@@ -38,6 +40,8 @@ def read_nodes_from_bed(bedfile):
             nodes[node]['chr']=chromo
             nodes[node]['start']=start
             nodes[node]['end']=end
+            if len(items)>4:
+                nodes[node]['include']=include
             nodes_idx[node_c]=node 
             node_c+=1
     return nodes,nodes_idx

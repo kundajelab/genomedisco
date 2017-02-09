@@ -10,26 +10,30 @@ import processing
 import data_operations
 import visualization
 from DiscoRandomWalks import DiscoRandomWalks
+from DiscoRandomWalks_binarizedMatrices import DiscoRandomWalks_binarizedMatrices
 
 def main():
     parser = argparse.ArgumentParser(description='Compute reproducibility of 3D genome data')
-    parser.add_argument('--m1',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC001.res40000.byChr.chr1.gz')
-    parser.add_argument('--m2',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC053.res40000.byChr.chr1.gz')
+    parser.add_argument('--datatype',default='hic')
+    parser.add_argument('--m1',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC014.res40000.byChr.chr21.gz')
+    parser.add_argument('--m2',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC001.res40000.byChr.chr21.gz')
     parser.add_argument('--matrix_format',type=str,default='n1n2val')
-    parser.add_argument('--node_file',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/nodes/Nodes.w40000.chr1.gz')
+    parser.add_argument('--node_file',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/nodes/Nodes.w40000.chr21.gz')
     parser.add_argument('--remove_diagonal',type=bool, default='True')
-    parser.add_argument('--m1name',type=str,default='HIC001')
-    parser.add_argument('--m2name',type=str,default='HIC053')
+    parser.add_argument('--m1name',type=str,default='HIC014')
+    parser.add_argument('--m2name',type=str,default='HIC001')
     parser.add_argument('--outdir',type=str,default='OUT')
     parser.add_argument('--outpref',type=str,default='outpref')
-    parser.add_argument('--m_subsample',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC071.res40000.byChr.chr1.gz')
+    parser.add_argument('--m_subsample',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC071.res40000.byChr.chr21.gz')
     parser.add_argument('--concise_analysis',action='store_true',help='Add this flag to only output the reproducibility score, and not perform the distance dependence analyses.')
-    parser.add_argument('--resolution',type=int,default=40000)
-    parser.add_argument('--process_matrix',type=str,default='uniform')
+    parser.add_argument('--norm',type=str,default='uniform')
     parser.add_argument('--method',type=str,default='RandomWalks')
     parser.add_argument('--tmin',type=int,default=1)
     parser.add_argument('--tmax',type=int,default=3)
+    parser.add_argument('--approximation',type=int,default=40000)
     args = parser.parse_args()
+
+    os.system('mkdir -p'+args.outdir)
 
     logging.basicConfig(format='%(asctime)s GenomeDisco %(message)s',level=logging.DEBUG)
     logging.info('| main: Starting GenomeDisco')
@@ -59,23 +63,29 @@ def main():
         if m2.sum()>desired_depth:
             m2_subsample=data_operations.subsample_to_depth(m2,desired_depth)
 
-    stats[args.m1name]['subsampled_depth']=m1_subsample.sum()
+    stats[args.m1name]['subsampled_depth']=m1_subsample.sum()   
     stats[args.m2name]['subsampled_depth']=m2_subsample.sum()
 
-    logging.info('| main: Normalizing with '+args.process_matrix)
-    m1_norm=data_operations.process_matrix(m1,args.process_matrix)
-    m2_norm=data_operations.process_matrix(m2,args.process_matrix)
+    logging.info('| main: Normalizing with '+args.norm)
+    m1_norm=data_operations.process_matrix(m1_subsample,args.norm)
+    m2_norm=data_operations.process_matrix(m2_subsample,args.norm)
 
     if not args.concise_analysis:
         #distance dependence analysis
         logging.info('| main: Distance dependence analysis')
-        m1dd=data_operations.get_distance_dep(m1_subsample)
-        m2dd=data_operations.get_distance_dep(m2_subsample)
-        visualization.plot_dds([m1dd,m2dd],[args.m1name,args.m2name],args.outdir+'/'+args.outpref+'.distDep',args.resolution)
+        if args.datatype=='hic':
+            m1dd=data_operations.get_distance_dep(m1_subsample)
+            m2dd=data_operations.get_distance_dep(m2_subsample)
+        if args.datatype=='capturec':
+            m1dd=data_operations.get_distance_dep_using_nodes_capturec(m1_subsample,nodes,nodes_idx,args.approximation)
+            m2dd=data_operations.get_distance_dep_using_nodes_capturec(m2_subsample,nodes,nodes_idx,args.approximation)
+        visualization.plot_dds([m1dd,m2dd],[args.m1name,args.m2name],args.outdir+'/'+args.outpref+'.distDep',args.approximation)
 
     logging.info('| main: Reproducibility analysis')
     if args.method=='RandomWalks':
         comparer=DiscoRandomWalks(args)
+    if args.method=='RandomWalks_binarizedMatrices':
+        comparer=DiscoRandomWalks_binarizedMatrices(args)
     reproducibility_text,score=comparer.compute_reproducibility(m1_norm,m2_norm,args)
 
     logging.info('| main: Writing report')

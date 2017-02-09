@@ -1,55 +1,111 @@
 
-hicfile1=$1
-hicfile2=$2
-chrSizes=$3
-outdir=$4
-outpref=$5
-resolution=$6
-bashrc=$7
-normalization=$8
-method=$9
+usage()
+{
+cat <<EOF
+usage: `basename $0` options
+genomedisco: DIfferences in Smoothed COntact maps
+Contact: oursu@stanford.edu
+OPTIONS:
+   -h     Show this message and exit
+   -t Type of data. Can be "hic", "capturec". DEFAULT: hic
+   -1 Input file 1. Assumes contacts in the form 'chr1 bin1 chr2 bin2 value'
+   -2 Input file 2. Same format as -m2
+   -b Bins. Bed file with the bins in this study. The fourth column MUST correspond to the values used for bin1 and bin2 in the input files
+   -d Output directory. DEFAULT: "OUT"
+   -p Output prefix. DEFAULT: "genomedisco"
+   -r Resolution (in bp). This is used for plotting the distance dependence curve, for HiC data. DEFAULT: 40000 
+   -n Normalization method. Can be: "uniform" (no normalization), "sqrtvc", or "coverage_norm". DEFAULT: sqrtvc
+   -m Method to use for this analysis. Can be: "RandomWalks". DEFAULT=RandomWalks
+   -s tmin. Minimum steps of random walks. DEFAULT=1
+   -e tmax. maximum steps of random walks. DEFAULT=3
+EOF
+}
 
-#============================================================================
+datatype='hic'
+m1=''
+m2=''
+nodes=''
+outdir='OUT'
+outpref='genomedisco'
+resolution='40000'
+bashrc=$(dirname "$0")/bashrc_genomedisco
+normalization='uniform'
+method=''
+tmin=1
+tmax=3
+
+while getopts "ht:1:2:b:d:p:r:n:m:s:e:" opt
+do
+    case $opt in
+	h)
+            usage; exit;;
+	t)
+	    datatype=$OPTARG;;
+	1)
+            m1=$OPTARG;;
+	2)
+            m2=$OPTARG;;
+	b)
+	    nodes=$OPTARG;;
+	d) 
+            outdir=$OPTARG;;
+	p)
+	    outpref=$OPTARG;;
+	r) 
+	    resolution=$OPTARG;;
+	n) 
+	    normalization=$OPTARG;;
+	m)
+	    method=$OPTARG;;
+	s)
+	    tmin=$OPTARG;;
+	e)
+            tmax=$OPTARG;;
+	?)
+	    usage
+	    exit 1;;
+    esac    
+done
+
+echo "Your parameters: ======================================================"
+echo "Input file 1: ${m1}"
+echo "Input file 2: ${m2}"
+echo "Bins: ${nodes}"
+echo "Output directory: ${outdir}"
+echo "Output prefix: ${outpref}"
+echo "Resolution: ${resolution} bp"
+echo "Normalization: ${normalization}"
+echo "Method: ${method}"
+echo "tmin: ${tmin}"
+echo "tmax: ${tmax}"
+echo "========================================================================"
+
 
 source ${bashrc}
-
 #======
 # Setup
 #======
 mkdir -p ${outdir}/${outpref}/scripts
 mkdir -p ${outdir}/${outpref}/analysis
 mkdir -p ${outdir}/${outpref}/analysis/data
-
-#=========================                                                                                                                                                                           
-# Make chromosomal windows                                                                                                                                                                           
-#=========================                                                                                                                                                                           
-
-s=${outdir}/${outpref}/scripts/make_windows.sh
-nodefile=${outdir}/${outpref}/analysis/data/nodefile.res${resolution}
-echo "source ${bashrc}" > ${s}
-echo "bedtools makewindows -w ${resolution} -g ${chrSizes} | awk '{print "'$'"1\"\t\""'$'"2\"\t\""'$'"3\"\t\""'$'"2}' | gzip > ${nodefile}.gz" >> ${s}
-echo "chromos="'$'"(zcat -f ${nodefile}.gz | cut -f1 | sort | uniq)" >> ${s}
-echo "for chromo in "'$'"{chromos};do zcat -f ${nodefile}.gz | grep -w "'$'"{chromo} | gzip > ${nodefile}."'$'"{chromo}.gz;done" >> ${s}
-chmod 755 ${s}
-${s}
-chromos=$(zcat -f ${nodefile}.gz | cut -f1 | sort | uniq | sed 's/\n/ /g')
-########remove!!!
-chromos="chr18 chr19 chr20 chr21 chr22"
+nodefile=${outdir}/${outpref}/analysis/data/nodes
 
 #================================
-# Split hic file into chromosomes
+# Split input files into chromosomes
 #================================
 s=${outdir}/${outpref}/scripts/split_hicfiles_by_chromosome.sh
-out1_perchromo=${outdir}/${outpref}/analysis/data/$(basename ${hicfile1})
-out2_perchromo=${outdir}/${outpref}/analysis/data/$(basename ${hicfile2})
+out1_perchromo=${outdir}/${outpref}/analysis/data/$(basename ${m1})
+out2_perchromo=${outdir}/${outpref}/analysis/data/$(basename ${m2})
+chromos=$(zcat -f ${nodes} | cut -f1 | sort | uniq | awk '{print "chr"$0}' | sed 's/chrchr/chr/g')
 echo "source ${bashrc}" > ${s}
 for chromo in ${chromos};
 do
-    echo "zcat -f ${hicfile1} | awk '{print \"chr\""'$'"1\"\t\""'$'"2\"\tchr\""'$'"3\"\t\""'$'"4\"\t\""'$'"5}' | sed 's/chrchr/chr/g' | awk -v chromosome=${chromo} '{if ("'$'"1==chromosome && "'$'"3==chromosome) print "'$'"2\"\t\""'$'"4\"\t\""'$'"5}' | gzip > ${out1_perchromo}.${chromo}.gz" >> ${s}
-    echo "zcat -f ${hicfile2} | awk '{print \"chr\""'$'"1\"\t\""'$'"2\"\tchr\""'$'"3\"\t\""'$'"4\"\t\""'$'"5}' | sed 's/chrchr/chr/g' | awk -v chromosome=${chromo} '{if ("'$'"1==chromosome && "'$'"3==chromosome) print "'$'"2\"\t\""'$'"4\"\t\""'$'"5}' | gzip > ${out2_perchromo}.${chromo}.gz" >> ${s}
+    #echo "zcat -f ${m1} | awk '{print \"chr\""'$'"1\"\t\""'$'"2\"\tchr\""'$'"3\"\t\""'$'"4\"\t\""'$'"5}' | sed 's/chrchr/chr/g' | awk -v chromosome=${chromo} '{if ("'$'"1==chromosome && "'$'"3==chromosome) print "'$'"2\"\t\""'$'"4\"\t\""'$'"5}' | gzip > ${out1_perchromo}.${chromo}.gz" >> ${s}
+    #echo "zcat -f ${m2} | awk '{print \"chr\""'$'"1\"\t\""'$'"2\"\tchr\""'$'"3\"\t\""'$'"4\"\t\""'$'"5}' | sed 's/chrchr/chr/g' | awk -v chromosome=${chromo} '{if ("'$'"1==chromosome && "'$'"3==chromosome) print "'$'"2\"\t\""'$'"4\"\t\""'$'"5}' | gzip > ${out2_perchromo}.${chromo}.gz" >> ${s}
+    echo "zcat -f ${nodes} | awk '{print \"chr\""'$'"1\"\t\""'$'"2\"\t\""'$'"3\"\t\""'$'"4}' | sed 's/chrchr/chr/g' | awk -v chromosome=${chromo} '{if ("'$'"1==chromosome) print "'$'"0}' | gzip > ${nodefile}.${chromo}.gz" >> ${s}
 done
 chmod 755 ${s}
-${s}
+#### ${s}
 
 #=================================
 # Run genomeDisco
@@ -58,16 +114,17 @@ s=${outdir}/${outpref}/scripts/run_disco.sh
 echo "source ${bashrc}" > ${s}
 for chromo in ${chromos};
 do
-    f1=${outdir}/${outpref}/analysis/data/$(basename ${hicfile1}).${chromo}.gz
-    f2=${outdir}/${outpref}/analysis/data/$(basename ${hicfile2}).${chromo}.gz
-    m1name=$(basename ${hicfile1} | sed 's/[.]gz//g')
-    m2name=$(basename ${hicfile2} | sed 's/[.]gz//g')
+    f1=${outdir}/${outpref}/analysis/data/$(basename ${m1}).${chromo}.gz
+    f2=${outdir}/${outpref}/analysis/data/$(basename ${m2}).${chromo}.gz
+    m1name=$(basename ${m1} | sed 's/[.]gz//g')
+    m2name=$(basename ${m2} | sed 's/[.]gz//g')
     mkdir -p ${outdir}/${outpref}/analysis/reproducibility
-    echo "${mypython} ${CODEDIR}/GenomeDisco/genomeDisco.py --m1 ${f1} --m2 ${f2} --m1name ${m1name} --m2name ${m2name} --node_file ${nodefile}.${chromo}.gz --outdir ${outdir}/${outpref}/analysis/reproducibility --outpref ${chromo} --m_subsample NA --resolution ${resolution} --process_matrix ${normalization} --method ${method} --tmin 1 --tmax 3" >> ${s}
+    echo "${mypython} ${CODEDIR}/genomedisco/genomeDisco.py --m1 ${f1} --m2 ${f2} --m1name ${m1name} --m2name ${m2name} --node_file ${nodefile}.${chromo}.gz --outdir ${outdir}/${outpref}/analysis/reproducibility --outpref ${chromo} --m_subsample NA --approximation ${resolution} --norm ${normalization} --method ${method} --tmin ${tmin} --tmax ${tmax}" >> ${s}
 done
 chmod 755 ${s}
-${s}
+echo ${s}
 
+exit
 #=================================
 # Make an html report
 #=================================
