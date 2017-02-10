@@ -150,4 +150,6 @@ def write_html_report(stats,args,reproducibility_text,score):
     out.write('</body>'+'\n')
     out.write('</html>'+'\n')
 
-main()
+
+if __name__=="__main__":
+    main()
