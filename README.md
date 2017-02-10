@@ -13,6 +13,6 @@ genomedisco is compatible with Python 2.
 
 Quick start
 ---
-
+To start ...
 
 
