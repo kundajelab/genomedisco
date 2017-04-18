@@ -88,8 +88,8 @@ def main():
 
     logging.info('| main: Writing report')
     write_html_report(stats,args,reproducibility_text,score)
-    out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.'+args.method+'.Score.txt','w')
-    out.write(args.m1name+'\t'+args.m2name+'\t'+str(score)+'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\n')
+    out=open(args.outdir+'/genomedisco.'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.txt','w')
+    out.write(args.m1name+'\t'+args.m2name+'\t'+str(score)+'\n')#'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\n')
     logging.info('| main: DONE!')
 
 

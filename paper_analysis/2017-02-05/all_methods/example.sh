@@ -38,7 +38,7 @@ fi
 #==================
 if [[ ${step} == "split" ]];
 then
-    ${disco}/scripts/splitByChromosome.sh -t hic -i ${samples} -n ${outdir}/${prefix}.bins.gz -j sge -o ${outdir}/${prefix}
+    ${genomedisco}/scripts/splitByChromosome.sh -t hic -i ${samples} -n ${outdir}/${prefix}.bins.gz -j sge -o ${outdir}/${prefix}
 fi
 
 #==================
@@ -62,6 +62,19 @@ then
     comparisons=${code}/example_comparisons.chr${chromosome}.txt
     parameters=${code}/example_parameters.txt
     action=compute
-    ${code}/compute_reproducibility.sh -o ${outdir}/${prefix}/results -p ${prefix} -n ${bins} -s ${samples} -c ${comparisons} -a ${action} -b ${bashrc} -r ${resolution} -m ${parameters}
+    ${code}/compute_reproducibility.sh -o ${outdir}/${prefix}/results -p ${prefix} -n ${bins} -s ${samples} -c ${comparisons} -a ${action} -b ${bashrc} -r ${resolution} -m ${parameters} -j sge
+    done
+fi
+
+if [[ ${step} == "scorelist" ]];
+then
+    for chromosome in 10 11;
+    do
+    bins=${outdir}/${prefix}/data/nodes/prefix.bins.gz.chr${chromosome}.gz
+    samples=${code}/example_samples.chr${chromosome}.txt
+    comparisons=${code}/example_comparisons.chr${chromosome}.txt
+    parameters=${code}/example_parameters.txt
+    action=scorelist
+    ${code}/compute_reproducibility.sh -o ${outdir}/${prefix}/results -p ${prefix} -n ${bins} -s ${samples} -c ${comparisons} -a ${action} -b ${bashrc} -r ${resolution} -m ${parameters} -j sge
     done
 fi

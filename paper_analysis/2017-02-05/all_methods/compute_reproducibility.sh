@@ -16,12 +16,14 @@ OPTIONS:
    -b bashrc file. Must contain the following variables:hicrepcode ( location of the wrapper around hicrep),hic-spectorcode, genomediscocode 
    -r resolution, in base pairs
    -m metadata. This file lists any parameters associated with running these methods. The format of the file is method, parameter, parameter value, tab separated. The parameters for genomedisco are tmin(minimum steps of random walk),tmax, normalization (can be sqrtvc). The parameters for hicrep are h(smoothing size), maxdist(maximum distance to consider). The parameters for hic-spector are n(the number of eigenvectors to use).
+   -j  whether to run these interactively or submit as jobs, using sge.  To submit jobs, set this to 'sge',  otherwise set to 'not_sge' (DEFAULT)
 "
 } 
 
 outdir='outdir'
 prefix='reproducibility'
-while getopts "ho:p:n:s:c:a:b:r:m:" opt
+sge='not_parallel'
+while getopts "ho:p:n:s:c:a:b:r:m:j:" opt
 do
     case $opt in
 	h)
@@ -44,6 +46,8 @@ do
 	        resolution=$OPTARG;;
 	m)
 	        metadata=$OPTARG;;
+	j)
+	        sge=$OPTARG;;
 	?)
 	        usage
 		    exit 1;;
@@ -53,7 +57,7 @@ done
 if [[ "${action}" == "compute" ]];
 then
     source ${bashrc}
-    zcat -f ${bins} | awk -v res=${resolution} '{mid=$2+res/2}{print $1"\t"$2"\t"$3"\t"mid}' | gzip > ${outdir}/$(basename ${bins}).mid.gz
+    #zcat -f ${bins} | awk -v res=${resolution} '{mid=$2+res/2}{print $1"\t"$2"\t"$3"\t"mid}' | gzip > ${outdir}/$(basename ${bins}).mid.gz
 
     while read line
     do
@@ -76,12 +80,16 @@ then
 	echo "source ${bashrc}" > ${s}
 	echo ${cmd} >> ${s}
 	chmod 755 ${s}
-	#qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
-    
+	if [[ ${sge} == "sge" ]];
+	then
+	    qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+	else
+	    ${s}
+	fi
+
 	mkdir -p ${outdir}/hic-spector/${pair}
 	outname=${outdir}/hic-spector/${pair}/hic-spector.${chromosome}.${firstItem}.vs.${secondItem}.txt
 	n=$(zcat -f ${metadata} | grep "hic-spector"  | grep -w n | sed 's/_/\t/g' | cut -f3)
-
 	s=${outname}.sh
 	cmd="julia ${hicspectorcode} ${outname}.f1 ${outname}.f2 ${outname} ${resolution} ${chromosome_number} ${firstItem} ${secondItem} ${n} ${spector}/HiC_spector.jl"
 	echo "source ${bashrc}" > ${s}
@@ -90,7 +98,12 @@ then
 	echo ${cmd} >> ${s}
 	echo "rm ${outname}.f1 ${outname}.f2" >> ${s}
 	chmod 755 ${s}
-	#qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
+	if [[ ${sge} == "sge" ]];
+        then
+            qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+	else
+            ${s}
+        fi
 	
 	mkdir -p ${outdir}/genomedisco/${pair}
 	tmin=$(zcat -f ${metadata} | grep "genomedisco"  | grep -w tmin | sed 's/_/\t/g' | cut -f3)
@@ -101,7 +114,40 @@ then
 	echo "source ${bashrc}" > ${s}
 	echo "${mypython} ${genomedisco}/genomedisco/__main__.py --m1 ${f1} --m2 ${f2} --m1name ${firstItem} --m2name ${secondItem} --node_file ${bins} --outdir ${outdir}/genomedisco/${pair}/ --outpref ${chromosome} --m_subsample NA --approximation 40000 --norm ${normalization} --method RandomWalks --tmin ${tmin} --tmax ${tmax} --concise_analysis" >> ${s}
 	chmod 755 ${s}
-	#qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
-	echo "========"
+	if [[ ${sge} == "sge" ]];
+        then
+            qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+	else
+            ${s}
+        fi
+    done < ${pairs}
+fi
+
+
+if [[ "${action}" == "scorelist" ]];
+then
+    source ${bashrc}
+    mkdir -p ${outdir}/scorelist
+    chromosomes=$(zcat -f ${pairs} | cut -f3 | sort | uniq) 
+    for chromosome in ${chromosomes};
+    do
+	scores=${outdir}/scorelist/${prefix}.${chromosome}.txt 
+	echo "#m1_m2_chromosome_genomedisco_hicrep_hic-spector" | sed 's/_/\t/g' > ${scores}
+    done
+    while read line
+    do
+        read -a items <<< "$line"
+        firstItem=${items[0]}
+        secondItem=${items[1]}
+        chromosome=${items[2]}
+        chromosome_number=$(echo ${chromosome} | sed 's/chr//g')
+	pair=${firstItem}_${secondItem}
+	scores=${outdir}/scorelist/${prefix}.${chromosome}.txt 
+	
+	d=$(cat ${outdir}/genomedisco/${pair}/genomedisco.${chromosome}.${firstItem}.vs.${secondItem}.txt | cut -f3)
+	r=$(cat ${outdir}/hicrep/${pair}/hicrep.${chromosome}.${firstItem}.vs.${secondItem}.txt | cut -f3)
+	s=$(cat ${outdir}/hic-spector/${pair}/hic-spector.${chromosome}.${firstItem}.vs.${secondItem}.txt | cut -f3)
+	
+	echo "${firstItem}_${secondItem}_${chromosome}_${d}_${r}_${s}" | sed 's/_/\t/g' >> ${scores}
     done < ${pairs}
 fi
