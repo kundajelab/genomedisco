@@ -1,4 +1,9 @@
 
+import matplotlib
+matplotlib.use('Agg')
+from matplotlib.backends.backend_pdf import PdfPages
+import matplotlib.pyplot as plt
+import pybedtools
 import numpy as np
 import argparse
 import os
@@ -31,11 +36,18 @@ def main():
 
     simulate(args)
 
+def read_bed_into_interval(bed):
+    regions=[]
+    for line in gzip.open(bed):
+        items=line.strip().split('\t')
+        regions.append(pybedtools.Interval(items[0], int(items[1]), int(items[2])))
+    return regions
+
 def simulate(args):
 
     maxdist_in_nodes=int(1.0*args.maxdist/args.resolution)
 
-    tads=processing.read_bed_into_interval(args.tadfile)
+    tads=read_bed_into_interval(args.tadfile)
     real_data=read_in_data(args.realdatafile)
     original_tad_boundary_var=0
     original_tadmatrix=tadfile_to_tadmatrix(args.tadfile,original_tad_boundary_var,args.resolution,args.nodefile)
@@ -146,7 +158,7 @@ def tadfile_to_tadmatrix(tadfile,var_boundary_diff_init,resolution,nodefile):
     
     var_boundary_diff=int(var_boundary_diff_init/resolution)
     
-    tads=processing.read_bed_into_interval(tadfile)
+    tads=read_bed_into_interval(tadfile)
     tad_matrix=np.zeros((n,n))
     for tad in tads:
         chromo,start,end=tad[0],int(1.0*float(tad[1])/resolution),int(1.0*float(tad[2])/resolution)

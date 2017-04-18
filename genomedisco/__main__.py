@@ -15,7 +15,7 @@ def main():
     parser.add_argument('--datatype',default='hic')
     parser.add_argument('--m1',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC014.res40000.byChr.chr21.gz')
     parser.add_argument('--m2',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC001.res40000.byChr.chr21.gz')
-    parser.add_argument('--matrix_format',type=str,default='n1n2val')
+    parser.add_argument('--matrix_format',type=str,default='n1n2val',help='c1n1c2n2val')
     parser.add_argument('--node_file',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/nodes/Nodes.w40000.chr21.gz')
     parser.add_argument('--remove_diagonal',type=bool, default='True')
     parser.add_argument('--m1name',type=str,default='HIC014')
@@ -77,7 +77,7 @@ def main():
         if args.datatype=='capturec':
             m1dd=data_operations.get_distance_dep_using_nodes_capturec(m1_subsample,nodes,nodes_idx,args.approximation)
             m2dd=data_operations.get_distance_dep_using_nodes_capturec(m2_subsample,nodes,nodes_idx,args.approximation)
-        visualization.plot_dds([m1dd,m2dd],[args.m1name,args.m2name],args.outdir+'/'+args.outpref+'.distDep',args.approximation)
+        visualization.plot_dds([m1dd,m2dd],[args.m1name,args.m2name],args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.distDep',args.approximation)
 
     logging.info('| main: Reproducibility analysis')
     if args.method=='RandomWalks':
@@ -88,14 +88,14 @@ def main():
 
     logging.info('| main: Writing report')
     write_html_report(stats,args,reproducibility_text,score)
-    out=open(args.outdir+'/'+args.outpref+args.m1name+'.vs.'+args.m2name+'.'+args.method+'.Score.txt','w')
+    out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.'+args.method+'.Score.txt','w')
     out.write(args.m1name+'\t'+args.m2name+'\t'+str(score)+'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\n')
     logging.info('| main: DONE!')
 
 
 def write_html_report(stats,args,reproducibility_text,score):
     os.system('mkdir -p '+args.outdir)
-    out=open(args.outdir+'/'+args.outpref+'.report.html','w')
+    out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.report.html','w')
 
     out.write('<html>'+'\n')
     out.write('<head>'+'\n')
@@ -136,7 +136,7 @@ def write_html_report(stats,args,reproducibility_text,score):
         out.write('<br>'+'\n')
         out.write('<font color="#a569bd"><strong>Distance dependence</strong></font>'+'\n')
         out.write('<br>'+'\n')
-        out.write('<img src="'+args.outpref+'.distDep.png" width="200" height="200"> '+'\n')
+        out.write('<img src="'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.distDep.png" width="200" height="200"> '+'\n')
         out.write('<br>'+'\n')
     
     out.write('<br>'+'\n')
