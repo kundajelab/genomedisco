@@ -82,7 +82,8 @@ chromos=$(zcat -f ${nodes} | cut -f1 | sort | uniq | awk '{print "chr"$0}' | sed
 
 s=${out}/scripts/nodes.split_files_by_chromosome.sh
 nodefile=${out}/data/nodes/$(basename ${nodes} | sed 's/[.].gz//g')
-echo "source ${bashrc}" > ${s}
+echo "#!/bin/sh" > ${s}
+echo "source ${bashrc}" >> ${s}
 for chromo in ${chromos};
 do
     if [[ ${datatype} == 'hic' ]];
@@ -99,13 +100,7 @@ do
 done
 
 #run
-if [[ ${j} == 'sge' ]];
-then
-    qsub -o ${s}.o -e ${s}.e ${s}
-else
-    ${s}
-fi
-
+run_code ${s} ${j}
 
 #=========================
 #split edges by chromosome
@@ -116,7 +111,8 @@ do
     samplename=${items[0]}
     samplefile=${items[1]}
     s=${out}/scripts/${samplename}.split_files_by_chromosome.sh
-    echo "source ${bashrc}" > ${s}
+    echo "#!/bin/sh" > ${s}
+    echo "source ${bashrc}" >> ${s}
     out_perchromo=${out}/data/edges/${samplename}/${samplename}
     if [ ! -d "${out}/data/edges/${samplename}" ]; then
 	mkdir -p ${out}/data/edges/${samplename}
@@ -128,12 +124,8 @@ do
     done
 
     #run
-    if [[ ${j} == 'sge' ]];
-    then
-	qsub -o ${s}.o -e ${s}.e ${s}
-    else
-	${s}
-    fi
+    run_code ${s} ${j}
+    
 
 done < ${i}
 

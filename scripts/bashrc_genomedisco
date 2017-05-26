@@ -1,14 +1,29 @@
-CODEDIR=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco
+CODEDIR=/oak/stanford/groups/akundaje/oursu/code/genomedisco
 #change CODEDIR to wherever you downloaded genomeDisco
 #===========================================================
 
-mypython=/srv/gsfs0/projects/snyder/oursu/software/anaconda2/mypython/bin/python
+mypython=/oak/stanford/groups/akundaje/oursu/software/anaconda2/bin/python
 #change mypython to the path of your python library
 #===========================================================
 
 export PYTHONPATH="${PYTHONPATH}:${CODEDIR}/genomedisco/:${CODEDIR}/genomedisco/comparison_types/"
-export PATH=/srv/gsfs0/projects/snyder/oursu/software/anaconda2/mypython/pkgs/pandoc-1.12.3-3/bin/:/srv/gsfs0/projects/snyder/oursu/software/julia/julia-3c9d75391c/bin/:$PATH
 
 #add bedtools
-module load bedtools/2.26.0
-module load r/3.3.1
+module load bedtools/2.26
+
+run_code()
+{
+	local s=$1
+	local j=$2
+
+	chmod 755 ${s}	
+	if [[ ${j} == 'sge' ]];
+	then
+		qsub -o ${s}.o -e ${s}.e ${s}
+	elif [[ ${j} == 'slurm' ]];
+	then
+		sbatch -o ${s}.o -e ${s}.e -p dev ${s}
+	else
+		${s}
+	fi
+}
