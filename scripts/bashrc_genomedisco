@@ -6,10 +6,8 @@ mypython=/oak/stanford/groups/akundaje/oursu/software/anaconda2/bin/python
 #change mypython to the path of your python library
 #===========================================================
 
+export PATH="/oak/stanford/groups/akundaje/oursu/software/bedtools2/bin/:${PATH}"
 export PYTHONPATH="${PYTHONPATH}:${CODEDIR}/genomedisco/:${CODEDIR}/genomedisco/comparison_types/"
-
-#add bedtools
-module load bedtools/2.26
 
 run_code()
 {
@@ -22,7 +20,7 @@ run_code()
 		qsub -o ${s}.o -e ${s}.e ${s}
 	elif [[ ${j} == 'slurm' ]];
 	then
-		sbatch -o ${s}.o -e ${s}.e -p dev ${s}
+		sbatch -o ${s}.o -e ${s}.e -p akundaje ${s}
 	else
 		${s}
 	fi

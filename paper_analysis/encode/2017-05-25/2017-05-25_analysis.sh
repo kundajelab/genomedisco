@@ -13,6 +13,7 @@ chrSizes=/oak/stanford/groups/akundaje/oursu/general/hg19.chrom.sizes
 #===============
 if [[ ${step} == "nodes" ]];
 then
+    rm -r ${DATA}/processed/nodes
     mkdir -p ${DATA}/processed/nodes
     for resolution in 10000 40000 500000;
     do
@@ -46,6 +47,19 @@ then
 	nodes=${DATA}/processed/nodes/Nodes.w${res}.bed.gz
 	cmd="${CODEDIR}/scripts/splitByChromosome.sh -t hic -i ${metadata}.res${res} -n ${nodes} -j slurm -o ${OUT}/res${res}"
 	echo ${cmd}
+	${cmd}
     done
 fi
+
+#now, let's try to run genomedisco on chr1 for 10kb resolution, to make sure it works
+if [[ ${step} == "test" ]];
+then
+    d=/oak/stanford/groups/akundaje/oursu/3d/reproducibility/encode/encode_2017-05-25/results
+    m1=${d}/res10000/data/edges/Matrix32/Matrix32.chr1.gz
+    m2=${d}/res10000/data/edges/Matrix78/Matrix78.chr1.gz
+    nodes=${d}/res10000/data/nodes/Nodes.w10000.bed.gz.chr1.gz
+    outdir=/oak/stanford/groups/akundaje/oursu/test
+    ${mypython} ${CODEDIR}/genomedisco/__main__.py --datatype hic --m1 ${m1} --m2 ${m2} --matrix_format n1n2val --node_file ${nodes} --remove_diagonal --m1name m1name --m2name m2name --outdir ${outdir} --outpref pref --norm sqrtvc --approximation 100000 --concise_analysis
+fi
+
 

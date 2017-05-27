@@ -17,7 +17,7 @@ def main():
     parser.add_argument('--m2',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/processed_data/HIC001.res40000.byChr.chr21.gz')
     parser.add_argument('--matrix_format',type=str,default='n1n2val',help='c1n1c2n2val')
     parser.add_argument('--node_file',type=str,default='/srv/gsfs0/projects/kundaje/users/oursu/3d/LA/merged_nodups/nodes/Nodes.w40000.chr21.gz')
-    parser.add_argument('--remove_diagonal',type=bool, default='True')
+    parser.add_argument('--remove_diagonal',action='store_true')
     parser.add_argument('--m1name',type=str,default='HIC014')
     parser.add_argument('--m2name',type=str,default='HIC001')
     parser.add_argument('--outdir',type=str,default='OUT')
