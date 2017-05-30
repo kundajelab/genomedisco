@@ -48,25 +48,37 @@ Running GenomeDISCO
 
 **1. Split files by chromosome**
 
+In addition to the input files, you need a metadata file with all the samples you are going to compare later on. The format is: contact map name, path to contact map (tab delimited). Here's an example:
+
+```HIC001 examples/HIC001.res40000.gz
+HIC002 examples/HIC002.res40000.gz
+```
+
+Now, let's move on to split the data by chromosome.
+
 ```
 cd genomedisco
 
 #input files
-nodes=examples/nodes.40000.gz
-contactmap1=examples/HIC001.res40000.gz
-contactmap2=examples/HIC002.res40000.gz
+nodes=$(pwd)/examples/Nodes.w40000.bed.gz
+contactmap1=$(pwd)/examples/HIC001.res40000.gz
+contactmap2=$(pwd)/examples/HIC002.res40000.gz
 
 #create metadata
-metadata_samples=examples/metadata.samples
+metadata_samples=$(pwd)/examples/metadata.samples
 echo "contactmapname1 ${contactmap1}" > ${metadata_samples}
 echo "contactmapname2 ${contactmap2}" >> ${metadata_samples}
 
 #split input files by chromosome
-outputdir=examples/output
+outputdir=$(pwd)/examples/output
 scripts/splitByChromosome.sh -t hic -i ${metadata_samples} -n ${nodes} -o ${outputdir}
 ```
 
+This will create a set of files in `${outputdir}/data`. These will be used in the next step.
+
 **2. Run GenomeDISCO**
+
+
 
 **3. Generate genomewide report**
 
