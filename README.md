@@ -46,6 +46,8 @@ As long as the node name corresponds to what is used in the contact map, you are
 Running GenomeDISCO
 ---
 
+For this example, we will use a subset of datasets from Rao et al., 2014.
+
 **1. Split files by chromosome**
 
 In addition to the input files, you need a metadata file with all the samples you are going to compare later on. The format is: contact map name, path to contact map (tab delimited). Here's an example:
