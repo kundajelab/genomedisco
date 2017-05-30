@@ -191,10 +191,16 @@ normalization=sqrtvc
 scripts/genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir} -b ${normalization}
 ```
 
-Visualize the pretty report as html files. 
+Visualize the pretty reports as html files. Note that sample1 and sample2 are from the same cell type, while sample3 is a different cell type. This is reflected in the reproducibility scores. 
 - sample1 vs sample2: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
 - sample1 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample3/genomewide.sample1.vs.sample3.genomedisco.report.html
 - sample2 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample2.vs.sample3/genomewide.sample2.vs.sample3.genomedisco.report.html
 
+More questions?
+====
+Contact Oana Ursu
 
+oursu@stanford.edu
+
+We are excited to hear from you and how we can improve GenomeDISCO!
 
