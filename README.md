@@ -16,6 +16,7 @@ genomedisco is compatible with Python 2.
 
 Quick start
 ---
-To start ...
+To start, you will need the following:
+- 2 contact maps for which you want to compute reproducibility
 
 
