@@ -33,7 +33,7 @@ genomedisco_GenomewideIntraChromosomal.sh -t hic -i examples/metadata.pairs -n e
 
 Note: the output directory specified here should be the same as the one used in Step 1.
 
-**3. Visualize results **
+**3. Visualize results**
 
 Create a beautiful html report describing the reproducibility analysis.
 
