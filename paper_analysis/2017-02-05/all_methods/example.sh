@@ -6,13 +6,14 @@ step=$1
 #==================
 # setup environment
 #==================
-bashrc=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/paper_analysis/2017-02-05/all_methods/methods_bashrc
+codebase=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco
+bashrc=${codebase}/paper_analysis/2017-02-05/all_methods/methods_bashrc
 source ${bashrc}
 
 #==================
 # set up samples to compare
 #==================
-chrSizes=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/paper_analysis/2017-02-05/all_methods/chrSizes
+chrSizes=${codebase}/paper_analysis/2017-02-05/all_methods/chrSizes
 outdir=${code}/test
 prefix=prefix
 resolution=40000
@@ -62,7 +63,7 @@ then
     comparisons=${code}/example_comparisons.chr${chromosome}.txt
     parameters=${code}/example_parameters.txt
     action=compute
-    ${code}/compute_reproducibility.sh -o ${outdir}/${prefix}/results -p ${prefix} -n ${bins} -s ${samples} -c ${comparisons} -a ${action} -b ${bashrc} -r ${resolution} -m ${parameters} -j sge
+    ${code}/compute_reproducibility.sh -o ${outdir}/${prefix}/results -p ${prefix} -n ${bins} -s ${samples} -c ${comparisons} -a ${action} -b ${bashrc} -r ${resolution} -m ${parameters} -j not_parallel
     done
 fi
 
@@ -75,6 +76,6 @@ then
     comparisons=${code}/example_comparisons.chr${chromosome}.txt
     parameters=${code}/example_parameters.txt
     action=scorelist
-    ${code}/compute_reproducibility.sh -o ${outdir}/${prefix}/results -p ${prefix} -n ${bins} -s ${samples} -c ${comparisons} -a ${action} -b ${bashrc} -r ${resolution} -m ${parameters} -j sge
+    ${code}/compute_reproducibility.sh -o ${outdir}/${prefix}/results -p ${prefix} -n ${bins} -s ${samples} -c ${comparisons} -a ${action} -b ${bashrc} -r ${resolution} -m ${parameters} -j not_parallel
     done
 fi

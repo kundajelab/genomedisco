@@ -31,7 +31,9 @@ def main():
     parser.add_argument('--approximation',type=int,default=40000)
     args = parser.parse_args()
 
-    os.system('mkdir -p'+args.outdir)
+    write_arguments(args)
+
+    os.system('mkdir -p '+args.outdir)
 
     logging.basicConfig(format='%(asctime)s GenomeDisco %(message)s',level=logging.DEBUG)
     logging.info('| main: Starting GenomeDisco')
@@ -89,27 +91,39 @@ def main():
     logging.info('| main: Writing report')
     write_html_report(stats,args,reproducibility_text,score)
     out=open(args.outdir+'/genomedisco.'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.txt','w')
-    out.write(args.m1name+'\t'+args.m2name+'\t'+str(score)+'\n')#'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\n')
+    out.write(args.m1name+'\t'+args.m2name+'\t'+str(score)+'\n')
+    out.close()
+    out=open(args.outdir+'/genomedisco.'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.seqdepth','w')
+    out.write(str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\n')
+    out.close()
     logging.info('| main: DONE!')
 
 
 def write_html_report(stats,args,reproducibility_text,score):
+    header_col='"009900"'
+    #header_col='"#000000"'
+
     os.system('mkdir -p '+args.outdir)
     out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.report.html','w')
 
     out.write('<html>'+'\n')
     out.write('<head>'+'\n')
-    out.write('<strong>'+args.m1name+' (red) vs '+args.m2name+' (blue)</strong>'+'\n')
+    out.write('<font color='+header_col+'> <strong>Reproducibility report</font></strong>'+'\n')
+    out.write('<br>'+'\n')
+    out.write('<br>'+'\n')
+    #out.write('<strong>'+args.outpref+'. '+'<font color="#FF0000">'+args.m1name+' (red)'+'<font color="#000000">'+' vs '+'<font color="#0000FF">'+args.m2name+' (blue)'+'<font color="#000000">'+'</strong>'+'\n')
+    out.write('<strong>'+args.outpref+'. '+args.m1name+' vs '+args.m2name+'</strong>'+'\n')
     out.write('<br>'+'\n')
     out.write('Report generated '+strftime("%Y-%m-%d %H:%M:%S", gmtime())+' by GenomeDISCO (DIfferences in Smoothed COntact maps)'+'\n')
+    out.write('<br>'+'\n')
     out.write('</head>'+'\n')
 
     out.write('<body>'+'\n')
     
     out.write('<br>'+'\n')
+    out.write('<font color='+header_col+'> <strong>Sequencing stats</font></strong>'+'\n')
     out.write('<br>'+'\n')
-    out.write('<font color="#a569bd"> <strong>General stats</font></strong>'+'\n')
-
+    out.write('<br>'+'\n')
     out.write('<table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">'+'\n')
 
     out.write('<tr>')
@@ -120,36 +134,43 @@ def write_html_report(stats,args,reproducibility_text,score):
 
     out.write('<tr>')
     out.write('<td> <strong>Sequencing depth</strong></td>'+'\n')
-    out.write('<td> '+str(stats[args.m1name]['depth'])+'</td>'+'\n')
-    out.write('<td> '+str(stats[args.m2name]['depth'])+'</td>'+'\n')
+    out.write('<td> '+str(1.0*stats[args.m1name]['depth']/1000000)+' M</td>'+'\n')
+    out.write('<td> '+str(1.0*stats[args.m2name]['depth']/1000000)+' M</td>'+'\n')
     out.write('</tr>')
 
-    out.write('<tr>')
-    out.write('<td> <strong>Sequencing depth (subsampled) </strong></td>'+'\n')
-    out.write('<td> '+str(stats[args.m1name]['subsampled_depth'])+'</td>'+'\n')
-    out.write('<td> '+str(stats[args.m2name]['subsampled_depth'])+'</td>'+'\n')
-    out.write('</tr>')
+    if args.m_subsample!='NA':
+        out.write('<tr>')
+        out.write('<td> <strong>Sequencing depth (subsampled) </strong></td>'+'\n')
+        out.write('<td> '+str(1.0*stats[args.m1name]['subsampled_depth']/1000000)+' M</td>'+'\n')
+        out.write('<td> '+str(1.0*stats[args.m2name]['subsampled_depth']/1000000)+' M</td>'+'\n')
+        out.write('</tr>')
 
     out.write('</table>'+'\n')
 
+    out.write('<br>'+'\n')
+    out.write('<font color='+header_col+'><strong>Reproducibility analysis</strong></font>'+'\n')
+    out.write(reproducibility_text[0]+'\n')
+
     if not args.concise_analysis:
         out.write('<br>'+'\n')
-        out.write('<font color="#a569bd"><strong>Distance dependence</strong></font>'+'\n')
+        out.write('<font color='+header_col+'><strong>Distance dependence</strong></font>'+'\n')
         out.write('<br>'+'\n')
-        out.write('<img src="'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.distDep.png" width="200" height="200"> '+'\n')
         out.write('<br>'+'\n')
-    
-    out.write('<br>'+'\n')
-    out.write('<font color="#a569bd"><strong>Reproducibility analysis</strong></font>'+'\n')
-
-    out.write(reproducibility_text+'\n')
-    
-    out.write('<br>'+'\n')
-    out.write('Reproducibility = '+str(score)+'\n')
+        out.write('<img src="'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.distDep.png" width="400" height="400"> '+'\n')
+        out.write('<br>'+'\n')
+        out.write('<br>'+'\n')
+        out.write('<font color='+header_col+'><strong>Random walk matrices</strong></font>'+'\n')
+        out.write(reproducibility_text[1]+'\n')
 
     out.write('</body>'+'\n')
     out.write('</html>'+'\n')
 
+def write_arguments(args):
+    argout=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.args','w')
+    argdict=vars(args)
+    for k in sorted(argdict):
+        argout.write(k+"="+str(argdict[k])+'\n')
+    argout.close()
 
 if __name__=="__main__":
     main()

@@ -78,36 +78,20 @@ echo "Job submission: ${j}"
 echo "========================================================================"
 
 source ${bashrc}
-chromos=$(zcat -f ${nodes} | cut -f1 | sort | uniq | awk '{print "chr"$0}' | sed 's/chrchr/chr/g')
-nodefile=${out}/data/nodes/$(basename ${nodes} | sed 's/[.].gz//g')
+chromos=$(zcat -f ${nodes} | cut -f1 | sort | uniq | awk '{print "chr"$0}' | sed 's/chrchr/chr/g' | sed 's/chr//g' | sort -n | awk '{print "chr"$1}' | paste -sd,)
 
 #=================================
-# Run genomeDisco
+# Make a html report
 #=================================
-mkdir -p ${out}/scripts
-mkdir -p ${out}/results
 while read line
-do
+do   
     read -a items <<< "$line"
     m1name=${items[0]}
     m2name=${items[1]}
-    outdir=${out}/results/${m1name}.vs.${m2name}
-    for chromo in ${chromos};
-    do
-	s=${out}/scripts/${chromo}.${m1name}.vs.${m2name}.run_disco.sh
-	echo "source ${bashrc}" > ${s}
-	f1=${out}/data/edges/${m1name}/${m1name}.${chromo}.gz
-	f2=${out}/data/edges/${m2name}/${m2name}.${chromo}.gz
-	if [[ $(zcat -f ${f1} | head -n10 | wc -l) > 0 ]];
-	then
-	    if [[ $(zcat -f ${f2} |head -n10 | wc -l) > 0 ]];
-	    then
-		mkdir -p ${outdir}
-		echo "${mypython} ${CODEDIR}/genomedisco/__main__.py --m1 ${f1} --m2 ${f2} --m1name ${m1name} --m2name ${m2name} --node_file ${nodefile}.${chromo}.gz --outdir ${outdir} --outpref ${chromo} --m_subsample NA --approximation ${distance_bin} --norm ${normalization} --method ${method} --tmin ${tmin} --tmax ${tmax}" >> ${s}
-	    fi
-	fi
-	run_code ${s} ${j}
-    done
+    s=${out}/results/genomewide.${m1name}.vs.${m2name}.report.sh
+    echo "source ${bashrc}" > ${s}
+    echo "${mypython} ${CODEDIR}/scripts/make_report.py --m1name ${m1name} --m2name ${m2name} --out ${out} --chromos ${chromos} --tmin ${tmin} --tmax ${tmax}" >> ${s}
+    run_code ${s} ${j}
+
 done < ${i}
 
-exit

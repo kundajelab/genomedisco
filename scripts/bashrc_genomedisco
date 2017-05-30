@@ -1,13 +1,18 @@
-CODEDIR=/oak/stanford/groups/akundaje/oursu/code/genomedisco
+#CODEDIR=/oak/stanford/groups/akundaje/oursu/code/genomedisco
+CODEDIR=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco
 #change CODEDIR to wherever you downloaded genomeDisco
 #===========================================================
 
-mypython=/oak/stanford/groups/akundaje/oursu/software/anaconda2/bin/python
+#mypython=/oak/stanford/groups/akundaje/oursu/software/anaconda2/bin/python
+mypython=/srv/gsfs0/projects/snyder/oursu/software/anaconda2/mypython/bin/python
 #change mypython to the path of your python library
 #===========================================================
 
-export PATH="/oak/stanford/groups/akundaje/oursu/software/bedtools2/bin/:${PATH}"
 export PYTHONPATH="${PYTHONPATH}:${CODEDIR}/genomedisco/:${CODEDIR}/genomedisco/comparison_types/"
+
+#add bedtools
+#module load bedtools/2.26
+module load bedtools/2.26.0
 
 run_code()
 {
@@ -17,10 +22,10 @@ run_code()
 	chmod 755 ${s}	
 	if [[ ${j} == 'sge' ]];
 	then
-		qsub -o ${s}.o -e ${s}.e ${s}
+		qsub -l h_vmem=10G -o ${s}.o -e ${s}.e ${s}
 	elif [[ ${j} == 'slurm' ]];
 	then
-		sbatch -o ${s}.o -e ${s}.e -p akundaje ${s}
+		sbatch -o ${s}.o -e ${s}.e -p dev ${s}
 	else
 		${s}
 	fi

@@ -124,7 +124,8 @@ do
     done
 
     #run
-    run_code ${s} ${j}
+    echo $s
+    #run_code ${s} ${j}
     
 
 done < ${i}
