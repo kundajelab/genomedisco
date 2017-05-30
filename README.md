@@ -191,6 +191,10 @@ normalization=sqrtvc
 scripts/genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir} -b ${normalization}
 ```
 
-Visualize the pretty report as an html. For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
+Visualize the pretty report as html files. 
+- sample1 vs sample2: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
+- sample1 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample3/genomewide.sample1.vs.sample3.genomedisco.report.html
+- sample2 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample2.vs.sample3/genomewide.sample2.vs.sample3.genomedisco.report.html
+
 
 
