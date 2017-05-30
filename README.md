@@ -50,7 +50,8 @@ Running GenomeDISCO
 
 In addition to the input files, you need a metadata file with all the samples you are going to compare later on. The format is: contact map name, path to contact map (tab delimited). Here's an example:
 
-```HIC001 examples/HIC001.res40000.gz
+```
+HIC001 examples/HIC001.res40000.gz
 HIC002 examples/HIC002.res40000.gz
 ```
 
