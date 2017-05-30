@@ -46,74 +46,31 @@ As long as the node name corresponds to what is used in the contact map, you are
 Running GenomeDISCO
 ---
 
-For this example, we will use a subset of datasets from Rao et al., 2014.
+Say you want to compare 2 contact maps. For this example, we will use a subset of datasets from Rao et al., 2014. The data used below is in `genomedisco/genomedisco/examples`.
 
 **1. Split files by chromosome**
 
-In addition to the input files, you need a metadata file with all the samples you are going to compare later on. The format is: contact map name, path to contact map (tab delimited). Here's an example:
-
 ```
-HIC001 examples/HIC001.res40000.gz
-HIC002 examples/HIC002.res40000.gz
+splitByChromosome.sh -t hic -i examples/metadata.samples -n examples/Nodes.w40000.bed.gz -o examples/output
 ```
-
-Now, let's move on to split the data by chromosome.
-
-```
-cd genomedisco
-
-#input files
-nodes=$(pwd)/examples/Nodes.w40000.bed.gz
-contactmap1=$(pwd)/examples/HIC001.res40000.gz
-contactmap2=$(pwd)/examples/HIC002.res40000.gz
-
-#create metadata for samples
-metadata_samples=$(pwd)/examples/metadata.samples
-echo "sample1 ${contactmap1}" > ${metadata_samples}
-echo "sample2 ${contactmap2}" >> ${metadata_samples}
-
-#split input files by chromosome
-outputdir=$(pwd)/examples/output
-scripts/splitByChromosome.sh -t hic -i ${metadata_samples} -n ${nodes} -o ${outputdir}
-```
-
-This will create a set of files in `${outputdir}/data`. These will be used in the next step.
 
 **2. Run GenomeDISCO**
 
 ```
-cd genomedisco
-
-#remember input data (this will be used to determine what chromosomes to compute)
-nodes=$(pwd)/examples/Nodes.w40000.bed.gz
-
-#create metadata for pairs to compare
-metadata_pairs=$(pwd)/examples/metadata.pairs
-echo "sample1 sample2" > ${metadata_pairs}
-
-#run reproducibility analysis
-outputdir=$(pwd)/examples/output
-normalization=sqrtvc
-scripts/genomedisco_GenomewideIntraChromosomal.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir}
--b ${normalization} 
+genomedisco_GenomewideIntraChromosomal.sh -t hic -i examples/metadata.pairs -n examples/Nodes.w40000.bed.gz -o examples/output -b sqrtvc
 ```
 
-**3. Generate genomewide report**
+Note: the output directory specified here should be the same as the one used in Step 1.
+
+**3. Visualize results **
+
+Create a beautiful html report describing the reproducibility analysis.
 
 ```
-cd genomedisco
-
-#remember input data (this will be used to determine what chromosomes to compute)
-nodes=$(pwd)/examples/Nodes.w40000.bed.gz
-metadata_pairs=$(pwd)/examples/metadata.pairs
-
-#run reproducibility analysis
-outputdir=$(pwd)/examples/output
-normalization=sqrtvc
-scripts/genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir} -b ${normalization}
+genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i examples/metadata.pairs -n examples/Nodes.w40000.bed.gz -o examples/output -b sqrtvc
 ```
 
-Visualize the pretty report as an html. For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
+For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
 
 Running reproducibility analysis in batches
 ====
