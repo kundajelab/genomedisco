@@ -26,12 +26,12 @@ i=''
 nodes=''
 j="not_parallel"
 out="OUT"
-distance_bin="40000"
+distance_bin="1000000"
 bashrc=$(dirname "$0")/bashrc_genomedisco
 normalization="uniform"
 method="RandomWalks"
-tmin=1
-tmax=3
+tmin=3
+tmax=7
 
 while getopts "ht:i:n:j:o:d:b:r:s:e:" opt
 do
@@ -69,7 +69,6 @@ echo "Datatype: ${datatype}"
 echo "Input metadata: ${i}"
 echo "Nodes: ${nodes}"
 echo "Output path: ${out}"
-echo "Distance bin: ${distance_bin}"
 echo "Normalization: ${normalization}"
 echo "Method: ${method}"
 echo "tmin: ${tmin}"

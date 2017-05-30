@@ -26,12 +26,12 @@ i=''
 nodes=''
 j="not_parallel"
 out="OUT"
-distance_bin="40000"
+distance_bin="1000000"
 bashrc=$(dirname "$0")/bashrc_genomedisco
 normalization="uniform"
 method="RandomWalks"
-tmin=1
-tmax=3
+tmin=3
+tmax=7
 
 while getopts "ht:i:n:j:o:d:b:r:s:e:" opt
 do
@@ -69,7 +69,6 @@ echo "Datatype: ${datatype}"
 echo "Input metadata: ${i}"
 echo "Nodes: ${nodes}"
 echo "Output path: ${out}"
-echo "Distance bin: ${distance_bin}"
 echo "Normalization: ${normalization}"
 echo "Method: ${method}"
 echo "tmin: ${tmin}"
@@ -88,7 +87,7 @@ do
     read -a items <<< "$line"
     m1name=${items[0]}
     m2name=${items[1]}
-    s=${out}/results/genomewide.${m1name}.vs.${m2name}.report.sh
+    s=${out}/scripts/genomewide.${m1name}.vs.${m2name}.report.sh
     echo "source ${bashrc}" > ${s}
     echo "${mypython} ${CODEDIR}/scripts/make_report.py --m1name ${m1name} --m2name ${m2name} --out ${out} --chromos ${chromos} --tmin ${tmin} --tmax ${tmax}" >> ${s}
     run_code ${s} ${j}

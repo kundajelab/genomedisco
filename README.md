@@ -65,10 +65,10 @@ nodes=$(pwd)/examples/Nodes.w40000.bed.gz
 contactmap1=$(pwd)/examples/HIC001.res40000.gz
 contactmap2=$(pwd)/examples/HIC002.res40000.gz
 
-#create metadata
+#create metadata for samples
 metadata_samples=$(pwd)/examples/metadata.samples
-echo "contactmapname1 ${contactmap1}" > ${metadata_samples}
-echo "contactmapname2 ${contactmap2}" >> ${metadata_samples}
+echo "sample1 ${contactmap1}" > ${metadata_samples}
+echo "sample2 ${contactmap2}" >> ${metadata_samples}
 
 #split input files by chromosome
 outputdir=$(pwd)/examples/output
@@ -79,10 +79,37 @@ This will create a set of files in `${outputdir}/data`. These will be used in th
 
 **2. Run GenomeDISCO**
 
+```
+cd genomedisco
 
+#remember input data (this will be used to determine what chromosomes to compute)
+nodes=$(pwd)/examples/Nodes.w40000.bed.gz
+
+#create metadata for pairs to compare
+metadata_pairs=$(pwd)/examples/metadata.pairs
+echo "sample1 sample2" > ${metadata_pairs}
+
+#run reproducibility analysis
+outputdir=$(pwd)/examples/output
+normalization=sqrtvc
+scripts/genomedisco_GenomewideIntraChromosomal.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir}
+-b ${normalization} 
+```
 
 **3. Generate genomewide report**
 
+```
+cd genomedisco
+
+#remember input data (this will be used to determine what chromosomes to compute)
+nodes=$(pwd)/examples/Nodes.w40000.bed.gz
+metadata_pairs=$(pwd)/examples/metadata.pairs
+
+#run reproducibility analysis
+outputdir=$(pwd)/examples/output
+normalization=sqrtvc
+scripts/genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir} -b ${normalization}
+```
 
 
 
