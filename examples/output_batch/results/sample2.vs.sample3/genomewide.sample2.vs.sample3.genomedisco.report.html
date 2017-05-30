@@ -1,0 +1,91 @@
+<html>
+<head>
+<font color="FF0000"> <strong>GenomeDISCO | Genomewide report </font></strong>
+<br>
+Report generated on Tue May 30 00:53:26 2017. Code: <a href="http://github.com/kundajelab/genomedisco">http://github.com/kundajelab/genomedisco</a>. Contact: Oana Ursu oursu@stanford.edu
+<br>
+<strong>sample2 vs sample3</strong>
+</head>
+<body>
+<br>
+<br>
+<font color="FF0000"> <strong>Reproducibility analysis</font></strong>
+<br>
+<td> <strong>What is GenomeDISCO reproducibility?</strong></td>
+<br>
+GenomeDISCO (DIfferences between Smoothed COntact maps) computes reproducibility by comparing 2 contact maps at increasing levels of smoothing. The smoothing is done using random walks on graphs. For each dataset, we run random walks of increasing length, and ask what is the probability that we reach node j starting at node i, given a random walk through the network of t steps, or iterations. The key idea is that <strong>if 2 nodes are in contact, then there should be many high-confidence paths connecting them through the network</strong>, even if perhaps the direct edge between them was undersampled. Short random walks provide information about the local network structures, such as loop cliques and subdomains, whereas longer random walks shift the focus toward global structures such as compartments. For each random walk iteration we compare the 2 smoothed contact maps, obtaining an L1 difference in smoothed contact maps.
+<br>
+In the end, we integrate information across all random walks by computing the area under the curve of L1 differences vs random walk iterations (see difference plot below), resulting in a dissimilarity score between the 2 contact maps of interest. We transform this dissimilarity into a reproducibility score using the formula "Reproducibility = 1-d". This yields a reproducibility score between -1 and 1, with higher values indicating similarity (in practice, the range of scores is [0.4,1]).
+<br>
+GenomeDISCO runs on each chromosome separately. The genomewide score reported below is the average across all chromosomes. <strong> Higher scores are better</strong>.<br>
+<br>
+<font color="FF0000"><strong> Your scores</strong></font>
+<br>
+<img src="sample2.vs.sample3.chrScores.png" width="600" height="200">
+<br>
+<br>
+Reproducibility (genomewide) = 0.719
+<br>
+<br>
+<font color="0033FF"><strong>These datasets are less reproducible than our empirically defined threshold. This could be due to low sequencing depth, differences in distance dependence curves, noise. Please be cautious with these datasets.</strong></font>
+<br>
+<br>
+<font color="FF0000"> <strong>Analysis by chromosome</font></strong>
+<br>
+<td> <strong>The difference plot</strong></td>
+ shows the L1 difference (normalized to the number of nodes) as a function of random walk iteration.
+<br>
+<td> <strong>The distance dependence plot</strong></td>
+ shows the probability of contact as a function of linear genomic distance. If 2 datasets have very difference distance dependence curves, their reproducibility will be lower than if they have similar curves.
+<br>
+<td> <strong>The remaining columns</strong></td>
+ below show the contact maps after smoothing with random walks. The upper triangular part plotted in red is sample2, while the blue is sample3. The colorbar shows red values as positive and blue values as negative purely for visualization purposes (in reality all values are positive).
+<br>
+<br>
+<table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+<tr>
+<td> </td>
+<td> <strong><center>seqdepth</center></strong></td>
+<td> <strong><center>reproducibility</center></strong></td>
+<td> <strong><center>difference plot</center></strong></td>
+<td> <strong><center>distance dependence</center></td>
+<td><center><strong>Random walk iteration 3</strong></center></td>
+<td><center><strong>Random walk iteration 4</strong></center></td>
+<td><center><strong>Random walk iteration 5</strong></center></td>
+<td><center><strong>Random walk iteration 6</strong></center></td>
+<td><center><strong>Random walk iteration 7</strong></center></td>
+</tr>
+<tr>
+<td> <strong> chr21</strong></td>
+<td> sample2: 1.49 M
+<br>
+<br>
+sample3: 1.16 M </td>
+<td> 0.732 </td>
+<td> <img src="chr21.sample2.vs.sample3.DiscoRandomWalks.Differences.png" width="200" height="200"> </td>
+<td> <img src="chr21.sample2.vs.sample3.distDep.png" width="200" height="200"> </td>
+<td> <img src="chr21.sample2.vs.sample3.DiscoRandomWalks.3.png" width="200" height="200"></td>
+<td> <img src="chr21.sample2.vs.sample3.DiscoRandomWalks.4.png" width="200" height="200"></td>
+<td> <img src="chr21.sample2.vs.sample3.DiscoRandomWalks.5.png" width="200" height="200"></td>
+<td> <img src="chr21.sample2.vs.sample3.DiscoRandomWalks.6.png" width="200" height="200"></td>
+<td> <img src="chr21.sample2.vs.sample3.DiscoRandomWalks.7.png" width="200" height="200"></td>
+</tr>
+<tr>
+<td> <strong> chr22</strong></td>
+<td> sample2: 1.93 M
+<br>
+<br>
+sample3: 1.37 M </td>
+<td> 0.706 </td>
+<td> <img src="chr22.sample2.vs.sample3.DiscoRandomWalks.Differences.png" width="200" height="200"> </td>
+<td> <img src="chr22.sample2.vs.sample3.distDep.png" width="200" height="200"> </td>
+<td> <img src="chr22.sample2.vs.sample3.DiscoRandomWalks.3.png" width="200" height="200"></td>
+<td> <img src="chr22.sample2.vs.sample3.DiscoRandomWalks.4.png" width="200" height="200"></td>
+<td> <img src="chr22.sample2.vs.sample3.DiscoRandomWalks.5.png" width="200" height="200"></td>
+<td> <img src="chr22.sample2.vs.sample3.DiscoRandomWalks.6.png" width="200" height="200"></td>
+<td> <img src="chr22.sample2.vs.sample3.DiscoRandomWalks.7.png" width="200" height="200"></td>
+</tr>
+</table>
+<br>
+</body>
+</html>

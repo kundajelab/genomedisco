@@ -1,0 +1,17 @@
+approximation=1000000
+concise_analysis=False
+datatype=hic
+m1=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/examples/output_batch/data/edges/sample1/sample1.chr22.gz
+m1name=sample1
+m2=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/examples/output_batch/data/edges/sample3/sample3.chr22.gz
+m2name=sample3
+m_subsample=NA
+matrix_format=n1n2val
+method=RandomWalks
+node_file=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/examples/output_batch/data/nodes/Nodes.w40000.bed.gz.chr22.gz
+norm=sqrtvc
+outdir=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/examples/output_batch/results/sample1.vs.sample3
+outpref=chr22
+remove_diagonal=False
+tmax=7
+tmin=3
