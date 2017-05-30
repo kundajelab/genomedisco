@@ -8,9 +8,9 @@ Installation
 ===
 
 1. Install [Anaconda](https://www.continuum.io/downloads). 
-2. Install genomedisco with the following command:
+2. Get genomedisco with the following command:
 ```
-conda install genomedisco -c kundajelab
+git clone http://github.com/kundajelab/genomedisco
 ```
 genomedisco is compatible with Python 2.
 
