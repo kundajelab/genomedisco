@@ -4,7 +4,7 @@ config = {
     'include_package_data': True,
     'description': 'Genome Disco: DIfferences in Smoothed COntact maps',
     'download_url': 'https://github.com/kundajelab/genomedisco',
-    'version': '0.1',
+    'version': '0.1.0',
     'packages': ['genomedisco', 'genomedisco/comparison_types'],
     'setup_requires': [],
     'entry_points': {'console_scripts': ['genomedisco = genomedisco.__main__:main']},
