@@ -53,7 +53,7 @@ fi
 if [[ ${step} == "score_better" ]];
 then
     metadata=${DATA}/processed/metadata/metadata
-    for res in 40000;
+    for res in 10000;
     do
 	rm ${metadata}.res${res}.pairs
 	for datapair in $(zcat -f /srv/gsfs0/projects/kundaje/users/oursu/3d/encode_highres/ReproducibilityMatrixPairs.txt | sed 's/ /delim/g');
@@ -78,7 +78,7 @@ fi
 if [[ ${step} == "report" ]];
 then
     metadata=${DATA}/processed/metadata/metadata
-    for res in 500000;
+    for res in 40000;
     do
 	nodes=${DATA}/processed/nodes/Nodes.w${res}.bed.gz
         ${CODEDIR}/scripts/genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i ${metadata}.res${res}.pairs -n ${nodes} -j sge -o ${OUT}/res${res} -d 1000000 -b sqrtvc -r RandomWalks -s 3 -e 7

@@ -13,6 +13,7 @@ export PYTHONPATH="${PYTHONPATH}:${CODEDIR}/genomedisco/:${CODEDIR}/genomedisco/
 #add bedtools
 #module load bedtools/2.26
 module load bedtools/2.26.0
+module load r/3.3.1
 
 run_code()
 {
@@ -22,7 +23,7 @@ run_code()
 	chmod 755 ${s}	
 	if [[ ${j} == 'sge' ]];
 	then
-		qsub -l h_vmem=10G -o ${s}.o -e ${s}.e ${s}
+		qsub -l h_vmem=50G -o ${s}.o -e ${s}.e ${s}
 	elif [[ ${j} == 'slurm' ]];
 	then
 		sbatch -o ${s}.o -e ${s}.e -p dev ${s}

@@ -102,10 +102,11 @@ do
 	    if [[ $(zcat -f ${f2} |head -n10 | wc -l) > 0 ]];
 	    then
 		mkdir -p ${outdir}
-		echo "${mypython} ${CODEDIR}/genomedisco/__main__.py --m1 ${f1} --m2 ${f2} --m1name ${m1name} --m2name ${m2name} --node_file ${nodefile}.${chromo}.gz --outdir ${outdir} --outpref ${chromo} --m_subsample NA --approximation ${distance_bin} --norm ${normalization} --method ${method} --tmin ${tmin} --tmax ${tmax}" >> ${s}
+		echo "${mypython} ${CODEDIR}/genomedisco/__main__.py --m1 ${f1} --m2 ${f2} --m1name ${m1name} --m2name ${m2name} --node_file ${nodefile}.${chromo}.gz --outdir ${outdir} --outpref ${chromo} --m_subsample NA --approximation ${distance_bin} --norm ${normalization} --method ${method} --tmin ${tmin} --tmax ${tmax} --concise_analysis" >> ${s}
 	    fi
 	fi
-	run_code ${s} ${j}
+	chmod 755 ${s}
+	#run_code ${s} ${j}
     done
 done < ${i}
 
