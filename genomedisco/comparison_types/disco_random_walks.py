@@ -38,7 +38,6 @@ class DiscoRandomWalks:
         #perform random walks 
         scores=[]        
         for t in range(args.tmin,args.tmax+1):
-            print t
             rw1=random_walk(m1,t)#.toarray()
             rw2=random_walk(m2,t)#.toarray()
             diff=abs(rw1-rw2).sum()

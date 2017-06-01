@@ -17,111 +17,26 @@ genomedisco is compatible with Python 2.
 Quick start
 ====
 
-Say you want to compare 2 contact maps. For this example, we will use a subset of datasets from Rao et al., 2014. The data used below is in `genomedisco/genomedisco/examples`.
-
-**1. Split files by chromosome**
+Say you want to compare 2 contact maps. For this example, we will use a subset of datasets from Rao et al., 2014. 
 
 ```
-splitByChromosome.sh -t hic -i examples/metadata.samples -n examples/Nodes.w40000.bed.gz -o examples/output
+python genomedisco/wrapper.py all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --nodes examples/Nodes.w40000.bed.gz --datatype hic --outdir examples/output --norm sqrtvc 
 ```
 
-**2. Run GenomeDISCO**
-
-```
-genomedisco_GenomewideIntraChromosomal.sh -t hic -i examples/metadata.pairs -n examples/Nodes.w40000.bed.gz -o examples/output -b sqrtvc
-```
-
-Note: the output directory specified here should be the same as the one used in Step 1.
-
-**3. Visualize results**
-
-Create a beautiful html report describing the reproducibility analysis.
-
-```
-genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i examples/metadata.pairs -n examples/Nodes.w40000.bed.gz -o examples/output -b sqrtvc
-```
-
-For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
+The analysis produces a beautiful html report of the results. For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
 
 Running reproducibility analysis in batches
 ====
-Want to run multiple comparisons, not just one? Here is how to modify the above commands.
 
-**1. Split files by chromosome**
+In the above example, we computed reproducibility for comparing 2 samples. But what if you have multiple comparisons of interest? 
 
-All you need to do here is add any additional samples involved in your comparisons.
-
-```
-HIC001 examples/HIC001.res40000.gz
-HIC002 examples/HIC002.res40000.gz
-HIC050 examples/HIC050.res40000.gz
-```
-
-Now, let's move on to split the data by chromosome.
+All you need to do is modify the metadata files (in our example `examples/metadata.batch.samples` and `examples/metadata.batch.pairs`), and then run the similar command:
 
 ```
-cd genomedisco
-
-#input files
-nodes=$(pwd)/examples/Nodes.w40000.bed.gz
-contactmap1=$(pwd)/examples/HIC001.res40000.gz
-contactmap2=$(pwd)/examples/HIC002.res40000.gz
-contactmap3=$(pwd)/examples/HIC050.res40000.gz ######## new addition
-
-#create metadata for samples
-metadata_samples=$(pwd)/examples/metadata.batch.samples
-echo "sample1 ${contactmap1}" > ${metadata_samples}
-echo "sample2 ${contactmap2}" >> ${metadata_samples}
-echo "sample3 ${contactmap3}" >> ${metadata_samples} ######## new addition
-
-#split input files by chromosome
-outputdir=$(pwd)/examples/output_batch
-scripts/splitByChromosome.sh -t hic -i ${metadata_samples} -n ${nodes} -o ${outputdir}
+python genomedisco/wrapper.py all --metadata_samples examples/metadata.batch.samples --metadata_pairs examples/metadata.batch.pairs --nodes examples/Nodes.w40000.bed.gz --datatype hic --outdir examples/output --norm sqrtvc
 ```
 
-This will create a set of files in `$(pwd)/examples/output_batch`. These will be used in the next step.
-
-**2. Run GenomeDISCO**
-
-All you need to do here is add all comparisons to the metadata describing all pairs of datasets you want to compare.
-
-```
-cd genomedisco
-
-#remember input data (this will be used to determine what chromosomes to compute)
-nodes=$(pwd)/examples/Nodes.w40000.bed.gz
-
-#create metadata for pairs to compare
-metadata_pairs=$(pwd)/examples/metadata.batch.pairs
-echo "sample1 sample2" > ${metadata_pairs}
-echo "sample1 sample3" >> ${metadata_pairs} ######## new addition
-echo "sample2 sample3" >> ${metadata_pairs} ######## new addition
-
-#run reproducibility analysis
-outputdir=$(pwd)/examples/output_batch
-normalization=sqrtvc
-scripts/genomedisco_GenomewideIntraChromosomal.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir}
--b ${normalization} 
-```
-
-**3. Generate genomewide report**
-
-Nothing needs to be changed here, since this uses the metadata for pairs that we defined above.
-
-```
-cd genomedisco
-
-#remember input data (this will be used to determine what chromosomes to compute)
-nodes=$(pwd)/examples/Nodes.w40000.bed.gz
-metadata_pairs=$(pwd)/examples/metadata.batch.pairs
-
-#run reproducibility analysis
-outputdir=$(pwd)/examples/output_batch
-normalization=sqrtvc
-scripts/genomedisco_GenomewideIntraChromosomal_report.sh -t hic -i ${metadata_pairs} -n ${nodes} -o ${outputdir} -b ${normalization}
-```
-
-Visualize the pretty reports as html files. Note that sample1 and sample2 are from the same cell type, while sample3 is a different cell type. This is reflected in the reproducibility scores. 
+Again, you can visualize the pretty reports as html files. Note that sample1 and sample2 are from the same cell type, while sample3 is a different cell type. This is reflected in the reproducibility scores. 
 - sample1 vs sample2: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
 - sample1 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample3/genomewide.sample1.vs.sample3.genomedisco.report.html
 - sample2 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample2.vs.sample3/genomewide.sample2.vs.sample3.genomedisco.report.html

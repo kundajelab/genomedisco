@@ -1,6 +1,5 @@
 
 import argparse
-import logging
 import copy
 import re
 import os
@@ -31,17 +30,15 @@ def main():
     parser.add_argument('--approximation',type=int,default=40000)
     args = parser.parse_args()
 
-    write_arguments(args)
+    #write_arguments(args)
 
     os.system('mkdir -p '+args.outdir)
 
-    logging.basicConfig(format='%(asctime)s GenomeDisco %(message)s',level=logging.DEBUG)
-    logging.info('| main: Starting GenomeDisco')
+    print "GenomeDISCO | "+strftime("%c")+" | Starting reproducibility analysis"
 
-    logging.info('| main: Reading nodes')
     nodes,nodes_idx=processing.read_nodes_from_bed(args.node_file)
 
-    logging.info('| main: Loading matrices')
+    print "GenomeDISCO | "+strftime("%c")+" | Loading contact maps"
     m1=processing.construct_csr_matrix_from_data_and_nodes(args.m1,nodes,args.remove_diagonal)
     m2=processing.construct_csr_matrix_from_data_and_nodes(args.m2,nodes,args.remove_diagonal)
 
@@ -54,9 +51,9 @@ def main():
     m1_subsample=copy.deepcopy(m1)
     m2_subsample=copy.deepcopy(m2)
     if args.m_subsample!='NA':
-        logging.info('| main: Subsampling to the depth of '+args.m_subsample)
+        print "GenomeDISCO | "+strftime("%c")+" | Subsampling to the depth of '+args.m_subsample"
         m_subsample=processing.construct_csr_matrix_from_data_and_nodes(args.m_subsample,nodes,args.remove_diagonal)
-        logging.info('| main: Subsampling depth = '+str(m_subsample.sum()))
+        print "GenomeDISCO | "+strftime("%c")+" | Subsampling depth = "+str(m_subsample.sum())
         desired_depth=m_subsample.sum()
         if m1.sum()>desired_depth:
             m1_subsample=data_operations.subsample_to_depth(m1,desired_depth)
@@ -66,13 +63,13 @@ def main():
     stats[args.m1name]['subsampled_depth']=m1_subsample.sum()   
     stats[args.m2name]['subsampled_depth']=m2_subsample.sum()
 
-    logging.info('| main: Normalizing with '+args.norm)
+    print "GenomeDISCO | "+strftime("%c")+'| main: Normalizing with '+args.norm
     m1_norm=data_operations.process_matrix(m1_subsample,args.norm)
     m2_norm=data_operations.process_matrix(m2_subsample,args.norm)
 
     if not args.concise_analysis:
         #distance dependence analysis
-        logging.info('| main: Distance dependence analysis')
+        print "GenomeDISCO | "+strftime("%c")+" | Distance dependence analysis"
         if args.datatype=='hic':
             m1dd=data_operations.get_distance_dep(m1_subsample)
             m2dd=data_operations.get_distance_dep(m2_subsample)
@@ -81,22 +78,20 @@ def main():
             m2dd=data_operations.get_distance_dep_using_nodes_capturec(m2_subsample,nodes,nodes_idx,args.approximation)
         visualization.plot_dds([m1dd,m2dd],[args.m1name,args.m2name],args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.distDep',args.approximation)
 
-    logging.info('| main: Reproducibility analysis')
+    print "GenomeDISCO | "+strftime("%c")+" | Computing reproducibility score"
     if args.method=='RandomWalks':
         comparer=DiscoRandomWalks(args)
-    if args.method=='RandomWalks_binarizedMatrices':
-        comparer=DiscoRandomWalks_binarizedMatrices(args)
     reproducibility_text,score=comparer.compute_reproducibility(m1_norm,m2_norm,args)
 
-    logging.info('| main: Writing report')
+    print "GenomeDISCO | "+strftime("%c")+" | Writing results"
     write_html_report(stats,args,reproducibility_text,score)
-    out=open(args.outdir+'/genomedisco.'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.txt','w')
+    out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.txt','w')
     out.write(args.m1name+'\t'+args.m2name+'\t'+str(score)+'\n')
     out.close()
-    out=open(args.outdir+'/genomedisco.'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.seqdepth','w')
+    out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.seqdepth','w')
     out.write(str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\n')
     out.close()
-    logging.info('| main: DONE!')
+    print "GenomeDISCO | "+strftime("%c")+" | DONE"
 
 
 def write_html_report(stats,args,reproducibility_text,score):
