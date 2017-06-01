@@ -20,7 +20,7 @@ Quick start
 Say you want to compare 2 contact maps. For this example, we will use a subset of datasets from Rao et al., 2014. 
 
 ```
-python genomedisco/wrapper.py all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --nodes examples/Nodes.w40000.bed.gz --datatype hic --outdir examples/output --norm sqrtvc 
+genomedisco all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --nodes examples/Nodes.w40000.bed.gz --outdir examples/output 
 ```
 
 The analysis produces a beautiful html report of the results. For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/report.sample1.vs.sample2.genomedisco.html
@@ -33,7 +33,7 @@ In the above example, we computed reproducibility for comparing 2 samples. But w
 All you need to do is modify the metadata files (in our example `examples/metadata.batch.samples` and `examples/metadata.batch.pairs`), and then run the similar command:
 
 ```
-python genomedisco/wrapper.py all --metadata_samples examples/metadata.batch.samples --metadata_pairs examples/metadata.batch.pairs --nodes examples/Nodes.w40000.bed.gz --datatype hic --outdir examples/output --norm sqrtvc
+genomedisco all --metadata_samples examples/metadata.batch.samples --metadata_pairs examples/metadata.batch.pairs --nodes examples/Nodes.w40000.bed.gz --outdir examples/output 
 ```
 
 Again, you can visualize the pretty reports as html files. Note that sample1 and sample2 are from the same cell type, while sample3 is a different cell type. This is reflected in the reproducibility scores. 

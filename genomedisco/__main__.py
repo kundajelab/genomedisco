@@ -21,7 +21,7 @@ def parse_args():
     metadata_pairs_parser.add_argument('--metadata_pairs',required=True,help='required')
     
     datatype_parser=argparse.ArgumentParser(add_help=False)
-    datatype_parser.add_argument('--datatype',required=True,help='required')
+    datatype_parser.add_argument('--datatype',default='hic')
 
     nodes_parser=argparse.ArgumentParser(add_help=False)
     nodes_parser.add_argument('--nodes',required=True,help='required')
