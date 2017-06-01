@@ -9,7 +9,7 @@ config = {
     'setup_requires': [],
     'entry_points': {'console_scripts': ['genomedisco = genomedisco.__main__:main']},
     'install_requires': ['numpy>=1.9', 'matplotlib<=1.5.3', 'scikit-learn'],
-    'scripts': ['scripts/annotate_baits.py', 'scripts/genomedisco_GenomewideIntraChromosomal.sh','scripts/genomedisco_multiChromosome.sh'],
+    'scripts': ['scripts/annotate_baits.py'],
     'name': 'genomedisco'
 }
 
