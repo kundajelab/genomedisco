@@ -327,8 +327,8 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
         html.write("</html>"+'\n')
 
 def run_all(datatype,metadata_samples,outdir,baits,running_mode,nodes,metadata_pairs,norm,tmin,tmax,concise_analysis):
-    #split_by_chromosome(datatype,metadata_samples,outdir,baits,running_mode,nodes)
-    #compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,running_mode,concise_analysis)
+    split_by_chromosome(datatype,metadata_samples,outdir,baits,running_mode,nodes)
+    compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,running_mode,concise_analysis)
     visualize(outdir,tmin,tmax,metadata_pairs)
 
 def main():

@@ -23,7 +23,7 @@ Say you want to compare 2 contact maps. For this example, we will use a subset o
 python genomedisco/wrapper.py all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --nodes examples/Nodes.w40000.bed.gz --datatype hic --outdir examples/output --norm sqrtvc 
 ```
 
-The analysis produces a beautiful html report of the results. For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
+The analysis produces a beautiful html report of the results. For the example we just ran, the html is here: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output/results/sample1.vs.sample2/report.sample1.vs.sample2.genomedisco.html
 
 Running reproducibility analysis in batches
 ====
@@ -37,9 +37,9 @@ python genomedisco/wrapper.py all --metadata_samples examples/metadata.batch.sam
 ```
 
 Again, you can visualize the pretty reports as html files. Note that sample1 and sample2 are from the same cell type, while sample3 is a different cell type. This is reflected in the reproducibility scores. 
-- sample1 vs sample2: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample2/genomewide.sample1.vs.sample2.genomedisco.report.html
-- sample1 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample3/genomewide.sample1.vs.sample3.genomedisco.report.html
-- sample2 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample2.vs.sample3/genomewide.sample2.vs.sample3.genomedisco.report.html
+- sample1 vs sample2: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample2/report.sample1.vs.sample2.genomedisco.html
+- sample1 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample1.vs.sample3/report.sample1.vs.sample3.genomedisco.html
+- sample2 vs sample3: http://htmlpreview.github.io/?http://github.com/kundajelab/genomedisco/blob/master/examples/output_batch/results/sample2.vs.sample3/report.sample2.vs.sample3.genomedisco.html
 
 More questions?
 ====
