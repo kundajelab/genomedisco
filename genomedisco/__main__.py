@@ -15,7 +15,7 @@ def parse_args():
 
     #individual parsers
     metadata_samples_parser=argparse.ArgumentParser(add_help=False)
-    metadata_samples_parser.add_argument('--metadata_samples',required=True,help='required')
+    metadata_samples_parser.add_argument('--metadata_samples',required=True,help='required. A file where each row represents a sample, and the entries are "samplename samplefile". Each of these will be processed. Note: each samplename in the file MUST be unique. Each samplefile listed here should follow the format "chr1 n1 chr2 n2 value"')
 
     metadata_pairs_parser=argparse.ArgumentParser(add_help=False)
     metadata_pairs_parser.add_argument('--metadata_pairs',required=True,help='required')
@@ -51,9 +51,9 @@ def parse_args():
     subparsers.required = True #http://bugs.python.org/issue9253#msg186387
 
     #parsers for commands
-    all_parser=subparsers.add_parser('all',
+    all_parser=subparsers.add_parser('run_all',
                             parents=[metadata_samples_parser,metadata_pairs_parser,datatype_parser,nodes_parser,baits_parser,running_mode_parser,outdir_parser,norm_parser,concise_analysis_parser,tmin_parser,tmax_parser],
-                            help='One command to run all steps in the reproducibility analysis')
+                            help='Run all steps in the reproducibility analysis with this single command')
 
     split_parser=subparsers.add_parser('split',
                             parents=[metadata_samples_parser,datatype_parser,nodes_parser,baits_parser,running_mode_parser,outdir_parser],
@@ -134,11 +134,16 @@ def split_by_chromosome(datatype,metadata_samples,outdir,baits,running_mode,node
     print 'GenomeDISCO | '+strftime("%c")+' | ============================='
 
 def run_script(script_name,running_mode):
+    subp.check_output(['bash','-c','chmod 755 '+script_name])
     if running_mode=='NA':
-        subp.check_output(['bash','-c','chmod 755 '+script_name])
         output=subp.check_output(['bash','-c',script_name])
         if output!='':
             print output
+    if running_mode=='write_script':
+        pass
+    if running_mode=='sge':
+        memo='10G'
+        output=subp.check_output(['bash','-c','qsub -l h_vmem='+memo+' -o '+script_name+'.o -e '+script_name+'.e '+script_name])
 
 def compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,running_mode,concise_analysis):
     outdir=os.path.abspath(outdir)
@@ -335,7 +340,7 @@ def main():
     command_methods = {'split': split_by_chromosome,
                          'reproducibility': compute_reproducibility,
                          'visualize': visualize,
-                       'all': run_all}
+                       'run_all': run_all}
     command, args = parse_args()
     global bashrc_file
     bashrc_file=os.path.abspath("../genomedisco/scripts/bashrc_genomedisco")
