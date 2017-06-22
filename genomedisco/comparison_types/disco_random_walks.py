@@ -8,8 +8,10 @@ import os
 import re
 import copy
 from scipy.stats.mstats import mquantiles
+from scipy.spatial.distance import euclidean
 from sklearn import metrics
 from pylab import rcParams
+from time import gmtime, strftime
 
 def random_walk(m_input,t):
     #return m_input.__pow__(t)
@@ -34,21 +36,34 @@ class DiscoRandomWalks:
         nonzero_2=[i for i in range(rowsums_2.shape[0]) if rowsums_2[i]>0.0]
 	nonzero_total=len(list(set(nonzero_1).union(set(nonzero_2))))
         nonzero_total=0.5*(1.0*len(list(set(nonzero_1)))+1.0*len(list(set(nonzero_2))))
+        print nonzero_total
 
         #perform random walks 
         scores=[]        
-        for t in range(args.tmin,args.tmax+1):
-            rw1=random_walk(m1,t)#.toarray()
-            rw2=random_walk(m2,t)#.toarray()
-            diff=abs(rw1-rw2).sum()
-            scores.append(diff/nonzero_total)
+        #for t in range(args.tmin,args.tmax+1):
+        for t in range(1,args.tmax+1):
+            extra_text=' (not included in score calculation)'
+            if t==1:
+                rw1=copy.deepcopy(m1)
+                rw2=copy.deepcopy(m2)
+            else:
+                rw1=rw1.dot(m1)
+                rw2=rw2.dot(m2)
+                #rw1=random_walk(m1,t)#.toarray()
+                #rw2=random_walk(m2,t)#.toarray()
+            if t>=args.tmin:
+                extra_text=''
+                diff=abs(rw1-rw2).sum()#+euclidean(rw1.toarray().flatten(),rw2.toarray().flatten()))
+                scores.append(diff/nonzero_total)
+            print 'GenomeDISCO | '+strftime("%c")+' | done t='+str(t)+extra_text
 
             #plot the random walk data
             if not args.concise_analysis:
                 rw1=rw1.toarray()
                 rw2=rw2.toarray()
-                combined=np.triu(rw1)-np.triu(rw2).T
-                np.fill_diagonal(combined,0.0)
+                #combined=np.triu(rw1)-np.triu(rw2).T
+                #np.fill_diagonal(combined,0.0)
+                combined=rw1-rw2
                 x=mquantiles(abs(combined.flatten()),0.99)
                 plt.matshow(combined,vmin=-x,vmax=x,cmap='bwr')
                 plt.colorbar()
@@ -66,7 +81,10 @@ class DiscoRandomWalks:
         #compute final score
         ts=range(args.tmin,args.tmax+1)
         denom=len(ts)-1
-        auc=metrics.auc(range(len(ts)),scores)/denom
+        if args.tmin==args.tmax:
+            auc=scores[0]
+        else:
+            auc=metrics.auc(range(len(ts)),scores)/denom
         reproducibility=1.0-auc
 
         #for the report
@@ -112,4 +130,4 @@ class DiscoRandomWalks:
                 reproducibility_text_rw=reproducibility_text_rw+'</td>'+'\n'
             reproducibility_text_rw=reproducibility_text_rw+"</table>"+'\n'
 
-        return [reproducibility_text,reproducibility_text_rw],reproducibility
+        return [reproducibility_text,reproducibility_text_rw],reproducibility,scores

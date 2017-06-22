@@ -64,7 +64,7 @@ def parse_args():
                             help='(step 2) compute reproducibility')
 
     visualize_parser=subparsers.add_parser('visualize',
-                            parents=[metadata_pairs_parser,datatype_parser],
+                            parents=[outdir_parser,tmin_parser,tmax_parser,metadata_pairs_parser],
                             help='(step 3) create an html report of the results')
 
     args = vars(parser.parse_args())
@@ -142,7 +142,7 @@ def run_script(script_name,running_mode):
     if running_mode=='write_script':
         pass
     if running_mode=='sge':
-        memo='10G'
+        memo='3G'
         output=subp.check_output(['bash','-c','qsub -l h_vmem='+memo+' -o '+script_name+'.o -e '+script_name+'.e '+script_name])
 
 def compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,running_mode,concise_analysis):
@@ -151,6 +151,8 @@ def compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,runnin
 
     for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
         chromo=chromo_line.strip()
+        #if chromo!='chr2':
+        #    continue
         for line in open(metadata_pairs,'r').readlines():
             items=line.strip().split()
             samplename1,samplename2=items[0],items[1]
@@ -170,9 +172,9 @@ def compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,runnin
                     concise_analysis_text=''
                     if concise_analysis:
                         concise_analysis_text=' --concise_analysis'
-                    outpath=outdir+'/results/'+samplename1+'.vs.'+samplename2
+                    outpath=outdir+'/results/genomedisco/'+samplename1+'.vs.'+samplename2
                     subp.check_output(['bash','-c','mkdir -p '+outpath])
-                    script_comparison.write("$mypython -W ignore "+os.path.abspath("../genomedisco/genomedisco/compute_reproducibility.py")+" --m1 "+f1+" --m2 "+f2+" --m1name "+samplename1+" --m2name "+samplename2+" --node_file "+nodefile+" --outdir "+outpath+" --outpref "+chromo+" --m_subsample NA --approximation 10000000 --norm "+norm+" --method RandomWalks "+" --tmin "+str(tmin)+" --tmax "+str(tmax)+concise_analysis_text+'\n')
+                    script_comparison.write("$mypython -W ignore "+os.path.abspath("/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/genomedisco/compute_reproducibility.py")+" --m1 "+f1+" --m2 "+f2+" --m1name "+samplename1+" --m2name "+samplename2+" --node_file "+nodefile+" --outdir "+outpath+" --outpref "+chromo+" --m_subsample lowest --approximation 10000000 --norm "+norm+" --method RandomWalks "+" --tmin "+str(tmin)+" --tmax "+str(tmax)+concise_analysis_text+'\n')
                     script_comparison.close()
                     run_script(script_comparison_file,running_mode)
 
@@ -184,12 +186,14 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
     topscores=0.85    
 
     for line in open(metadata_pairs,'r').readlines():
+
         items=line.strip().split()
         samplename1,samplename2=items[0],items[1]
 
-        print 'GenomeDISCO | '+strftime("%c")+' | Making report for '+samplename1+'.vs.'+samplename2
+        file_all_scores=open(outdir+'/results/genomedisco/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt','w')
+        print 'GenomeDISCO | '+strftime("%c")+' | Writing report for '+samplename1+'.vs.'+samplename2
 
-        html=open(outdir+'/results/'+samplename1+'.vs.'+samplename2+'/report.'+samplename1+'.vs.'+samplename2+'.genomedisco.html','w')
+        html=open(outdir+'/results/genomedisco/'+samplename1+'.vs.'+samplename2+'/report.'+samplename1+'.vs.'+samplename2+'.genomedisco.html','w')
     
         html.write("<html>"+'\n')
         html.write("<head>"+'\n')
@@ -217,15 +221,16 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
         scoredict={}
         for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
             chromo=chromo_line.strip()
-            score_num+=1
-            f=outdir+'/results/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.txt'
+            f=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
             if os.path.isfile(f):
-                score=float(open(outdir+'/results/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.txt','r').readlines()[0].split('\t')[2])
+                score_num+=1
+                score=float(open(outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt','r').readlines()[0].split('\t')[2])
+                score=float(int(1000*score))/1000.0
                 score_sum+=score
                 scores.append(score)
                 chromos.append(chromo)
                 scoredict[chromo]=score
-            
+        
         plt.close("all")
         widthfactor=3
         rcParams['figure.figsize'] = 10*widthfactor,10
@@ -243,7 +248,7 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
         plt.gcf().subplots_adjust(left=0.25)
         plt.legend(loc=3,fontsize=25)
         plt.show()
-        chrscores=outdir+'/results/'+samplename1+".vs."+samplename2+'/'+samplename1+'.vs.'+samplename2+'.chrScores.png'
+        chrscores=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+samplename1+'.vs.'+samplename2+'.chrScores.png'
         plt.savefig(chrscores)
         plt.close()
 
@@ -264,7 +269,7 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
         html.write("<br>"+'\n')
         html.write("<br>"+'\n')
         html.write("Reproducibility (genomewide) = "+str(float("{0:.3f}".format(float(genomewide_score))))+'\n')
-
+        
         if genomewide_score>=topscores:
             outcome='Congratulations! These datasets are highly reproducible.'
         else:
@@ -299,14 +304,21 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
             html.write("<td><center><strong>Random walk iteration "+str(t)+"</strong></center></td>"+'\n')
         html.write("</tr>"+'\n')
 
-        for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
-            chromo=chromo_line.strip()
+        score_strings=[]
+        chromo_strings=[]
+        sorted_chromos=gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines()
+        sorted_chromos.sort()
+        for chromo_idx in range(len(sorted_chromos)):
+            chromo=sorted_chromos[chromo_idx].strip()
             f1=outdir+'/data/edges/'+samplename1+'/'+samplename2+'.'+chromo+'.gz'
             f2=outdir+'/data/edges/'+samplename1+'/'+samplename2+'.'+chromo+'.gz'
-            f=outdir+'/results/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.txt'
-            sf=outdir+'/results/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.seqdepth'
+            f=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
+            sf=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.datastats.txt'
+            
             if os.path.isfile(f):
-                s1,s2,ssub1,ssub2=open(sf,'r').readlines()[0].strip().split('\t')
+                chromo_strings.append(chromo)
+                items=open(sf,'r').readlines()[1].strip().split('\t')
+                s1,s2,ssub1,ssub2=items[2:6]
                 s1=str(float("{0:.2f}".format(float(float(s1)/1000000))))
                 s2=str(float("{0:.2f}".format(float(float(s2)/1000000))))
                 html.write("<tr>"+'\n')
@@ -316,8 +328,10 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
                 html.write("<br>"+'\n')
                 html.write("<br>"+'\n')
                 html.write(samplename2+": "+str(s2)+" M </td>"+'\n')
+                score_strings.append(str(float("{0:.3f}".format(float(score)))))
                 html.write("<td> "+str(float("{0:.3f}".format(float(score))))+" </td>"+'\n')
                 diffplot=chromo+"."+samplename1+".vs."+samplename2+".DiscoRandomWalks.Differences.png"
+                
                 html.write("<td> <img src=\""+diffplot+"\" width=\""+picsize+"\" height=\""+picsize+"\"> </td>"+'\n')
                 dd=chromo+"."+samplename1+".vs."+samplename2+".distDep.png"
                 html.write("<td> <img src=\""+dd+"\" width=\""+picsize+"\" height=\""+picsize+"\"> </td>"+'\n')
@@ -325,6 +339,8 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
                     pic=chromo+"."+samplename1+".vs."+samplename2+".DiscoRandomWalks."+str(t)+".png"
                     html.write("<td> <img src=\""+pic+"\" width=\""+picsize+"\" height=\""+picsize+"\"></td>"+'\n')
                 html.write("</tr>"+'\n')
+        file_all_scores.write('#m1'+'\t'+'m2'+'\t'+'\t'.join(chromo_strings)+'\t'+'genomewide'+'\n')
+        file_all_scores.write(samplename1+'\t'+samplename2+'\t'+'\t'.join(score_strings)+'\t'+str(float("{0:.3f}".format(float(genomewide_score))))+'\n')
 
         html.write("</table>"+'\n')
         html.write("<br>"+'\n')
@@ -343,7 +359,7 @@ def main():
                        'run_all': run_all}
     command, args = parse_args()
     global bashrc_file
-    bashrc_file=os.path.abspath("../genomedisco/scripts/bashrc_genomedisco")
+    bashrc_file=os.path.abspath("/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/scripts/bashrc_genomedisco")
     command_methods[command](**args)
 
 

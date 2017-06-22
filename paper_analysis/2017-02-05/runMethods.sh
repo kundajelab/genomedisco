@@ -47,7 +47,7 @@ then
 	echo "source ${bashrc}" > ${s}
 	echo ${cmd} >> ${s}
 	chmod 755 ${s}
-	qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
+	#qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
     
 	mkdir -p ${outdir}/hic-spector/${pair}
 	outname=${outdir}/hic-spector/${pair}/chr${chromosome}.${firstItem}.vs.${secondItem}.txt
@@ -60,7 +60,7 @@ then
 	echo ${cmd} >> ${s}
 	echo "rm ${outname}.f1 ${outname}.f2" >> ${s}
 	chmod 755 ${s}
-	qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
+	#qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
 	
 	mkdir -p ${outdir}/disco/${pair}
         echo  ${outdir}/disco
@@ -82,9 +82,10 @@ then
 	    disco_nodes=${nodefile}
 	fi
 	echo "source ${bashrc}" > ${s}
-	echo "${mypython} ${CODE}/genomedisco/__main__.py --m1 ${f1} --m2 ${f2} --m1name ${firstItem} --m2name ${secondItem} --node_file ${disco_nodes} --outdir ${outdir}/disco/${pair}/ --outpref chr${chromosome} --m_subsample NA --approximation 40000 --norm sqrtvc --method RandomWalks --tmin 3 --tmax 7" >> ${s}
+	echo "${mypython} ${CODE}/genomedisco/compute_reproducibility.py --m1 ${f1} --m2 ${f2} --m1name ${firstItem} --m2name ${secondItem} --node_file ${disco_nodes} --outdir ${outdir}/disco/${pair}/ --outpref chr${chromosome} --m_subsample NA --approximation 40000 --norm sqrtvc --method RandomWalks --tmin 3 --tmax 3" >> ${s}
 	chmod 755 ${s}
-	qsub -l h_vmem=20G -l hostname=scg3* -o ${s}.o -e ${s}.e ${s}
+	#echo ${s}
+	qsub -o ${s}.o -e ${s}.e ${s}
 	echo "========"
     done < ${metadata}
 fi

@@ -313,18 +313,18 @@ then
 	do
 	    summary=${noisedirname}/${method}.results.txt
 	    rm ${summary} 
-	    cat  ${noisedirname}/${method}/*/*.txt |  cut -f1,2,3 | sed 's/D//g' | sed 's/[.]TM/\t/g' | sed 's/[.]S/\t/g' |sed 's/[.]EN/\t/g' | sed 's/[.]NN/\t/g'| sed 's/[.]BN/\t/g' | sed 's/[.]a//g' | cut -f1-6,13 > ${summary}
+	    cat  ${noisedirname}/${method}/*/*scores.txt |  cut -f1,2,3 | sed 's/D//g' | sed 's/[.]TM/\t/g' | sed 's/[.]S/\t/g' |sed 's/[.]EN/\t/g' | sed 's/[.]NN/\t/g'| sed 's/[.]BN/\t/g' | sed 's/[.]a//g' | cut -f1-6,13 > ${summary}
 	    echo "====="
 	    echo ${summary}
 	    cat ${summary}
 	    if [[ ${noisedirname} == ${DD_DIR} ]];
 	    then
-		cat  ${noisedirname}/${method}/*/*.txt |  cut -f1,2,3 | sed 's/D//g' | sed 's/[.]TM/\t/g' | sed 's/[.]S/\t/g' |sed 's/[.]EN/\t/g' | sed 's/[.]NN/\t/g'| sed 's/[.]BN/\t/g' | sed 's/[.]dd_/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' | awk '{ddsame="different"}{if ($7==$15) ddsame="same"}{if ($3==$11) print $1"\t"$2"\t"$4"\t"$6"\t"ddsame"\t"$3"\t"$11"\t"$17}' > ${summary}
+		cat  ${noisedirname}/${method}/*/*scores.txt |  cut -f1,2,3 | sed 's/D//g' | sed 's/[.]TM/\t/g' | sed 's/[.]S/\t/g' |sed 's/[.]EN/\t/g' | sed 's/[.]NN/\t/g'| sed 's/[.]BN/\t/g' | sed 's/[.]dd_/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' | awk '{ddsame="different"}{if ($7==$15) ddsame="same"}{if ($3==$11) print $1"\t"$2"\t"$4"\t"$6"\t"ddsame"\t"$3"\t"$11"\t"$17}' > ${summary}
 	    fi
 	    
 	    if [[ ${noisedirname} == ${NONREP_DIR} ]];
             then
-		cat  ${noisedirname}/${method}/*/*.txt |  cut -f1,2,3 | sed 's/D//g' | sed 's/[.]TM/\t/g' | sed 's/[.]S/\t/g' |sed 's/[.]EN/\t/g' | sed 's/[.]NN/\t/g'| sed 's/[.]BN/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' | awk '{rep="nonrep"}{if ($3==$10) rep="biorep"}{print $1"\t"$2"\t"$4"\t"$6"\t"rep"\t"$3"\t"$15}' > ${summary}
+		cat  ${noisedirname}/${method}/*/*scores.txt |  cut -f1,2,3 | sed 's/D//g' | sed 's/[.]TM/\t/g' | sed 's/[.]S/\t/g' |sed 's/[.]EN/\t/g' | sed 's/[.]NN/\t/g'| sed 's/[.]BN/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' | awk '{rep="nonrep"}{if ($3==$10) rep="biorep"}{print $1"\t"$2"\t"$4"\t"$6"\t"rep"\t"$3"\t"$15}' > ${summary}
 
 	    fi
 	done

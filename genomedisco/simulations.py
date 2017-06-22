@@ -60,8 +60,6 @@ def simulate(args):
         for ddfile_idx in range(len(ddfiles)):
             ddfile=ddfiles[ddfile_idx]
             ddtad=ddtads[ddfile_idx]
-            print 'ddtad'
-            print ddtad
             ddtad_matrix=tadfile_to_tadmatrix(ddtad,original_tad_boundary_var,args.resolution,args.nodefile)
             ddata=read_in_data(ddfile)
             print 'done'
@@ -184,15 +182,20 @@ def sample_interactions(prob_matrix,depth):
     return new_m
 
 
-def get_probability_matrix(tad_matrix,dd,maxdist,prob_noise,eps,prob_node):
+def get_probability_matrix(tad_matrix,dd_dict,maxdist,prob_noise,eps,prob_node):
+    dd=dd_dict['dd']
+    sd=dd_dict['sd']
     prob_m=np.zeros(tad_matrix.shape)
     for i in range(prob_m.shape[0]):
         for j in range(i,min(prob_m.shape[0],i+maxdist+1)):
             d=abs(i-j)
-            pij=dd['interTAD'][d]
+            #sample from a normal distribution to see how much to change the contact - this is in order to have enriched contacts
+            contact_delta=np.random.randn(1)[0]
+            pij=dd['interTAD'][d]+contact_delta*sd['interTAD'][d]
             if tad_matrix[i,j]==1.0 and dd['intraTAD'][d]>0.0:
-                pij=dd['intraTAD'][d]
-            
+                pij=dd['intraTAD'][d]+contact_delta*sd['intraTAD'][d]
+            pij=max(0.00000000000001,min(0.9999999999,pij))
+
             noise_addition=0.0
             add_noise=np.random.binomial(1, prob_noise, size=1)[0]
             if add_noise>0.0 and prob_noise!=0.0:
@@ -217,6 +220,8 @@ def get_2_distance_dependence_curves(m,maxdist,tad_matrix):
     n=tad_matrix.shape[0]
     tadmeans=[]
     nontadmeans=[]
+    tad_sd=[]
+    nontad_sd=[]
     total=0.0
     for d in range(maxdist+1):
         tad_values=[]
@@ -236,21 +241,34 @@ def get_2_distance_dependence_curves(m,maxdist,tad_matrix):
                 nontad_values.append(v)
         tadmeans.append(np.nan_to_num(np.nanmean(np.array(tad_values))))
         nontadmeans.append(np.nan_to_num(np.nanmean(np.array(nontad_values))))
+        tad_sd.append(np.nan_to_num(np.nanstd(np.array(tad_values))))
+        nontad_sd.append(np.nan_to_num(np.nanstd(np.array(nontad_values))))
     #now, divide by total to get probabilities
     tadprobs=[]
     nontadprobs=[]
+    tadprobs_sd=[]
+    nontadprobs_sd=[]
     dd={}
     dd['intraTAD']={}
     dd['interTAD']={}
+    sd={}
+    sd['intraTAD']={}
+    sd['interTAD']={}
     for d in range(maxdist+1):
         if d==0:
             dd['intraTAD'][d]=0.0
             dd['interTAD'][d]=0.0
+            sd['intraTAD'][d]=0.0
+            sd['interTAD'][d]=0.0
         else:
             dd['intraTAD'][d]=tadmeans[d]/total
             dd['interTAD'][d]=nontadmeans[d]/total
+            sd['intraTAD'][d]=tad_sd[d]/total
+            sd['interTAD'][d]=nontad_sd[d]/total
         tadprobs.append(dd['intraTAD'][d])
         nontadprobs.append(dd['interTAD'][d])
+        tadprobs_sd.append(sd['intraTAD'][d])
+        nontadprobs_sd.append(sd['interTAD'][d])
         
     plt.plot(np.log(tadprobs)/np.log(10),label='Intra-TAD',color='red')
     plt.plot(np.log(nontadprobs)/np.log(10),label='Inter-TAD',color='blue')
@@ -259,8 +277,12 @@ def get_2_distance_dependence_curves(m,maxdist,tad_matrix):
     plt.axvline(25,linewidth=1, color = 'lightgray') ### this is 1Mb
     plt.legend()
     plt.show()
-    
-    return dd
+
+    dd_and_sd={}
+    dd_and_sd['dd']=dd
+    dd_and_sd['sd']=sd
+
+    return dd_and_sd
     
 
 

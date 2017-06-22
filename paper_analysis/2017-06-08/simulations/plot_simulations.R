@@ -1,0 +1,159 @@
+require(ggplot2)
+
+mydir="/ifs/scratch/oursu/3d/paper/2017-05-30/simulations"
+
+disco_t=c(0.28,0.77,0.88,0.88)
+s_t=c(0.5,0.75,0.76,0.77)
+rep_t=c(0,0.05,0.06,0.1)
+
+
+plot_dd=function(f,out,yname,xname,noisename,multi=1,mini,maxi,isDisco,threshold_values,w=10,h=3){
+scores=read.table(f)
+colnames(scores)=c('Depth','TADmeansize','EN','BN','DD','s1','s2','score')
+print(scores[order(scores$DD),])
+     thresholds=data.frame(Depth=c("10000","100000","1000000","10000000"),t=threshold_values)
+reps=which(as.character(scores[,"DD"])=="same")
+scores=data.frame(scores,DD_seqdepth=scores[,'DD'])
+scores[,'DD_seqdepth']=as.character(scores[,'DD_seqdepth'])
+scores[reps,'DD_seqdepth']=scores[reps,'Depth']
+scores[,"Depth"]=factor(scores[,"Depth"])
+pdf(out,width=w,height=h)
+print(ggplot(scores[order(scores$DD),],aes(x=DD,y=score,color=factor(DD_seqdepth)))+facet_wrap(~Depth,nrow=1)+theme_bw()+geom_jitter()+#geom_point()+
+scale_color_discrete(name="Same vs different vs\ndistance dependence")+xlab(xname)+ylab(yname)+
+         theme(axis.title.y = element_text(size = rel(2), angle = 90))+
+         theme(axis.title.x = element_text(size = rel(2), angle = 0))+
+         ylim(mini,maxi)+
+scale_colour_manual(values=c("10000"="#E69F00","100000"="#56B4E9","1000000"="#009E73","10000000"="#000000",different="gray"))+
+    geom_hline(aes(yintercept = t,color=factor(Depth)),  thresholds,linetype="dashed")+
+
+         theme(axis.text = element_text(size = rel(1), angle = 0)))#geom_boxplot()+geom_jitter())
+dev.off()
+}
+
+plot_dd(paste(mydir,'/DistanceDependence/disco.results.txt',sep=''),
+paste(mydir,'/DistanceDependence/disco.dd.results.pdf',sep=''),'Score','Distance dependence curves','NA',5,0.0,1,TRUE, disco_t)
+
+#plot_dd(paste(mydir,'/DistanceDependence/hic-spector.results.txt',sep=''),
+#paste(mydir,'/DistanceDependence/hic-spector.dd.results.pdf',sep=''),'Score','Distance dependence curves','#NA',5,0,0.99,FALSE,s_t)
+
+#plot_dd(paste(mydir,'/DistanceDependence/hicrep.results.txt',sep=''),
+#paste(mydir,'/DistanceDependence/hicrep.dd.results.pdf',sep=''),'Score','Distance dependence curves','NA',5#,-0.3,0.3,FALSE, rep_t)
+
+
+plot_biorep_nonrep=function(f,out,yname,xname,noisename,multi=1,mini,maxi,isDisco,threshold_values,w=10,h=3){
+scores=read.table(f)
+colnames(scores)=c('Depth','TADmeansize','EN','BN','Rep','Simulation_index','score')
+print(dim(scores))
+d=which(duplicated(scores))
+if (length(d)>=1){
+scores=scores[-which(duplicated(scores)),]
+}
+reps=which(as.character(scores[,"Rep"])=="biorep")
+scores[,'Rep']=as.character(scores[,'Rep'])
+scores[reps,'Rep']=scores[reps,'Depth']
+print(scores)
+     thresholds=data.frame(Depth=c("10000","100000","1000000","10000000"),t=threshold_values)
+scores[,"Depth"]=factor(scores[,"Depth"])
+pdf(out,width=w,height=h)
+print(ggplot(scores[order(scores$Rep,decreasing=TRUE),],aes(x=as.factor(EN),y=score,color=factor(Rep)))+facet_wrap(~Depth,nrow=1)+theme_bw()+geom_jitter()+#geom_point()+
+scale_colour_manual(values=c("10000"="#E69F00","100000"="#56B4E9","1000000"="#009E73","10000000"="#000000","nonrep"="gray"))+
+    geom_hline(aes(yintercept = t,color=factor(Depth)),  thresholds,linetype="dashed")+
+
+#scale_color_discrete(name="Replicates vs\nNonreplicates")+xlab(xname)+ylab(yname)+
+#scale_color_manual(values=c("blue","gray"))+
+	xlab(xname)+ylab(yname)+
+         theme(axis.title.y = element_text(size = rel(2), angle = 90))+
+         theme(axis.title.x = element_text(size = rel(2), angle = 0))+
+         ylim(mini,maxi)+
+         theme(axis.text = element_text(size = rel(1), angle = 0))+scale_alpha_manual(guide='none', values = list(biorep =1, nonrep = 1)))
+#geom_boxplot()+geom_jitter()
+dev.off()
+}
+
+plot_biorep_nonrep(paste(mydir,'/RepNonrep/disco.results.txt',sep=''),
+paste(mydir,'/RepNonrep/disco.rep.results.pdf',sep=''),'Score','Edge noise','NA',1,0,1,TRUE, disco_t)
+
+#plot_biorep_nonrep(paste(mydir,'/RepNonrep/hic-spector.results.txt',sep=''),
+#paste(mydir,'/RepNonrep/hic-spector.rep.results.pdf',sep=''),'Score','Edge noise','NA',1,0,0.99,FALSE, s_t)
+
+#plot_biorep_nonrep(paste(mydir,'/RepNonrep/hicrep.results.txt',sep=''),
+#paste(mydir,'/RepNonrep/hicrep.rep.results.pdf',sep=''),'Score','Edge noise','NA',1,-0.3,0.3,FALSE,rep_t)
+
+
+plot_noise=function(f,out,yname,xname,noisename,multi=1,mini,maxi,isDisco,xmax,threshold_values,w=10,h=7){
+    scores=read.table(f)
+    colnames(scores)=c('Depth','TADmeansize','sim','EN','NN','BN','score')
+    scores$BN=scores$BN/1000
+    print(scores)
+    depths=unique(scores[,'Depth'])
+    noises=unique(scores[,noisename])
+     thresholds=data.frame(Depth=c("10000","100000","1000000","10000000"),t=threshold_values)
+    d=data.frame(depth=rep(depths,times=length(noises)),
+            noise=rep(noises,each=length(depths)),
+            score_mean=0.0,score_l=0.0,score_h=0.0)
+    for (i in c(1:(dim(d)[1]))){
+        depth=d[i,'depth']
+        noise=d[i,'noise']
+        vals=as.numeric(as.character(scores[intersect(which(as.character(scores[,'Depth'])==as.character(depth)),
+                  which(as.character(scores[,noisename])==as.character(noise))),'score']))
+        m=mean(vals)
+        s=sd(vals)
+        d[i,'score_mean']=m
+        d[i,'score_l']=m-s
+        d[i,'score_h']=m+s
+    }
+
+    print("here1")
+    pdf(out,width=w,height=h)
+    print(ggplot(d,aes(x=noise,y=score_mean,color=factor(depth)))+
+    geom_hline(aes(yintercept = t,color=factor(Depth)),  thresholds,linetype="dashed")+
+	geom_point()+geom_line()+
+      geom_errorbar(aes(ymin=score_l,ymax=score_h),width=0.05*multi)+theme_bw()+ylab(yname)+xlab(xname)+
+	scale_colour_manual(values=c("10000"="#E69F00","100000"="#56B4E9","1000000"="#009E73","10000000"="#000000"))+
+         #scale_color_discrete(name="Sequencing\nDepth")+
+         theme(axis.title.y = element_text(size = rel(4), angle = 90))+
+         theme(axis.title.x = element_text(size = rel(4), angle = 0))+
+	 ylim(mini,maxi)+
+	 xlim(-1*0.05*multi,xmax)+
+         theme(axis.text = element_text(size = rel(3), angle = 0)))
+    dev.off()
+    print("here2")
+}
+
+plot_noise(paste(mydir,'/EdgeNoise/disco.results.txt',sep=''),paste(mydir,'/EdgeNoise/disco.edgenoise.results.pdf',sep=''),'Score','Edge noise','EN',1,-0.1,1,TRUE,1,disco_t)
+print(paste(mydir,'/EdgeNoise/disco.edgenoise.results.pdf',sep=''))
+
+#plot_noise(paste(mydir,'/EdgeNoise/hicrep.results.txt',sep=''),
+#               paste(mydir,'/EdgeNoise/hicrep.edgenoise.results.pdf',sep=''),
+#               'Score','Edge noise','EN',1,-0.3,0.3,FALSE,1,rep_t)
+
+#plot_noise(paste(mydir,'/EdgeNoise/hic-spector.results.txt',sep=''),
+#               paste(mydir,'/EdgeNoise/hic-spector.edgenoise.results.pdf',sep=''),
+#               'Score','Edge noise','EN',1,0,1,FALSE,1,s_t)
+
+print("here")
+plot_noise(paste(mydir,'/NodeNoise/disco.results.txt',sep=''),
+               paste(mydir,'/NodeNoise/disco.nodenoise.results.pdf',sep=''),
+               'Score','Node noise','NN',1,-1,1,TRUE,1,disco_t)
+
+#plot_noise(paste(mydir,'/NodeNoise/hicrep.results.txt',sep=''),
+#               paste(mydir,'/NodeNoise/hicrep.nodenoise.results.pdf',sep=''),
+#               'Score','Node noise','NN',1,-0.3,0.3,FALSE,1,rep_t)
+
+#plot_noise(paste(mydir,'/NodeNoise/hic-spector.results.txt',sep=''),
+#               paste(mydir,'/NodeNoise/hic-spector.nodenoise.results.pdf',sep=''),
+#               'Score','Node noise','NN',1,0,1,FALSE,1,s_t)
+
+
+plot_noise(paste(mydir,'/BoundaryNoise/disco.results.txt',sep=''),
+               paste(mydir,'/NodeNoise/disco.boundarynoise.results.pdf',sep=''),
+               'Score','Boundary noise','BN',150,0,1,TRUE,205,disco_t)
+
+#plot_noise(paste(mydir,'/BoundaryNoise/hicrep.results.txt',sep=''),
+#               paste(mydir,'/BoundaryNoise/hicrep.boundarynoise.results.pdf',sep=''),
+#               'Score','Boundary noise','BN',150,-0.3,0.3,FALSE,200,rep_t)
+
+#plot_noise(paste(mydir,'/BoundaryNoise/hic-spector.results.txt',sep=''),
+#               paste(mydir,'/BoundaryNoise/hic-spector.boundarynoise.results.pdf',sep=''),
+#               'Score','Boundary noise','BN',150,0,1,FALSE,200,s_t)
+

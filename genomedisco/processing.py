@@ -44,6 +44,8 @@ def read_nodes_from_bed(bedfile):
                 nodes[node]['include']=include
             nodes_idx[node_c]=node 
             node_c+=1
+    print 'num nodes'
+    print node_c
     return nodes,nodes_idx
 
 def construct_csr_matrix_from_data_and_nodes(f,nodes,remove_diag=True):
@@ -52,6 +54,10 @@ def construct_csr_matrix_from_data_and_nodes(f,nodes,remove_diag=True):
     total_nodes=len(nodes.keys())
     mdata=np.loadtxt(f)
     
+    dist_threshold=2000000
+
+    #keep=(abs(mdata[:,0]-mdata[:,1])<=dist_threshold)
+    #mdata=mdata[keep,:]
     i=map(lambda x:nodes[str(int(x))]['idx'], mdata[:,0])
     j=map(lambda x:nodes[str(int(x))]['idx'], mdata[:,1])
     
@@ -65,7 +71,7 @@ def construct_csr_matrix_from_data_and_nodes(f,nodes,remove_diag=True):
     rows=[tuple(row) for row in mini_maxi_ij]
     #- if the original set of rows is larger than the unique set of rows, flag an error
     if len(rows)>len(set(rows)):
-        print "GenomeDISCO | "+strftime("%c")+" | processing: =============== Warning: Your file contains duplicate interactions! Please ensure that each interaction is listed once, then re-run. In the meantime, we will run this analysis using the sum of all counts encountered per interaction"
+        print "=============== Warning: Your file contains duplicate interactions! Please ensure that each interaction is listed once, then re-run. In the meantime, we will run this analysis using the sum of all counts encountered per interaction"
     
     csr_m=csr_matrix( (mdata[:,2],(mini_maxi_ij[:,0],mini_maxi_ij[:,1])), shape=(total_nodes,total_nodes),dtype=float )
     if remove_diag:

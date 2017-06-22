@@ -1,0 +1,15 @@
+module load bedtools/2.26.0
+module load r/3.3.1
+
+code=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/paper_analysis/2017-06-08/all_methods
+genomedisco=/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco
+julia_path=/srv/gsfs0/projects/snyder/oursu/software/julia/julia-3c9d75391c/bin/
+spector=/srv/gsfs0/projects/snyder/oursu/software/git/HiC_spector/
+mypython=/srv/gsfs0/projects/snyder/oursu/software/anaconda2/mypython/bin/python
+
+export PATH=${julia_path}:$PATH
+
+hicrepcode=${code}/hicrep_wrapper.R
+hicspectorcode=${code}/hic-spector_wrapper_hg19.jl
+genomediscocode=${code}/genomedisco_wrapper.py
+

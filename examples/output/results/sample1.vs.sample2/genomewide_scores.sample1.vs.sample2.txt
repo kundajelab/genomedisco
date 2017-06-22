@@ -1,0 +1,2 @@
+#m1	m2	chr21	chr22	genomewide
+sample1	sample2	0.942	0.945	0.943

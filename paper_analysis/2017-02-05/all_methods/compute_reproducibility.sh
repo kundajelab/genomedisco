@@ -8,35 +8,32 @@ Script for computing reproducibility using genomedisco,hicrep,hic-spector
 OPTIONS:
    -h     Show this message and exit
    -o name of the output directory
-   -p prefix for output files
    -n file containing the genomic bins used. The format is chromosome, start, end, name. The name of the bin must match the entries in the contact maps.
    -s file listing all the samples. The format is sample name, file that contains the contacts
-   -c file listing all comparisons. The format is sample name 1, sample name 2, chromosome
+   -p file listing all pairs. The format is sample name 1, sample name 2, chromosome
    -a action to be performed. Possible options are: compute, summarize.
    -b bashrc file. Must contain the following variables:hicrepcode ( location of the wrapper around hicrep),hic-spectorcode, genomediscocode 
    -r resolution, in base pairs
    -m metadata. This file lists any parameters associated with running these methods. The format of the file is method, parameter, parameter value, tab separated. The parameters for genomedisco are tmin(minimum steps of random walk),tmax, normalization (can be sqrtvc). The parameters for hicrep are h(smoothing size), maxdist(maximum distance to consider). The parameters for hic-spector are n(the number of eigenvectors to use).
    -j  whether to run these interactively or submit as jobs, using sge.  To submit jobs, set this to 'sge',  otherwise set to 'not_sge' (DEFAULT)
+   -c chromosome
 "
 } 
 
 outdir='outdir'
-prefix='reproducibility'
 sge='not_parallel'
-while getopts "ho:p:n:s:c:a:b:r:m:j:" opt
+while getopts "ho:n:s:p:a:b:r:m:j:c:" opt
 do
     case $opt in
 	h)
 	        usage; exit;;
 	o)
 	        outdir=$OPTARG;;
-	p)
-	        prefix=$OPTARG;;
 	n)
 	        bins=$OPTARG;;
 	s)
 	        samples=$OPTARG;;
-	c)
+	p)
 	        pairs=$OPTARG;;
 	a)
 	        action=$OPTARG;;
@@ -48,6 +45,8 @@ do
 	        metadata=$OPTARG;;
 	j)
 	        sge=$OPTARG;;
+	c)
+	        chromosome=$OPTARG;;
 	?)
 	        usage
 		    exit 1;;
@@ -64,14 +63,14 @@ then
 	read -a items <<< "$line"
 	firstItem=${items[0]}
 	secondItem=${items[1]}
-	chromosome=${items[2]}
+	#chromosome=${items[2]}
 	chromosome_number=$(echo ${chromosome} | sed 's/chr//g')
 	pair=${firstItem}_${secondItem}
-	f1=$(zcat -f ${samples} | awk -v chrom=${chromosome} '{if ($3==chrom) print $0}' | cut -f1-2 | grep ${firstItem} | cut -f2)
-	f2=$(zcat -f ${samples} | awk -v chrom=${chromosome} '{if ($3==chrom) print $0}' | cut -f1-2 |  grep ${secondItem} | cut -f2)
+	f1=$(zcat -f ${samples} | cut -f1-2 | grep ${firstItem} | cut -f2)
+	f2=$(zcat -f ${samples} | cut -f1-2 |  grep ${secondItem} | cut -f2)
 	
-	mkdir -p ${outdir}/hicrep/${pair}
-	outname=${outdir}/hicrep/${pair}/hicrep.${chromosome}.${firstItem}.vs.${secondItem}.txt
+	mkdir -p ${outdir}/results/hicrep/${pair}
+	outname=${outdir}/results/hicrep/${pair}/hicrep.${chromosome}.${firstItem}.vs.${secondItem}.txt
 	s=${outname}.sh
 	h=$(zcat -f ${metadata} | grep "hicrep"  | grep -w h | sed 's/_/\t/g' | cut -f3)
 	maxdist=$(zcat -f ${metadata} | grep "hicrep"  | grep -w maxdist | sed 's/_/\t/g' | cut -f3)
@@ -80,15 +79,15 @@ then
 	echo "source ${bashrc}" > ${s}
 	echo ${cmd} >> ${s}
 	chmod 755 ${s}
-	if [[ ${sge} == "sge" ]];
-	then
-	    qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
-	else
-	    ${s}
-	fi
+	#if [[ ${sge} == "sge" ]];
+	#then
+	#    qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+	#else
+	#    ${s}
+	#fi
 
-	mkdir -p ${outdir}/hic-spector/${pair}
-	outname=${outdir}/hic-spector/${pair}/hic-spector.${chromosome}.${firstItem}.vs.${secondItem}.txt
+	mkdir -p ${outdir}/results/hic-spector/${pair}
+	outname=${outdir}/results/hic-spector/${pair}/hic-spector.${chromosome}.${firstItem}.vs.${secondItem}.txt
 	n=$(zcat -f ${metadata} | grep "hic-spector"  | grep -w n | sed 's/_/\t/g' | cut -f3)
 	s=${outname}.sh
 	cmd="julia ${hicspectorcode} ${outname}.f1 ${outname}.f2 ${outname} ${resolution} ${chromosome_number} ${firstItem} ${secondItem} ${n} ${spector}/HiC_spector.jl"
@@ -98,25 +97,25 @@ then
 	echo ${cmd} >> ${s}
 	echo "rm ${outname}.f1 ${outname}.f2" >> ${s}
 	chmod 755 ${s}
-	if [[ ${sge} == "sge" ]];
-        then
-            qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
-	else
-            ${s}
-        fi
+	#if [[ ${sge} == "sge" ]];
+        #then
+        #    qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+	#else
+        #    ${s}
+        #fi
 	
-	mkdir -p ${outdir}/genomedisco/${pair}
+	mkdir -p ${outdir}/results/genomedisco/${pair}
 	tmin=$(zcat -f ${metadata} | grep "genomedisco"  | grep -w tmin | sed 's/_/\t/g' | cut -f3)
 	tmax=$(zcat -f ${metadata} | grep "genomedisco"  | grep -w tmax | sed 's/_/\t/g' | cut -f3)
 	normalization=$(zcat -f ${metadata} | grep "genomedisco"  | grep -w normalization | sed 's/_/\t/g' | cut -f3)
-	outname=${outdir}/genomedisco/${pair}/genomedisco.${chromosome}.${firstItem}.vs.${secondItem}.txt
+	outname=${outdir}/results/genomedisco/${pair}/genomedisco.${chromosome}.${firstItem}.vs.${secondItem}.txt
         s=${outname}.sh
 	echo "source ${bashrc}" > ${s}
-	echo "${mypython} ${genomedisco}/genomedisco/__main__.py --m1 ${f1} --m2 ${f2} --m1name ${firstItem} --m2name ${secondItem} --node_file ${bins} --outdir ${outdir}/genomedisco/${pair}/ --outpref ${chromosome} --m_subsample NA --approximation 40000 --norm ${normalization} --method RandomWalks --tmin ${tmin} --tmax ${tmax} --concise_analysis" >> ${s}
+	echo "${mypython} ${genomedisco}/genomedisco/compute_reproducibility.py --m1 ${f1} --m2 ${f2} --m1name ${firstItem} --m2name ${secondItem} --node_file ${bins} --outdir ${outdir}/results/genomedisco/${pair}/ --outpref ${chromosome} --m_subsample NA --approximation 40000 --norm ${normalization} --method RandomWalks --tmin ${tmin} --tmax ${tmax} --concise_analysis" >> ${s}
 	chmod 755 ${s}
 	if [[ ${sge} == "sge" ]];
         then
-            qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+            qsub -l h_vmem=50G -o ${s}.o -e ${s}.e ${s}
 	else
             ${s}
         fi

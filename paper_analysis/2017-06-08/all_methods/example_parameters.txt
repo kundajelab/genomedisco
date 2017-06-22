@@ -1,0 +1,6 @@
+hicrep	h	5
+hicrep	maxdist	5000000
+genomedisco	tmin	3
+genomedisco	tmax	7
+genomedisco	normalization	sqrtvc
+hic-spector	n	20
