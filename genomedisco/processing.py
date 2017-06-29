@@ -58,6 +58,7 @@ def construct_csr_matrix_from_data_and_nodes(f,nodes,remove_diag=True):
 
     #keep=(abs(mdata[:,0]-mdata[:,1])<=dist_threshold)
     #mdata=mdata[keep,:]
+    
     i=map(lambda x:nodes[str(int(x))]['idx'], mdata[:,0])
     j=map(lambda x:nodes[str(int(x))]['idx'], mdata[:,1])
     

@@ -151,8 +151,8 @@ def compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,runnin
 
     for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
         chromo=chromo_line.strip()
-        #if chromo!='chr2':
-        #    continue
+        if chromo in ['chr22']:
+            continue
         for line in open(metadata_pairs,'r').readlines():
             items=line.strip().split()
             samplename1,samplename2=items[0],items[1]

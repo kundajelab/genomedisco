@@ -59,11 +59,11 @@ class DiscoRandomWalks:
 
             #plot the random walk data
             if not args.concise_analysis:
-                rw1=rw1.toarray()
-                rw2=rw2.toarray()
-                #combined=np.triu(rw1)-np.triu(rw2).T
+                rw1a=rw1.toarray()
+                rw2a=rw2.toarray()
+                combined=np.triu(rw1a)-np.triu(rw2a).T
                 #np.fill_diagonal(combined,0.0)
-                combined=rw1-rw2
+                combined=rw1a-rw2a
                 x=mquantiles(abs(combined.flatten()),0.99)
                 plt.matshow(combined,vmin=-x,vmax=x,cmap='bwr')
                 plt.colorbar()

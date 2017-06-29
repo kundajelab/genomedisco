@@ -179,7 +179,7 @@ then
 	for chromosome in $(zcat -f ${outdir}/data/metadata/chromosomes.gz | sed 's/\n/ /g' | sed 's/chr//g');
 	do
 	    echo ${chromosome}
-	    if [[ ${chromosome} == '15' ]];
+	    if [[ ${chromosome} == '1' ]];
 	    then
 		echo ${chromosome}
 		bins=${outdir}/data/nodes/nodes.chr${chromosome}.gz

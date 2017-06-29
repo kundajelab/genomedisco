@@ -52,7 +52,7 @@ def main():
     m2_subsample=copy.deepcopy(m2)
     if args.m_subsample!='NA':
         if args.m_subsample=='lowest':
-            if stats[args.m1name]['depth']>stats[args.m2name]['depth']:
+            if stats[args.m1name]['depth']>=stats[args.m2name]['depth']:
                 m_subsample=copy.deepcopy(m2)
             if stats[args.m1name]['depth']<stats[args.m2name]['depth']:
                 m_subsample=copy.deepcopy(m1)

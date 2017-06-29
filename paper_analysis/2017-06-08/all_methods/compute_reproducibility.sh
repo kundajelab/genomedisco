@@ -20,6 +20,8 @@ OPTIONS:
 "
 } 
 
+memory="-l h_vmem=20G"
+#memory=""
 outdir='outdir'
 sge='not_parallel'
 while getopts "ho:n:s:p:a:b:r:m:j:c:" opt
@@ -79,12 +81,12 @@ then
 	echo "source ${bashrc}" > ${s}
 	echo ${cmd} >> ${s}
 	chmod 755 ${s}
-	if [[ ${sge} == "sge" ]];
-	then
-	    qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
-	else
-	    ${s}
-	fi
+	#if [[ ${sge} == "sge" ]];
+	#then
+	#    qsub ${memory} -o ${s}.o -e ${s}.e ${s}
+	#else
+	#    ${s}
+	#fi
 
 	mkdir -p ${outdir}/results/hic-spector/${pair}
 	outname=${outdir}/results/hic-spector/${pair}/hic-spector.${chromosome}.${firstItem}.vs.${secondItem}.txt
@@ -99,7 +101,7 @@ then
 	chmod 755 ${s}
 	if [[ ${sge} == "sge" ]];
         then
-            qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+	    qsub ${memory} -o ${s}.o -e ${s}.e ${s}
 	else
             ${s}
         fi
