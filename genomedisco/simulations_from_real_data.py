@@ -19,7 +19,6 @@ def main():
     parser.add_argument('--nodenoise',default='0.0')
     parser.add_argument('--boundarynoise',default='0')
     parser.add_argument('--depth',type=int,default=1000000)
-    parser.add_argument('--eps',type=float,default=0.9)
     parser.add_argument('--outdir',default='/ifs/scratch/oursu/test/testmat')
     parser.add_argument('--resolution',type=int,default=40000)
     args = parser.parse_args()
@@ -47,12 +46,12 @@ def main():
                         for ddfile_idx in range(len(ddfiles)):
                             ddfile=ddfiles[ddfile_idx]
                             dd=read_in_data(ddfile,nodes)
-                            prob_matrix=get_probability_matrix(my_matrix,dd,float(edgenoise),args.eps,float(nodenoise))
+                            prob_matrix=get_probability_matrix(my_matrix,dd,float(edgenoise),float(nodenoise))
                             print prob_matrix
                             
                             intro=args.outdir+'/Depth_'+str(args.depth)+'.'+mname
                             sampled_matrix=sample_interactions(prob_matrix,args.depth)
-                            ftowrite=intro+'.EN_'+str(edgenoise)+'.eps_'+str(args.eps)+'.NN_'+str(nodenoise)+'.BN_'+str(boundarynoise)+'.'+ab+'.dd_'+str(ddfile_idx)+'.gz'
+                            ftowrite=intro+'.EN_'+str(edgenoise)+'.NN_'+str(nodenoise)+'.BN_'+str(boundarynoise)+'.'+ab+'.dd_'+str(ddfile_idx)+'.gz'
                             print ftowrite
                             write_matrix(sampled_matrix,ftowrite,args)
                             
@@ -66,7 +65,7 @@ def sample_interactions(prob_matrix,depth):
             new_m[j,i]=reads
     return new_m
 
-def get_probability_matrix(my_matrix,ddmat,edge_noise,eps,node_noise,maxdist=2000):
+def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,maxdist=2000):
     #convert matrix to probabilities
     total_probs=np.triu(copy.deepcopy(my_matrix)).sum()
     mat=copy.deepcopy(my_matrix)/total_probs #this is the probability matrix
@@ -106,12 +105,15 @@ def get_probability_matrix(my_matrix,ddmat,edge_noise,eps,node_noise,maxdist=200
             add_edge_noise=np.random.binomial(1, edge_noise, size=1)[0]
             pij_final=pij
             if add_edge_noise>0.0 and edge_noise!=0.0:
+                '''
                 up_or_down=1
                 if np.random.binomial(1, 0.5, size=1)[0]>0.0:
                     up_or_down=-1
                 edge_noise_addition=eps*up_or_down*pij
                 pij_final=min(1.0,max(0.0,pij+edge_noise_addition))
-            
+                '''
+                pij_final=0.0
+
             new_mat[i,j]=pij_final
             new_mat[j,i]=pij_final
     #node noise

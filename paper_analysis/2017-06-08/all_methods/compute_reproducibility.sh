@@ -70,7 +70,7 @@ then
 	pair=${firstItem}_${secondItem}
 	f1=$(zcat -f ${samples} | cut -f1-2 | grep ${firstItem} | cut -f2)
 	f2=$(zcat -f ${samples} | cut -f1-2 |  grep ${secondItem} | cut -f2)
-	
+
 	mkdir -p ${outdir}/results/hicrep/${pair}
 	outname=${outdir}/results/hicrep/${pair}/hicrep.${chromosome}.${firstItem}.vs.${secondItem}.txt
 	s=${outname}.sh
@@ -81,12 +81,12 @@ then
 	echo "source ${bashrc}" > ${s}
 	echo ${cmd} >> ${s}
 	chmod 755 ${s}
-	#if [[ ${sge} == "sge" ]];
-	#then
-	#    qsub ${memory} -o ${s}.o -e ${s}.e ${s}
-	#else
-	#    ${s}
-	#fi
+	if [[ ${sge} == "sge" ]];
+	then
+	    qsub ${memory} -o ${s}.o -e ${s}.e ${s}
+	else
+	    ${s}
+	fi
 
 	mkdir -p ${outdir}/results/hic-spector/${pair}
 	outname=${outdir}/results/hic-spector/${pair}/hic-spector.${chromosome}.${firstItem}.vs.${secondItem}.txt
@@ -99,13 +99,13 @@ then
 	echo ${cmd} >> ${s}
 	echo "rm ${outname}.f1 ${outname}.f2" >> ${s}
 	chmod 755 ${s}
-	if [[ ${sge} == "sge" ]];
-        then
-	    qsub ${memory} -o ${s}.o -e ${s}.e ${s}
-	else
-            ${s}
-        fi
-	
+	#if [[ ${sge} == "sge" ]];
+        #then
+	#    qsub -l h_vmem=10G -o ${s}.o -e ${s}.e ${s}
+	#else
+        #    ${s}
+        #fi
+
 	mkdir -p ${outdir}/results/genomedisco/${pair}
 	tmin=$(zcat -f ${metadata} | grep "genomedisco"  | grep -w tmin | sed 's/_/\t/g' | cut -f3)
 	tmax=$(zcat -f ${metadata} | grep "genomedisco"  | grep -w tmax | sed 's/_/\t/g' | cut -f3)

@@ -38,7 +38,6 @@ mkdir -p ${NODE_DIR}
 mkdir -p ${B_DIR}
 mkdir -p ${DD_DIR}
 mkdir -p ${NONREP_DIR}
-eps=0.9
 resolution=50000
 
 
@@ -55,7 +54,7 @@ then
 	    boundarynoise=0
 	    for edgenoise in 0.0 0.1 0.25 0.5 0.75 0.9;
 	    do
-		cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${EDGE_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --eps ${eps} --boundarynoise ${boundarynoise}"
+		cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${EDGE_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise}"
 		s=${EDGE_DIR}/script_depth${depth}.${mname}.edgenoise$(echo ${edgenoise} | sed 's/,/_/g').sh
 		echo "source ${bashrc}" > ${s}
 		echo $cmd >> ${s}
@@ -79,7 +78,7 @@ then
             boundarynoise=0
             for nodenoise in 0.0 0.1 0.25 0.5 0.75 0.9;
             do
-                cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${NODE_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --eps ${eps} --boundarynoise ${boundarynoise}"
+                cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${NODE_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise}"
 		s=${NODE_DIR}/script_depth${depth}.${mname}.nodenoise${nodenoise}.sh
 		echo "source ${bashrc}" > ${s}
 		echo $cmd >> ${s}
@@ -103,7 +102,7 @@ then
 	    nodenoise=0.0
 	    for boundarynoise in 0 1 2 4 8 16 32;
 	    do
-		cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${B_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --eps ${eps} --boundarynoise ${boundarynoise}"
+		cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${B_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise}"
 		s=${B_DIR}/script_depth${depth}.${mname}.boundarynoise.${boundarynoise}.sh
 		echo "source ${bashrc}" > ${s}
 		echo $cmd >> ${s}
@@ -128,7 +127,7 @@ then
 	    edgenoise=0.0
 	    nodenoise=0.0
 	    boundarynoise=0
-	    cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${DD_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${d1},${d2} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --eps ${eps} --boundarynoise ${boundarynoise}"
+	    cmd="${mypython} ${CODEDIR}/genomedisco/simulations_from_real_data.py --outdir ${DD_DIR} --resolution ${resolution} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${d1},${d2} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise}"
 
 	    s=${DD_DIR}/script_depth${depth}.ddHIC${HICNUM}.${mname}.sh
 	    echo "source ${bashrc}" > ${s}
@@ -164,12 +163,19 @@ then
 	do
             for mname in $(echo ${mnames} | sed 's/,/ /g');
             do
-		dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.eps_0.9.NN_${nodenoise}.BN_${boundarynoise}
-		echo "${dataname_short}.a.dd_0delim${dataname_short}.b.dd_0delimchr21" | sed 's/delim/\t/g' >> ${edgenoise_metadata_pairs}
+		d1=Depth_${depth}.${mname}.EN_0.0.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+		d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+		echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${edgenoise_metadata_pairs}
+		
+		d1=Depth_${depth}.${mname}.EN_0.0.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+                d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+                echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${edgenoise_metadata_pairs}
+
 		for ab in a b;
 		do
                     chromo="simulated"
-                    echo "${dataname_short}.${ab}.dd_0delim${EDGE_DIR}/${dataname_short}.${ab}.dd_0.gzdelimNA" | sed 's/delim/\t/g' >> ${edgenoise_metadata}
+		    dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab}.dd_0
+                    echo "${dataname_short}delim${EDGE_DIR}/${dataname_short}.gzdelimNA" | sed 's/delim/\t/g' >> ${edgenoise_metadata}
 		done
             done
 	done
@@ -185,12 +191,19 @@ then
         do
 	    for mname in $(echo ${mnames} | sed 's/,/ /g');
             do
-		dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.eps_0.9.NN_${nodenoise}.BN_${boundarynoise}
-		echo "${dataname_short}.a.dd_0delim${dataname_short}.b.dd_0delimchr21" | sed 's/delim/\t/g'  >> ${nodenoise_metadata_pairs}
+		d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_0.0.BN_${boundarynoise}.a.dd_0
+                d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+                echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${nodenoise_metadata_pairs}
+
+                d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_0.0.BN_${boundarynoise}.b.dd_0
+                d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+                echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${nodenoise_metadata_pairs}
+
 		for ab in a b;
 		do
                     chromo="simulated"
-                    echo "${dataname_short}.${ab}.dd_0delim${NODE_DIR}/${dataname_short}.${ab}.dd_0.gzdelimNA" | sed 's/delim/\t/g' >> ${nodenoise_metadata}
+		    dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab}.dd_0
+                    echo "${dataname_short}delim${NODE_DIR}/${dataname_short}.gzdelimNA" | sed 's/delim/\t/g' >> ${nodenoise_metadata}
 		done
 	    done
 	done
@@ -206,13 +219,19 @@ then
 	do
 	    for mname in $(echo ${mnames} | sed 's/,/ /g');
             do
-                dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.eps_0.9.NN_${nodenoise}.BN_${boundarynoise}
-		dataname_reference=Depth_${depth}.${mname}.EN_${edgenoise}.eps_0.9.NN_${nodenoise}.BN_0
-                echo "${dataname_short}.a.dd_0delim${dataname_reference}.b.dd_0delimchr21" | sed 's/delim/\t/g'  >> ${boundarynoise_metadata_pairs}
+		d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_0.a.dd_0
+                d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+                echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${boundarynoise_metadata_pairs}
+
+                d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_0.b.dd_0
+                d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+                echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${boundarynoise_metadata_pairs}
+
 		for ab in a b;
 		do
-                    chromo="simulated"
-                    echo "${dataname_short}.${ab}.dd_0delim${B_DIR}/${dataname_short}.${ab}.dd_0.gzdelimNA" | sed 's/delim/\t/g' >> ${boundarynoise_metadata}
+		    chromo="simulated"
+                    dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab}.dd_0
+                    echo "${dataname_short}delim${B_DIR}/${dataname_short}.gzdelimNA" | sed 's/delim/\t/g' >> ${boundarynoise_metadata}
                 done
 	    done
 	done
@@ -231,12 +250,12 @@ then
             do
 		for  ab1 in a b;
 		do 
-		    dataname_short1=Depth_${depth}.${mname1}.EN_${edgenoise}.eps_0.9.NN_${nodenoise}.BN_${boundarynoise}.${ab1}.dd_0
+		    dataname_short1=Depth_${depth}.${mname1}.EN_0.0.NN_${edgenoise}.BN_${boundarynoise}.${ab1}.dd_0
 		    for mname2 in $(echo ${mnames} | sed 's/,/ /g');
 		    do
 			for ab2 in a b;
 			do
-			    dataname_short2=Depth_${depth}.${mname2}.EN_${edgenoise}.eps_0.9.NN_${nodenoise}.BN_${boundarynoise}.${ab2}.dd_0
+			    dataname_short2=Depth_${depth}.${mname2}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab2}.dd_0
 			    echo "${dataname_short1}delim${dataname_short2}delimsimulated" | sed 's/delim/\t/g' >> ${nonrep_metadata_pairs}.many
 			done
 		    done
@@ -303,7 +322,7 @@ fi
 
 if [[ "${desired_action}" == "automatic" ]];
 then
-    for spot in DistanceDependence BoundaryNoise RepNonrep NodeNoise EdgeNoise;
+    for spot in NodeNoise BoundaryNoise; #DistanceDependence BoundaryNoise RepNonrep NodeNoise EdgeNoise;
     do
 	chromosome=21
 	metadata_pairs=${SIMULATION_DIR}/${spot}/Metadata.pairs 

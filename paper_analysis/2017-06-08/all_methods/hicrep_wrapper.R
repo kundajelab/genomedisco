@@ -5,6 +5,21 @@ require("hicrep")
 
 #=============================
 
+testing=function(){
+	f1='/ifs/scratch/oursu/3d/paper/2017-06-08/LA/reproducibility/res40000/data/edges/HIC001/HIC001.chr21.gz'
+	f2='/ifs/scratch/oursu/3d/paper/2017-06-08/LA/reproducibility/res40000/data/edges/HIC003/HIC003.chr21.gz'
+	out='test'
+	c1=1
+	c2=2
+	c3=3
+	maxdist=5000000
+	resol=40000
+	nodefile='/ifs/scratch/oursu/3d/paper/2017-06-08/LA/reproducibility/res40000/data/nodes/nodes.chr21.gz'
+	h=5
+	m1name='m1'
+	m2name='m2'
+}
+
 f1=args[1]
 f2=args[2]
 out=args[3]
@@ -42,25 +57,31 @@ rownames(m1)=colnames(m1)=nodes
 m2=array(0,dim=c(length(nodes),length(nodes)))
 rownames(m2)=colnames(m2)=nodes
 
-for (i in c(1:(dim(d1)[1]))){
-    n1=d1[i,1]
-    n2=d1[i,2]
-    v=d1[i,3]
-    m1[as.character(n1),as.character(n2)]=m1[as.character(n1),as.character(n2)]+v
-    m1[as.character(n2),as.character(n1)]=m1[as.character(n2),as.character(n1)]+v
-}
-for (i in c(1:(dim(d2)[1]))){
-    n1=d2[i,1]
-    n2=d2[i,2]
-    v=d2[i,3]
-    m2[as.character(n1),as.character(n2)]=m2[as.character(n1),as.character(n2)]+v
-    m2[as.character(n2),as.character(n1)]=m2[as.character(n2),as.character(n1)]+v
-}
+require(reshape2)
+d1[,1]=as.character(d1[,1])
+d1[,2]=as.character(d1[,2])
+d2[,1]=as.character(d2[,1])
+d2[,2]=as.character(d2[,2])
+d1cast=acast(d1, V1~V2, value.var="V3",fill=0)
+d2cast=acast(d2, V1~V2, value.var="V3",fill=0)
+m1[rownames(d1cast),colnames(d1cast)]=m1[rownames(d1cast),colnames(d1cast)]+d1cast
+m1[colnames(d1cast),rownames(d1cast)]=m1[colnames(d1cast),rownames(d1cast)]+t(d1cast)
+
+m2[rownames(d2cast),colnames(d2cast)]=m2[rownames(d2cast),colnames(d2cast)]+d2cast
+m2[colnames(d2cast),rownames(d2cast)]=m2[colnames(d2cast),rownames(d2cast)]+t(d2cast)
+
 m1_big=data.frame(chr='chromo',n1=as.numeric(as.character(nodedata[,2])),n2=as.numeric(as.character(nodedata[,3])),m1)
 m2_big=data.frame(chr='chromo',n1=as.numeric(as.character(nodedata[,2])),n2=as.numeric(as.character(nodedata[,3])),m2)
 
+colnames(m1_big)=gsub('X','',colnames(m1_big))
+colnames(m2_big)=gsub('X','',colnames(m2_big))
+
+m1_big[which(is.na(m1_big))]=0
+m2_big[which(is.na(m2_big))]=0
+
 # prepare matrices
 Pre_HiC <- prep(m1_big, m2_big, resol, h, maxdist)
+print(head(Pre_HiC))
 
 # compute score
 SCC.out = get.scc(Pre_HiC, resol, maxdist)

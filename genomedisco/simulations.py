@@ -189,7 +189,6 @@ def get_probability_matrix(tad_matrix,dd_dict,maxdist,prob_noise,eps,prob_node):
     for i in range(prob_m.shape[0]):
         for j in range(i,min(prob_m.shape[0],i+maxdist+1)):
             d=abs(i-j)
-            #sample from a normal distribution to see how much to change the contact - this is in order to have enriched contacts
             contact_delta=np.random.randn(1)[0]
             pij=dd['interTAD'][d]+contact_delta*sd['interTAD'][d]
             if tad_matrix[i,j]==1.0 and dd['intraTAD'][d]>0.0:
