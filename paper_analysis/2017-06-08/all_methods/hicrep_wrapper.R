@@ -6,15 +6,15 @@ require("hicrep")
 #=============================
 
 testing=function(){
-	f1='/ifs/scratch/oursu/3d/paper/2017-06-08/LA/reproducibility/res40000/data/edges/HIC001/HIC001.chr21.gz'
-	f2='/ifs/scratch/oursu/3d/paper/2017-06-08/LA/reproducibility/res40000/data/edges/HIC003/HIC003.chr21.gz'
+	f1='/ifs/scratch/oursu/encode_nonhighres/results/res40000/data/edges/Matrix97/Matrix97.chr21.gz'
+	f2='/ifs/scratch/oursu/encode_nonhighres/results/res40000/data/edges/Matrix256/Matrix256.chr21.gz'
 	out='test'
 	c1=1
 	c2=2
 	c3=3
 	maxdist=5000000
 	resol=40000
-	nodefile='/ifs/scratch/oursu/3d/paper/2017-06-08/LA/reproducibility/res40000/data/nodes/nodes.chr21.gz'
+	nodefile='/ifs/scratch/oursu/encode_nonhighres/results/res40000/data/nodes/nodes.chr21.gz'
 	h=5
 	m1name='m1'
 	m2name='m2'

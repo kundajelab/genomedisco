@@ -151,7 +151,7 @@ def compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,runnin
 
     for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
         chromo=chromo_line.strip()
-        if chromo in ['chr22']:
+        if chromo not in ['chr1']:
             continue
         for line in open(metadata_pairs,'r').readlines():
             items=line.strip().split()
@@ -174,7 +174,9 @@ def compute_reproducibility(datatype,metadata_pairs,outdir,norm,tmin,tmax,runnin
                         concise_analysis_text=' --concise_analysis'
                     outpath=outdir+'/results/genomedisco/'+samplename1+'.vs.'+samplename2
                     subp.check_output(['bash','-c','mkdir -p '+outpath])
-                    script_comparison.write("$mypython -W ignore "+os.path.abspath("/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/genomedisco/compute_reproducibility.py")+" --m1 "+f1+" --m2 "+f2+" --m1name "+samplename1+" --m2name "+samplename2+" --node_file "+nodefile+" --outdir "+outpath+" --outpref "+chromo+" --m_subsample lowest --approximation 10000000 --norm "+norm+" --method RandomWalks "+" --tmin "+str(tmin)+" --tmax "+str(tmax)+concise_analysis_text+'\n')
+                    #todo: remove hardcoded blacklist
+                    blacklist='/home/oursu/blacklist.gz'
+                    script_comparison.write("$mypython -W ignore "+os.path.abspath("/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/genomedisco/compute_reproducibility.py")+" --m1 "+f1+" --m2 "+f2+" --m1name "+samplename1+" --m2name "+samplename2+" --node_file "+nodefile+" --outdir "+outpath+" --outpref "+chromo+" --m_subsample lowest --approximation 10000000 --norm "+norm+" --method RandomWalks "+" --tmin "+str(tmin)+" --tmax "+str(tmax)+" --transition --blacklist "+blacklist+concise_analysis_text+'\n')
                     script_comparison.close()
                     run_script(script_comparison_file,running_mode)
 

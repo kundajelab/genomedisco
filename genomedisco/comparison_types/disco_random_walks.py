@@ -12,6 +12,30 @@ from scipy.spatial.distance import euclidean
 from sklearn import metrics
 from pylab import rcParams
 from time import gmtime, strftime
+from scipy.sparse import csr_matrix
+
+def to_transition(m):
+    mup=m
+    mdown=mup.transpose()
+    mdown.setdiag(0)
+    mtogether=mup+mdown
+    sums=mtogether.sum(axis=1)
+    nonzeros=mtogether.nonzero()
+    num_elts=len(nonzeros[0])
+    rows=[]
+    cols=[]
+    m_norm_data=[]
+    for elt in range(num_elts):
+        i=nonzeros[0][elt]
+        j=nonzeros[1][elt]
+        rows.append(i)
+        cols.append(j)
+        if sums[i,0]>0:
+            m_norm_data.append(float(mtogether[i,j])/(float(sums[i,0])))
+        else:
+            m_norm_data.append(0)
+    return csr_matrix((m_norm_data,(rows,cols)),shape=mtogether.get_shape(),dtype=float)
+
 
 def random_walk(m_input,t):
     #return m_input.__pow__(t)
@@ -28,6 +52,15 @@ class DiscoRandomWalks:
         #make symmetric
         m1=m1_csr+m1_csr.transpose()
         m2=m2_csr+m2_csr.transpose()
+
+        #set diagonal to 0
+        m1.setdiag(0)
+        m2.setdiag(0)
+
+        #convert to an actual transition matrix
+        if args.transition:
+            m1=to_transition(m1)
+            m2=to_transition(m2)
 
         #count nonzero nodes (note that we take the average number of nonzero nodes in the 2 datasets)
 	rowsums_1=m1.sum(axis=1)                                                                          

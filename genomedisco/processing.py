@@ -1,6 +1,7 @@
 import numpy as np
 import gzip
 from scipy.sparse import csr_matrix
+from scipy.sparse import coo_matrix
 from time import gmtime, strftime
 
 #===== MATRIX IO
@@ -14,19 +15,29 @@ def load_sparse_csr(filename):
     return csr_matrix((  loader['data'], loader['indices'], loader['indptr']),
                          shape = loader['shape'])
 
-#===== Reading in data
-#TODO: tell people that nodes should come in the order in which they go in the matrix
-def read_nodes_from_bed(bedfile):
+def read_nodes_from_bed(bedfile,blacklistfile='NA'):
+    
+    blacklist={}
+    if blacklistfile!='NA':
+        for line in gzip.open(blacklistfile):
+            items=line.strip().split('\t')
+            chromo,start,end=items[0],int(items[1]),int(items[2])
+            if chromo not in blacklist:
+                blacklist[chromo]=[]
+            blacklist[chromo].append((start,end))
+    
     print "GenomeDISCO | "+strftime("%c")+" | processing: Loading genomic regions from "+bedfile
 
     nodes={}
     nodes_idx={}
     node_c=0
+    blacklisted_nodes=[]
     for line in gzip.open(bedfile,'r'):
         items=line.strip().split('\t')
         chromo=items[0]
-        start=items[1]
-        end=items[2]
+        start=int(items[1])
+        end=int(items[2])
+                
         node=items[3]
         if len(items)>4:
             include=items[4]
@@ -43,12 +54,33 @@ def read_nodes_from_bed(bedfile):
             if len(items)>4:
                 nodes[node]['include']=include
             nodes_idx[node_c]=node 
+            
+            if chromo in blacklist:
+                for blacklist_item in blacklist[chromo]:
+                    if (start<=blacklist_item[0] and end>=blacklist_item[0]) or (start<=blacklist_item[1] and end>=blacklist_item[1]) or (start>=blacklist_item[0] and end<=blacklist_item[1]):
+                        blacklisted_nodes.append(node_c)
+                
             node_c+=1
-    print 'num nodes'
-    print node_c
-    return nodes,nodes_idx
+            
+    return nodes,nodes_idx,blacklisted_nodes
 
-def construct_csr_matrix_from_data_and_nodes(f,nodes,remove_diag=True):
+def filter_nodes(m,to_remove):
+    
+    if len(to_remove)==0:
+        return m
+    
+    nonzeros=m.nonzero()
+    num_elts=len(nonzeros[0])
+    
+    r_idx=[i for i, x in enumerate(nonzeros[0]) if x not in to_remove]
+    c_idx=[i for i, x in enumerate(nonzeros[1]) if x not in to_remove]
+    keep=list(set(r_idx).union(set(c_idx)))
+    
+    coo_mat=m.tocoo()
+        
+    return csr_matrix((coo_mat.data[keep],(coo_mat.row[keep],coo_mat.col[keep])),shape=m.get_shape(),dtype=float)    
+
+def construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes,remove_diag=True):
     print "GenomeDISCO | "+strftime("%c")+" | processing: Loading interaction data from "+f
 
     total_nodes=len(nodes.keys())
@@ -78,5 +110,7 @@ def construct_csr_matrix_from_data_and_nodes(f,nodes,remove_diag=True):
     if remove_diag:
         csr_m.setdiag(0)
     
-    return csr_m
+    return filter_nodes(csr_m,blacklisted_nodes)
+
+
 

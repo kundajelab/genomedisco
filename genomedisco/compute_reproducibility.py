@@ -28,6 +28,8 @@ def main():
     parser.add_argument('--tmin',type=int,default=1)
     parser.add_argument('--tmax',type=int,default=3)
     parser.add_argument('--approximation',type=int,default=40000)
+    parser.add_argument('--transition',action='store_true')
+    parser.add_argument('--blacklist',default='NA')
     args = parser.parse_args()
 
     #write_arguments(args)
@@ -35,12 +37,12 @@ def main():
     os.system('mkdir -p '+args.outdir)
 
     print "GenomeDISCO | "+strftime("%c")+" | Starting reproducibility analysis"
-
-    nodes,nodes_idx=processing.read_nodes_from_bed(args.node_file)
+    nodes,nodes_idx,blacklist_nodes=processing.read_nodes_from_bed(args.node_file,args.blacklist)
+    print blacklist_nodes
 
     print "GenomeDISCO | "+strftime("%c")+" | Loading contact maps"
-    m1=processing.construct_csr_matrix_from_data_and_nodes(args.m1,nodes,args.remove_diagonal)
-    m2=processing.construct_csr_matrix_from_data_and_nodes(args.m2,nodes,args.remove_diagonal)
+    m1=processing.construct_csr_matrix_from_data_and_nodes(args.m1,nodes,blacklist_nodes,args.remove_diagonal)
+    m2=processing.construct_csr_matrix_from_data_and_nodes(args.m2,nodes,blacklist_nodes,args.remove_diagonal)
 
     stats={}
     stats[args.m1name]={}
