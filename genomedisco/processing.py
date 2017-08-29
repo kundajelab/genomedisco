@@ -94,8 +94,9 @@ def construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes,remove_di
     i=map(lambda x:nodes[str(int(x))]['idx'], mdata[:,0])
     j=map(lambda x:nodes[str(int(x))]['idx'], mdata[:,1])
     
-    #flag cases where the same i,j pair is repeated in the file                                                                                                            
-    #- convert i,j,value to min(i,j),max(i,j),value                                                                                                                        
+    #flag cases where the same i,j pair is repeated in the file                                             
+    #- convert i,j,value to min(i,j),max(i,j),value                                                         
+                                                          
     ij=np.array([i,j])
     mini=ij.min(axis=0)
     maxi=ij.max(axis=0)

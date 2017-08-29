@@ -38,7 +38,6 @@ def main():
 
     print "GenomeDISCO | "+strftime("%c")+" | Starting reproducibility analysis"
     nodes,nodes_idx,blacklist_nodes=processing.read_nodes_from_bed(args.node_file,args.blacklist)
-    print blacklist_nodes
 
     print "GenomeDISCO | "+strftime("%c")+" | Loading contact maps"
     m1=processing.construct_csr_matrix_from_data_and_nodes(args.m1,nodes,blacklist_nodes,args.remove_diagonal)
@@ -59,7 +58,7 @@ def main():
             if stats[args.m1name]['depth']<stats[args.m2name]['depth']:
                 m_subsample=copy.deepcopy(m1)
         else:
-            m_subsample=processing.construct_csr_matrix_from_data_and_nodes(args.m_subsample,nodes,args.remove_diagonal)
+            m_subsample=processing.construct_csr_matrix_from_data_and_nodes(args.m_subsample,nodes,blacklist_nodes,args.remove_diagonal)
         print "GenomeDISCO | "+strftime("%c")+" | Subsampling to the depth of "+args.m_subsample
         print "GenomeDISCO | "+strftime("%c")+" | Subsampling depth = "+str(m_subsample.sum())
         desired_depth=m_subsample.sum()
