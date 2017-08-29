@@ -1,3 +1,0 @@
-HIC001	/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/paper_analysis/2017-02-05/all_methods/test/prefix/data/edges/HIC001/HIC001.chr11.gz	chr11
-HIC002	/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/paper_analysis/2017-02-05/all_methods/test/prefix/data/edges/HIC002/HIC002.chr11.gz	chr11
-HIC050	/srv/gsfs0/projects/snyder/oursu/software/git/public_genomedisco/genomedisco/paper_analysis/2017-02-05/all_methods/test/prefix/data/edges/HIC050/HIC050.chr11.gz	chr11
