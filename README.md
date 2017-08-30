@@ -19,6 +19,16 @@ genomedisco/install_scripts/install_genomedisco.sh
 
 **Note if you are installing these locally**: There are a few parameters you can provide to the installation script, to point it to your desired python installation, R installation, R library, modules and bedtools installation. Thus, you can run the above script as follows:
 
+usage: install_genomedisco.sh options
+Installs genomedisco.
+OPTIONS
+   -h               Show this message and exit
+   --pathtopython   Path to python. DEFAULT: python
+   --pathtor        Path to R. DEFAULT: R
+   --rlib           Path to R libraries. DEFAULT=''
+   --pathtobedtools Path to bedtools. DEFAULT=bedtools
+   --modules        Names of modules to be loaded. Comma-delimited. This can be used on computing clusters with shared installations, and will be loaded as 'module load modulename'. DEFAULT=''
+
 ```
 genomedisco/install_scripts/install_genomedisco.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
 ```
@@ -54,6 +64,12 @@ GenomeDISCO supports computing concordance scores for Hi-C data using not only t
 
 Inputs
 =============
+
+Before running GenomeDISCO, make sure to have the following files:
+
+- **contact map** For each of your samples, you need a file containing the counts assigned to each pair of bins in your contact map, and should have the format `chr1 bin1 chr2 bin2 value`. Note: GenomeDISCO assumes that this file contains the contacts for all chromosomes, and will split it into individual files for each chromosome.
+
+- **bins** This file contains the full set of genomic regions associated with your contact maps, in the format `chr start end name` where name is the name of the bin as used in the contact map files above. GenomeDISCO supports both fixed-size bins and variable-sized bins (e.g. obtained by partitioning the genome into restriction fragments). 
 
 GenomeDISCO takes the following inputs:
 

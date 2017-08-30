@@ -21,13 +21,13 @@ def parse_args():
     metadata_pairs_parser.add_argument('--metadata_pairs',required=True,help='required. Each row is a pair of sample names to be compared, in the format "samplename1 samplename2". Important: sample names used here need to correspond to the first column of the --metadata_samples file.')
 
     bins_parser=argparse.ArgumentParser(add_help=False)
-    bins_parser.add_argument('--bins',required=True,help='required. A (gzipped) bed file of the all bins used in the analysis. It should have 4 columns: "chr start end name", where the name of the bin corresponds to the bins used in the contact maps. For each chromosome, the bins must be ordered by their genomic position, which can be done with \"sort -k1,1 -k2,2n in.bed > in.sorted.bed\"')
+    bins_parser.add_argument('--bins',required=True,help='required. A (gzipped) bed file of the all bins used in the analysis. It should have 4 columns: "chr start end name", where the name of the bin corresponds to the bins used in the contact maps.')
 
     re_fragments_parser=argparse.ArgumentParser(add_help=False)
     re_fragments_parser.add_argument('--re_fragments',action='store_true',help='Add this flag if the bins are not uniform bins in the genome (e.g. if they are restriction-fragment-based). By default, the code assumes the bins are of uniform length.')
 
     outdir_parser=argparse.ArgumentParser(add_help=False)
-    outdir_parser.add_argument('--outdir',default='replicateQC',required=True,help='Name of output directory. DEFAULT: replicateQC')
+    outdir_parser.add_argument('--outdir',default='replicateQC',help='Name of output directory. DEFAULT: replicateQC')
     
     parameter_file_parser=argparse.ArgumentParser(add_help=False)
     parameter_file_parser.add_argument('--parameters_file',help='File with parameters for reproducibility and QC analysis. See the documentation for details.',default='NA')
@@ -96,7 +96,7 @@ def quasar_makePartition(outdir,nodes,resolution,restriction_fragment_level,subs
     re_text=''
     if restriction_fragment_level==True:
         re_text=' --re'
-    partition_script.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/software/make_partition_from_bedfile.py --nodes "+nodes+' --partition '+nodes_partition+' --subset_chromosomes '+subset_chromosomes+' --resolution '+resolution+re_text+'\n')
+    partition_script.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/make_partition_from_bedfile.py --nodes "+nodes+' --partition '+nodes_partition+' --subset_chromosomes '+subset_chromosomes+' --resolution '+resolution+re_text+'\n')
     partition_script.close()
     run_script(partition_script_file,running_mode)
 
@@ -166,13 +166,13 @@ def split_by_chromosome(metadata_samples,bins,re_fragments,methods,outdir,runnin
     write_resolution(nodes,resolution_file)
     resolution=open(resolution_file,'r').readlines()[0].split()[0]
 
-    if 'QuASAR-QC' in methods_list or 'QuASAR-Rep' in methods_list:
+    if 'QuASAR-QC' in methods_list or 'QuASAR-Rep' in methods_list or "all" in methods_list:
         #make nodes for quasar
         quasar_makePartition(outdir,nodes,resolution,re_fragments,subset_chromosomes,running_mode)
         #create hifive datasets from original files (genomewide)
         quasar_makeDatasets(metadata_samples,outdir,subset_chromosomes,resolution,running_mode)
 
-    if 'GenomeDISCO' in methods_list or 'HiCRep' in methods_list or 'HiC-Spector' in methods_list:
+    if 'GenomeDISCO' in methods_list or 'HiCRep' in methods_list or 'HiC-Spector' in methods_list or "all" in methods_list:
         #split the data into chromosomes
         for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
             chromo=chromo_line.strip()
@@ -189,7 +189,7 @@ def split_by_chromosome(metadata_samples,bins,re_fragments,methods,outdir,runnin
 
             print '3DChromatin_ReplicateQC | '+strftime("%c")+' | Splitting nodes '+chromo
 
-            script_nodes.write("zcat -f "+nodes+' | awk \'{print "chr"$1"\\t"$2"\\t"$3"\\t"$4"\\tincluded"}\' | sed \'s/chrchr/chr/g\' | awk -v chromosome='+chromo+' \'{if ($1==chromosome) print $0}\' | gzip > '+nodefile+'\n')
+            script_nodes.write("zcat -f "+nodes+' | sort -k1,1 -k2,2n | awk \'{print "chr"$1"\\t"$2"\\t"$3"\\t"$4"\\tincluded"}\' | sed \'s/chrchr/chr/g\' | awk -v chromosome='+chromo+' \'{if ($1==chromosome) print $0}\' | gzip > '+nodefile+'\n')
 
             script_nodes.close()
             run_script(script_nodes_file,running_mode)
@@ -332,19 +332,19 @@ def compute_reproducibility(metadata_pairs,methods,parameters_file,outdir,runnin
             f2=outdir+'/data/edges/'+samplename2+'/'+samplename2+'.'+chromo+'.gz'
             nodefile=outdir+'/data/nodes/nodes.'+chromo+'.gz'
 
-            if "GenomeDISCO" in methods_list:
+            if "GenomeDISCO" in methods_list or "all" in methods_list:
                 print strftime("%c")+'\n'+'running GenomeDISCO | computing reproducibility for '+samplename1+'.vs.'+samplename2+' '+chromo
                 GenomeDISCO_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile)
 
-            if "HiCRep" in methods_list:
+            if "HiCRep" in methods_list or "all" in methods_list:
                 print strftime("%c")+'\n'+'running HiCRep | computing reproducibility for '+samplename1+'.vs.'+samplename2+' '+chromo
                 HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile)
 
-            if "HiC-Spector" in methods_list:
+            if "HiC-Spector" in methods_list or "all" in methods_list:
                 print strftime("%c")+'\n'+'running HiC-Spector | computing reproducibility for '+samplename1+'.vs.'+samplename2+' '+chromo
                 print "coming soon"
 
-            if "QuASAR-Rep" in methods_list:
+            if "QuASAR-Rep" in methods_list or "all" in methods_list:
                 print strftime("%c")+'\n'+'running QuASAR-Rep | computing reproducibility for '+samplename1+'.vs.'+samplename2+' (running on all chromosomes at once)'
                 QuASAR_rep_wrapper(outdir,parameters,samplename1,samplename2,running_mode)
 
@@ -599,7 +599,7 @@ def main():
     if "GenomeDISCO" in methods_list and len(methods_list)==1:
         bashrc_file=os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/scripts/bashrc.genomedisco"
     else:
-        bashrc_file=os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/scripts/bashrc.all_methods"
+        bashrc_file=os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/scripts/bashrc.allMethods"
     command_methods[command](**args)
 
 
