@@ -19,6 +19,13 @@ genomedisco/install_scripts/install_genomedisco.sh
 
 GenomeDISCO is compatible with Python 2.
 
+**Note if you are installing these locally**: There are a few parameters you can provide to the installation script, to point it to your desired python installation, R installation, R library, modules and bedtools installation. Thus, you can run the above script as follows:
+
+```
+genomedisco/install_scripts/install_genomedisco.sh 
+--pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules R/3.4.0 --pathtobedtools path/to/your/bedtools
+```
+
 Quick start
 ====
 

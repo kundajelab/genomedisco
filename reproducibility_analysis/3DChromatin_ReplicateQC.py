@@ -412,7 +412,7 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
         '''
         visualize(outdir,parameters_file,metadata_pairs)
 
-def visualize(outdir,tmin,tmax,metadata_pairs):
+def visualize(outdir,parameters_file,metadata_pairs):
     header_col='FF0000'
     picsize="200"
     topscores=0.85    
@@ -423,7 +423,6 @@ def visualize(outdir,tmin,tmax,metadata_pairs):
         samplename1,samplename2=items[0],items[1]
 
         file_all_scores=open(outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt','w')
-        print outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt'
         print 'GenomeDISCO | '+strftime("%c")+' | Writing report for '+samplename1+'.vs.'+samplename2
 
         html=open(outdir+'/results/genomedisco/'+samplename1+'.vs.'+samplename2+'/report.'+samplename1+'.vs.'+samplename2+'.genomedisco.html','w')
