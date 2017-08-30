@@ -1,8 +1,9 @@
 # GenomeDISCO
 
-`GenomeDISCO` (DIfferences between Smoothed COntact maps) is a package for comparing contact maps of 3D genome structures, obtained from experiments such as Hi-C, Capture-C, ChIA-PET, HiChip, etc. It uses graph diffusion to smooth contact maps, and then compares them, resulting in a reproducibility score that can be used for quality control of biological replicates.
+`GenomeDISCO` (DIfferences between Smoothed COntact maps) is a package for comparing contact maps of 3D genome structures, obtained from experiments such as Hi-C, Capture-C, ChIA-PET, HiChip, etc. It uses random walks on the contact map graph for smoothing before comparing the contact maps, resulting in a concordance score that can be used for quality control of biological replicates.
 
-Read the full paper here:
+Read the full paper here: 
+Oana Ursu, Nathan Boley, Maryna Taranova, Y. X. Rachel Wang, Galip Gurkan Yardimci, William Stafford Noble, Anshul Kundaje. GenomeDISCO: A concordance score for chromosome conformation capture experiments using random walks on contact map graphs. bioRxiv: http://www.biorxiv.org/content/early/2017/08/29/181842
 
 Installation
 ===
