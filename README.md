@@ -20,18 +20,28 @@ genomedisco/install_scripts/install_genomedisco.sh
 **Note if you are installing these locally**: There are a few parameters you can provide to the installation script, to point it to your desired python installation, R installation, R library, modules and bedtools installation. Thus, you can run the above script as follows:
 
 usage: install_genomedisco.sh options
+
 Installs genomedisco.
+
 OPTIONS
+
    -h               Show this message and exit
+
    --pathtopython   Path to python. DEFAULT: python
+
    --pathtor        Path to R. DEFAULT: R
+
    --rlib           Path to R libraries. DEFAULT=''
+
    --pathtobedtools Path to bedtools. DEFAULT=bedtools
+
    --modules        Names of modules to be loaded. Comma-delimited. This can be used on computing clusters with shared installations, and will be loaded as 'module load modulename'. DEFAULT=''
 
 ```
 genomedisco/install_scripts/install_genomedisco.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
 ```
+
+
 
 Quick start
 ====
