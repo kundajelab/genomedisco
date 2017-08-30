@@ -30,7 +30,7 @@ def parse_args():
     outdir_parser.add_argument('--outdir',default='replicateQC',required=True,help='Name of output directory. DEFAULT: replicateQC')
     
     parameter_file_parser=argparse.ArgumentParser(add_help=False)
-    parameter_file_parser.add_argument('--parameters_file',help='File with parameters for reproducibility and QC analysis. See the documentation for details.')
+    parameter_file_parser.add_argument('--parameters_file',help='File with parameters for reproducibility and QC analysis. See the documentation for details.',default='NA')
 
     concise_analysis_parser=argparse.ArgumentParser(add_help=False)
     concise_analysis_parser.add_argument('--concise_analysis',action='store_true',help='Set this flag to obtain a concise analysis, which means replicateQC is measured but plots that might be more time/memory consuming are not created.')
@@ -231,6 +231,8 @@ def run_script(script_name,running_mode):
         output=subp.check_output(['bash','-c','sbatch --mem '+memo+' -o '+script_name+'.o -e '+script_name+'.e'+' -p '+partition+' '+script_name])
 
 def read_parameters_file(parameters_file):
+    if parameters_file=="NA":
+        parameters_file=os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/examples/example_parameters.txt"
     parameters={}
     for line in open(parameters_file,'r').readlines():
         items=line.strip().split('\t')
@@ -390,7 +392,6 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
                 samplename1,samplename2=items[0],items[1]
                 chromofile.write(samplename1+'\t'+samplename2+'\t'+str(scores[method][samplename1+'.vs.'+samplename2][chromo])+'\n')
             chromofile.close()
-            print outdir+'/results/summary/'+method+'/'+method+'.'+chromo+'.txt'
 
         genomewide_file=open(outdir+'/results/summary/'+method+'/'+method+'.genomewide.txt','w')
         for line in open(metadata_pairs,'r').readlines():
@@ -409,12 +410,181 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
         heatmap_script.close()
         run_script(heatmap_script_file,'NA')
         '''
+        visualize(outdir,parameters_file,metadata_pairs)
 
-def run_all(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameter_file,outdir,running_mode,concise_analysis,subset_chromosomes):
+def visualize(outdir,tmin,tmax,metadata_pairs):
+    header_col='FF0000'
+    picsize="200"
+    topscores=0.85    
+
+    for line in open(metadata_pairs,'r').readlines():
+
+        items=line.strip().split()
+        samplename1,samplename2=items[0],items[1]
+
+        file_all_scores=open(outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt','w')
+        print outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt'
+        print 'GenomeDISCO | '+strftime("%c")+' | Writing report for '+samplename1+'.vs.'+samplename2
+
+        html=open(outdir+'/results/genomedisco/'+samplename1+'.vs.'+samplename2+'/report.'+samplename1+'.vs.'+samplename2+'.genomedisco.html','w')
+    
+        html.write("<html>"+'\n')
+        html.write("<head>"+'\n')
+        html.write("<font color=\""+header_col+"\"> <strong>GenomeDISCO | Genomewide report </font></strong>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("Report generated on "+strftime("%c")+'\n')
+        html.write("<br>"+'\n')
+        html.write("Code: <a href=\"http://github.com/kundajelab/genomedisco\">http://github.com/kundajelab/genomedisco</a>."+'\n')
+        html.write("<br>"+'\n')
+        html.write("Contact: Oana Ursu oursu@stanford.edu"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<strong>"+samplename1+" vs "+samplename2+"</strong>"+'\n')
+        html.write("</head>"+'\n')
+        html.write("<body>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<br>"+'\n')
+        
+        #genomewide score
+        html.write("<font color=\""+header_col+"\"> <strong>Reproducibility analysis</font></strong>"+'\n')
+        html.write("<br>"+'\n')
+        score_sum=0.0
+        score_num=0
+        scores=[]
+        chromos=[]
+        scoredict={}
+        for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
+            chromo=chromo_line.strip()
+            f=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
+            if os.path.isfile(f):
+                score_num+=1
+                score=float(open(outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt','r').readlines()[0].split('\t')[2])
+                score=float(int(1000*score))/1000.0
+                score_sum+=score
+                scores.append(score)
+                chromos.append(chromo)
+                scoredict[chromo]=score
+        
+        plt.close("all")
+        widthfactor=3
+        rcParams['figure.figsize'] = 10*widthfactor,10
+        rcParams['xtick.labelsize'] = 20
+        rcParams['ytick.labelsize'] = 20
+        plt.scatter(range(len(chromos)),np.array(scores),s=100)
+        plt.xticks(range(len(chromos)),chromos,rotation='vertical')
+        plt.xlabel('chromosome',fontsize=30)
+        plt.ylim(0.4,1.0)
+        plt.axhline(topscores, color='r', linestyle='dashed',linewidth=2,label='threshold for high-quality datasets')
+        plt.axhline(np.array(scores).mean(), color='b', linewidth=2,label='genomewide reproducibility for these datasets')
+        plt.yticks([0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+        plt.ylabel('reproducibility',fontsize=30)
+        plt.gcf().subplots_adjust(bottom=0.25)
+        plt.gcf().subplots_adjust(left=0.25)
+        plt.legend(loc=3,fontsize=25)
+        plt.show()
+        chrscores=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+samplename1+'.vs.'+samplename2+'.chrScores.png'
+        plt.savefig(chrscores)
+        plt.close()
+
+        genomewide_score=score_sum/score_num
+        
+        html.write("<td> <strong>What is GenomeDISCO reproducibility?</strong></td>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("GenomeDISCO (DIfferences between Smoothed COntact maps) computes reproducibility by comparing 2 contact maps at increasing levels of smoothing. The smoothing is done using random walks on graphs. For each dataset, we run random walks of increasing length, and ask what is the probability that we reach node j starting at node i, given a random walk through the network of t steps, or iterations. The key idea is that <strong>if 2 nodes are in contact, then there should be many high-confidence paths connecting them through the network</strong>, even if perhaps the direct edge between them was undersampled. Short random walks provide information about the local network structures, such as loop cliques and subdomains, whereas longer random walks shift the focus toward global structures such as compartments. For each random walk iteration we compare the 2 smoothed contact maps, obtaining an L1 difference in smoothed contact maps."+'\n')
+        html.write("<br>"+'\n')
+        html.write("In the end, we integrate information across all random walks by computing the area under the curve of L1 differences vs random walk iterations (see difference plot below), resulting in a dissimilarity score between the 2 contact maps of interest. We transform this dissimilarity into a reproducibility score using the formula \"Reproducibility = 1-d\". This yields a reproducibility score between -1 and 1, with higher values indicating similarity (in practice, the range of scores is [0.4,1])."+'\n')
+        html.write("<br>"+'\n')
+        html.write("GenomeDISCO runs on each chromosome separately. The genomewide score reported below is the average across all chromosomes. <strong> Higher scores are better</strong>.")
+        html.write("<br>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<font color=\""+header_col+"\"><strong> Your scores</strong></font>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<img src=\""+os.path.basename(chrscores)+"\" width=\""+str(int(1.3*int(picsize))*widthfactor)+"\" height=\""+str(1.3*int(picsize))+"\">"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("Reproducibility (genomewide) = "+str(float("{0:.3f}".format(float(genomewide_score))))+'\n')
+        
+        if genomewide_score>=topscores:
+            outcome='Congratulations! These datasets are highly reproducible.'
+        else:
+            outcome='These datasets are less reproducible than our empirically defined threshold. This could be due to low sequencing depth, differences in distance dependence curves, noise. Please be cautious with these datasets.'
+        html.write("<br>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<font color=\"0033FF\"><strong>"+outcome+"</strong></font>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<font color=\""+header_col+"\"> <strong>Analysis by chromosome</font></strong>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("<td> <strong>The difference plot</strong></td>"+'\n')
+        html.write(" shows the L1 difference (normalized to the number of nodes) as a function of random walk iteration."+'\n')
+        html.write("<br>"+'\n')
+        html.write("<td> <strong>The distance dependence plot</strong></td>"+'\n')
+        html.write(" shows the probability of contact as a function of linear genomic distance. If 2 datasets have very difference distance dependence curves, their reproducibility will be lower than if they have similar curves."+'\n')
+        html.write("<br>"+'\n')
+        html.write("<td> <strong>The remaining columns</strong></td>"+'\n')
+        html.write(" below show the contact maps after smoothing with random walks. The upper triangular part plotted in red is "+samplename1+", while the blue is "+samplename2+". The colorbar shows red values as positive and blue values as negative purely for visualization purposes (in reality all values are positive)."+'\n')
+        html.write("<br>"+'\n')
+        html.write("<br>"+'\n')
+    
+        #big table
+        html.write("<table border=\"1\" cellpadding=\"10\" cellspacing=\"0\" style=\"border-collapse:collapse;\">"+'\n')
+        html.write("<tr>"+'\n')
+        html.write("<td> </td>"+'\n')
+        html.write("<td> <strong><center>seqdepth</center></strong></td>"+'\n')
+        html.write("<td> <strong><center>reproducibility</center></strong></td>"+'\n')
+        html.write("<td> <strong><center>difference plot</center></strong></td>"+'\n')
+        html.write("<td> <strong><center>distance dependence</center></td>"+'\n')
+        for t in range(tmin,tmax+1):
+            html.write("<td><center><strong>Random walk iteration "+str(t)+"</strong></center></td>"+'\n')
+        html.write("</tr>"+'\n')
+
+        score_strings=[]
+        chromo_strings=[]
+        sorted_chromos=gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines()
+        sorted_chromos.sort()
+        for chromo_idx in range(len(sorted_chromos)):
+            chromo=sorted_chromos[chromo_idx].strip()
+            f1=outdir+'/data/edges/'+samplename1+'/'+samplename2+'.'+chromo+'.gz'
+            f2=outdir+'/data/edges/'+samplename1+'/'+samplename2+'.'+chromo+'.gz'
+            f=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
+            sf=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.datastats.txt'
+            
+            if os.path.isfile(f):
+                chromo_strings.append(chromo)
+                items=open(sf,'r').readlines()[1].strip().split('\t')
+                s1,s2,ssub1,ssub2=items[2:6]
+                s1=str(float("{0:.2f}".format(float(float(s1)/1000000))))
+                s2=str(float("{0:.2f}".format(float(float(s2)/1000000))))
+                html.write("<tr>"+'\n')
+                html.write("<td> <strong> "+chromo+"</strong></td>"+'\n')
+                score=scoredict[chromo]
+                html.write("<td> "+samplename1+": "+str(s1)+' M'+'\n')
+                html.write("<br>"+'\n')
+                html.write("<br>"+'\n')
+                html.write(samplename2+": "+str(s2)+" M </td>"+'\n')
+                score_strings.append(str(float("{0:.3f}".format(float(score)))))
+                html.write("<td> "+str(float("{0:.3f}".format(float(score))))+" </td>"+'\n')
+                diffplot=chromo+"."+samplename1+".vs."+samplename2+".DiscoRandomWalks.Differences.png"
+                
+                html.write("<td> <img src=\""+diffplot+"\" width=\""+picsize+"\" height=\""+picsize+"\"> </td>"+'\n')
+                dd=chromo+"."+samplename1+".vs."+samplename2+".distDep.png"
+                html.write("<td> <img src=\""+dd+"\" width=\""+picsize+"\" height=\""+picsize+"\"> </td>"+'\n')
+                for t in range(tmin,tmax+1):
+                    pic=chromo+"."+samplename1+".vs."+samplename2+".DiscoRandomWalks."+str(t)+".png"
+                    html.write("<td> <img src=\""+pic+"\" width=\""+picsize+"\" height=\""+picsize+"\"></td>"+'\n')
+                html.write("</tr>"+'\n')
+        file_all_scores.write('#m1'+'\t'+'m2'+'\t'+'\t'.join(chromo_strings)+'\t'+'genomewide'+'\n')
+        file_all_scores.write(samplename1+'\t'+samplename2+'\t'+'\t'.join(score_strings)+'\t'+str(float("{0:.3f}".format(float(genomewide_score))))+'\n')
+
+        html.write("</table>"+'\n')
+        html.write("<br>"+'\n')
+        html.write("</body>"+'\n')
+        html.write("</html>"+'\n')
+
+def run_all(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes):
     split_by_chromosome(metadata_samples,bins,re_fragments,methods,outdir,running_mode,subset_chromosomes)
-    get_qc(metadata_samples,methods,parameter_file,outdir,running_mode,concise_analysis,subset_chromosomes)
-    compute_reproducibility(metadata_pairs,methods,parameter_file,outdir,running_mode,concise_analysis,subset_chromosomes)
-    summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameter_file,outdir,running_mode,concise_analysis,subset_chromosomes)
+    get_qc(metadata_samples,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes)
+    compute_reproducibility(metadata_pairs,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes)
+    summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes)
 
 def main():
     command_methods = {'split': split_by_chromosome,

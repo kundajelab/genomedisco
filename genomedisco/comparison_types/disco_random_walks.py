@@ -69,7 +69,7 @@ class DiscoRandomWalks:
         nonzero_2=[i for i in range(rowsums_2.shape[0]) if rowsums_2[i]>0.0]
 	nonzero_total=len(list(set(nonzero_1).union(set(nonzero_2))))
         nonzero_total=0.5*(1.0*len(list(set(nonzero_1)))+1.0*len(list(set(nonzero_2))))
-        print nonzero_total
+        #print nonzero_total
 
         #perform random walks 
         scores=[]        

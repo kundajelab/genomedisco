@@ -92,8 +92,10 @@ def main():
         comparer=DiscoRandomWalks(args)
     reproducibility_text,score,scores=comparer.compute_reproducibility(m1_norm,m2_norm,args)
 
+    '''
     print "GenomeDISCO | "+strftime("%c")+" | Writing results"
     write_html_report(stats,args,reproducibility_text,score)
+    '''
     out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.scores.txt','w')
     out.write(args.m1name+'\t'+args.m2name+'\t'+str('{:.3f}'.format(score))+'\n')
     out.close()
@@ -118,7 +120,7 @@ def main():
         dd_value=str('{:.10f}'.format(dd_diff))
     out.write(args.m1name+'\t'+args.m2name+'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\t'+dd_value+'\n')
     out.close()
-    print "GenomeDISCO | "+'\t'.join(score_strings)
+    print "GenomeDISCO | Differences by random walk step: "+'\t'.join(score_strings)
     print "GenomeDISCO | "+strftime("%c")+" | DONE"
 
 def get_dd_diff(m1dd,m2dd):
