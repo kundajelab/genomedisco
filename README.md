@@ -41,7 +41,7 @@ cd genomedisco
 python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --method GenomeDISCO --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Nodes.w40000.bed.gz --outdir examples/output 
 ```
 
-For detailed explanations of all inputs to GenomeDISCO, go to the ["Inputs" section of the documentation](#documentation)
+For detailed explanations of all inputs to GenomeDISCO, go to the ["Inputs" section of the documentation](#iputs)
 
 To run reproducibility analysis in batches (more than one comparison), all you need to do is modify the `--metadata_samples` and `--metadata_pairs` to add the additional samples and sample pairs respectively that you wish to compare.
 
