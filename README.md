@@ -39,6 +39,13 @@ python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --method Geno
 
 To run reproducibility analysis in batches (more than one comparison), all you need to do is modify the `--metadata_samples` and `--metadata_pairs` to add the additional samples and sample pairs respectively that you wish to compare.
 
+Running other methods for measuring concordance of 3D genome data
+====
+
+**coming soon**
+
+GenomeDISCO supports computing concordance scores for Hi-C data using not only the GenomeDISCO framework, but also HiCRep (http://github.com/qunhualilab/hicrep), HiC-Spector (http://github.com/gersteinlab/HiC-spector) and QuASAR-Rep (part of the hifive suite at http://github.com/bxlab/hifive). In addition, it also computes QC scores for Hi-C data using QuASAR-QC (part of the hifive suite at http://github.com/bxlab/hifive). Thanks to Tao Yang and Michael Sauria for providing wrapper scripts around their methods.
+
 Documentation
 =============
 
