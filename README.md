@@ -5,19 +5,17 @@
 `GenomeDISCO` (**DI**fferences between **S**moothed **CO**ntact maps) is a package for comparing contact maps of 3D genome structures, obtained from experiments such as Hi-C, Capture-C, ChIA-PET, HiChip, etc. It uses random walks on the contact map graph for smoothing before comparing the contact maps, resulting in a concordance score that can be used for quality control of biological replicates.
 
 Read the full paper here: 
-*A concordance score for chromosome conformation capture experiments using random walks on contact map graphs.* Oana Ursu, Nathan Boley, Maryna Taranova, Y. X. Rachel Wang, Galip Gurkan Yardimci, William Stafford Noble, Anshul Kundaje. bioRxiv: http://www.biorxiv.org/content/early/2017/08/29/181842
+*GenomeDISCO: A concordance score for chromosome conformation capture experiments using random walks on contact map graphs.* Oana Ursu, Nathan Boley, Maryna Taranova, Y. X. Rachel Wang, Galip Gurkan Yardimci, William Stafford Noble, Anshul Kundaje. bioRxiv: http://www.biorxiv.org/content/early/2017/08/29/181842
 
 Installation
 ===
 
-1. Install [Anaconda](https://www.continuum.io/downloads). 
+1. Install [Anaconda](https://www.continuum.io/downloads). GenomeDISCO is compatible with Python 2.
 2. Obtain and install GenomeDISCO with the following commands:
 ```
 git clone http://github.com/kundajelab/genomedisco
 genomedisco/install_scripts/install_genomedisco.sh
 ```
-
-GenomeDISCO is compatible with Python 2.
 
 **Note if you are installing these locally**: There are a few parameters you can provide to the installation script, to point it to your desired python installation, R installation, R library, modules and bedtools installation. Thus, you can run the above script as follows:
 
