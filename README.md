@@ -39,7 +39,7 @@ python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --method Geno
 
 To run reproducibility analysis in batches (more than one comparison), all you need to do is modify the `--metadata_samples` and `--metadata_pairs` to add the additional samples and sample pairs respectively that you wish to compare.
 
-Running other methods for measuring concordance of 3D genome data
+Running other methods for measuring concordance and QC of Hi-C data
 ====
 
 **coming soon**
