@@ -59,6 +59,9 @@ GenomeDISCO takes the following inputs:
 
 - `--metadata_samples` Information about the samples being compared. Tab-delimited file, with columns "samplename", "samplefile". Note: each samplename should be unique. Each samplefile listed here should follow the format "chr1 bin1 chr2 bin2 value
 
+An example line would look like this:
+```sample1 path/to/file/for/sample1```
+
 - `--metadata_pairs` Each row is a pair of sample names to be compared, in the format "samplename1 samplename2". Important: sample names used here need to correspond to the first column of the --metadata_samples file.
 
 More questions?
