@@ -33,7 +33,7 @@ genomedisco/examples/configure_example.sh
 Then run the concordance analysis:
 
 ```
-python genomedisco/reproducibility_analysis/chromatin3d_replicateQC.py run_all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --nodes examples/Nodes.w40000.bed.gz --outdir examples/output 
+python genomedisco/reproducibility_analysis/chromatin3d_replicateQC.py run_all --method GenomeDISCO --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --nodes examples/Nodes.w40000.bed.gz --outdir examples/output 
 ```
 
 To run reproducibility analysis in batches (more than one comparison), see the documentation.
