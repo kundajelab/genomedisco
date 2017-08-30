@@ -23,8 +23,6 @@ genomedisco/install_scripts/install_genomedisco.sh
 genomedisco/install_scripts/install_genomedisco.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
 ```
 
-
-
 Quick start
 ====
 
@@ -52,7 +50,36 @@ Running other methods for measuring concordance and QC of Hi-C data
 
 **coming soon**
 
-GenomeDISCO supports computing concordance scores for Hi-C data using not only the GenomeDISCO framework, but also HiCRep (http://github.com/qunhualilab/hicrep), HiC-Spector (http://github.com/gersteinlab/HiC-spector) and QuASAR-Rep (part of the hifive suite at http://github.com/bxlab/hifive). In addition, it also computes QC scores for Hi-C data using QuASAR-QC (part of the hifive suite at http://github.com/bxlab/hifive). Thanks to Tao Yang and Michael Sauria for providing wrapper scripts around their methods.
+GenomeDISCO supports computing concordance scores for Hi-C data using not only the GenomeDISCO framework, but also:
+- HiCRep (http://github.com/qunhualilab/hicrep) 
+- HiC-Spector (http://github.com/gersteinlab/HiC-spector) 
+- QuASAR-Rep (part of the hifive suite at http://github.com/bxlab/hifive) 
+
+In addition, it also computes QC scores for Hi-C data using 
+- QuASAR-QC (part of the hifive suite at http://github.com/bxlab/hifive)
+
+Thanks to Michael Sauria for providing wrapper scripts around the QuASAR method, and Tao Yang and Koon-Kiu Yan for their assistance in integrating all methods into a unified software.
+
+Install other methods
+------
+```
+git clone http://github.com/kundajelab/genomedisco
+genomedisco/install_scripts/install_others.sh
+```
+As before, if you are installing locally, then do:
+```
+genomedisco/install_scripts/install_others.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
+```
+
+Run all methods on your data
+------
+
+```
+cd genomedisco
+python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Nodes.w40000.bed.gz --outdir examples/output
+```
+
+The only difference to before is that `--methods GenomeDISCO` was omitted, and by default all methods are run. If you want to run a subset of methods, you can provide them as a comma-delimited list; for instance to run QuASAR-QC and QuASAR-Rep, you would set `--methods QuASAR-QC,QuASAR-Rep`.
 
 Inputs
 =============
