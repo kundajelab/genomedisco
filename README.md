@@ -41,7 +41,7 @@ cd genomedisco
 python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --method GenomeDISCO --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Nodes.w40000.bed.gz --outdir examples/output 
 ```
 
-For detailed explanations of all inputs to GenomeDISCO, go to the ["Inputs" section of the documentation](#iputs)
+For detailed explanations of all inputs to GenomeDISCO, see the ["Inputs" section below](#inputs)
 
 To run reproducibility analysis in batches (more than one comparison), all you need to do is modify the `--metadata_samples` and `--metadata_pairs` to add the additional samples and sample pairs respectively that you wish to compare.
 
@@ -52,13 +52,16 @@ Running other methods for measuring concordance and QC of Hi-C data
 
 GenomeDISCO supports computing concordance scores for Hi-C data using not only the GenomeDISCO framework, but also HiCRep (http://github.com/qunhualilab/hicrep), HiC-Spector (http://github.com/gersteinlab/HiC-spector) and QuASAR-Rep (part of the hifive suite at http://github.com/bxlab/hifive). In addition, it also computes QC scores for Hi-C data using QuASAR-QC (part of the hifive suite at http://github.com/bxlab/hifive). Thanks to Tao Yang and Michael Sauria for providing wrapper scripts around their methods.
 
-Documentation
+Inputs
 =============
 
-Inputs
------
+GenomeDISCO takes the following inputs:
 
-See the full documentation here.
+`--metadata_samples` 
+
+Information about the samples being compared. Tab-delimited file, with columns "samplename", "samplefile". Note: each samplename should be unique. Each samplefile listed here should follow the format "chr1 bin1 chr2 bin2 value
+
+`--metadata_pairs` Each row is a pair of sample names to be compared, in the format "samplename1 samplename2". Important: sample names used here need to correspond to the first column of the --metadata_samples file.
 
 More questions?
 ====
