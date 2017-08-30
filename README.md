@@ -20,8 +20,7 @@ genomedisco/install_scripts/install_genomedisco.sh
 **Note if you are installing these locally**: There are a few parameters you can provide to the installation script, to point it to your desired python installation, R installation, R library, modules and bedtools installation. Thus, you can run the above script as follows:
 
 ```
-genomedisco/install_scripts/install_genomedisco.sh 
---pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules R/3.4.0 --pathtobedtools path/to/your/bedtools
+genomedisco/install_scripts/install_genomedisco.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
 ```
 
 Quick start
@@ -41,6 +40,8 @@ Then run the concordance analysis:
 cd genomedisco
 python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --method GenomeDISCO --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Nodes.w40000.bed.gz --outdir examples/output 
 ```
+
+[Link to a header](#documentation)
 
 To run reproducibility analysis in batches (more than one comparison), all you need to do is modify the `--metadata_samples` and `--metadata_pairs` to add the additional samples and sample pairs respectively that you wish to compare.
 
