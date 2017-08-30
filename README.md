@@ -43,12 +43,12 @@ python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --method Geno
 
 For detailed explanations of all inputs to GenomeDISCO, see the ["Inputs" section below](#inputs)
 
-To run reproducibility analysis in batches (more than one comparison), all you need to do is modify the `--metadata_samples` and `--metadata_pairs` to add the additional samples and sample pairs respectively that you wish to compare.
+To run reproducibility analysis in batches (more than one comparison), all you need to do is modify the `--metadata_samples` and `--metadata_pairs` to add the additional samples and sample pairs respectively that you wish to compare. For details, see ["Analyzing multiple dataset pairs"](#analyzing-multiple-dataset-pairs)
 
 Running other methods for measuring concordance and QC of Hi-C data
 ====
 
-**coming soon**
+**under development**
 
 GenomeDISCO supports computing concordance scores for Hi-C data using not only the GenomeDISCO framework, but also:
 - HiCRep (http://github.com/qunhualilab/hicrep) 
@@ -99,11 +99,15 @@ An example line would look like this:
 
 - `--metadata_pairs` Each row is a pair of sample names to be compared, in the format "samplename1 samplename2". Important: sample names used here need to correspond to the first column of the --metadata_samples file.
 
+Analyzing multiple dataset pairs
+======
+To analyze multiple pairs of contact maps (or multiple contact maps if just computing QC), all you need to do is add any additional datasets you want to analyze to the `--metadata_samples` file and any additional pairs of datasets you want to compare to the `--metadata_pairs` files. 
+
 More questions?
 ====
 Contact Oana Ursu
 
 oursu@stanford.edu
 
-We are excited to hear from you and how we can improve GenomeDISCO!
+
 
