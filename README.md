@@ -60,10 +60,9 @@ In addition, it also computes QC scores for Hi-C data using
 
 Thanks to Michael Sauria for providing wrapper scripts around the QuASAR method, and Tao Yang and Koon-Kiu Yan for their assistance in integrating all methods into a unified software.
 
-Install other methods (HiCRep, HiC-Spector, QuASAR-Rep, QuASAR-QC)
+1. Install other methods (HiCRep, HiC-Spector, QuASAR-Rep, QuASAR-QC)
 ------
 ```
-git clone http://github.com/kundajelab/genomedisco
 genomedisco/install_scripts/install_others.sh
 ```
 As before, if you are installing locally, then do:
@@ -71,7 +70,7 @@ As before, if you are installing locally, then do:
 genomedisco/install_scripts/install_others.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
 ```
 
-Run all methods on your data
+2. Run all methods on your data
 ------
 
 ```
@@ -102,7 +101,7 @@ GenomeDISCO takes the following inputs:
 
 - `--methods` Which method to use for measuring concordance or QC. Comma-delimited list. Possible methods: "GenomeDISCO", "HiCRep", "HiC-Spector", "QuASAR-Rep", "QuASAR-QC". By default all methods are run
 
-- `--parameters_file` File with parameters for reproducibility and QC analysis. For details see ["Parameters file"](#paramaters-file)
+- `--parameters_file` File with parameters for reproducibility and QC analysis. For details see ["Parameters file"](#parameters-file)
 
 - `--outdir` Name of output directory. DEFAULT: replicateQC
 
