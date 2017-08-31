@@ -60,7 +60,7 @@ In addition, it also computes QC scores for Hi-C data using
 
 Thanks to Michael Sauria for providing wrapper scripts around the QuASAR method, and Tao Yang and Koon-Kiu Yan for their assistance in integrating all methods into a unified software.
 
-1. Install other methods (HiCRep, HiC-Spector, QuASAR-Rep, QuASAR-QC)
+Install other methods (HiCRep, HiC-Spector, QuASAR-Rep, QuASAR-QC)
 ------
 ```
 genomedisco/install_scripts/install_others.sh
@@ -70,7 +70,7 @@ As before, if you are installing locally, then do:
 genomedisco/install_scripts/install_others.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
 ```
 
-2. Run all methods on your data
+Run all methods on your data
 ------
 
 ```
