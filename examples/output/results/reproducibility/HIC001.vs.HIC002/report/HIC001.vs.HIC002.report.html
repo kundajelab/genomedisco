@@ -1,0 +1,59 @@
+<html>
+<head>
+<font color="FF0000"> <strong>GenomeDISCO | Genomewide report </font></strong>
+<br>
+Report generated on Wed Aug 30 19:11:37 2017
+<br>
+Code: <a href="http://github.com/kundajelab/genomedisco">http://github.com/kundajelab/genomedisco</a>.
+<br>
+Contact: Oana Ursu oursu@stanford.edu
+<br>
+<strong>HIC001 vs HIC002</strong>
+</head>
+<body>
+<br>
+<br>
+<font color="FF0000"> <strong>Reproducibility analysis</font></strong>
+<br>
+<td> <strong>What is GenomeDISCO reproducibility?</strong></td>
+<br>
+GenomeDISCO (DIfferences between Smoothed COntact maps) computes reproducibility by comparing 2 contact maps at increasing levels of smoothing. The smoothing is done using random walks on graphs. For each dataset, we run random walks of increasing length, and ask what is the probability that we reach node j starting at node i, given a random walk through the network of t steps, or iterations. The key idea is that <strong>if 2 nodes are in contact, then there should be many high-confidence paths connecting them through the network</strong>, even if perhaps the direct edge between them was undersampled. Short random walks provide information about the local network structures, such as loop cliques and subdomains, whereas longer random walks shift the focus toward global structures such as compartments. For each random walk iteration we compare the 2 smoothed contact maps, obtaining an L1 difference in smoothed contact maps.
+<br>
+In the end, we integrate information across all random walks by computing the area under the curve of L1 differences vs random walk iterations (see difference plot below), resulting in a dissimilarity score between the 2 contact maps of interest. We transform this dissimilarity into a reproducibility score using the formula "Reproducibility = 1-d". This yields a reproducibility score between -1 and 1, with higher values indicating similarity (in practice, the range of scores is [0.4,1]).
+<br>
+GenomeDISCO runs on each chromosome separately. The genomewide score reported below is the average across all chromosomes. <strong> Higher scores are better</strong>.<br>
+<br>
+<font color="FF0000"><strong> Your scores</strong></font>
+<br>
+<img src="HIC001.vs.HIC002.chrScores.png" width="780" height="260.0">
+<br>
+<br>
+Reproducibility (genomewide) = 0.924
+<br>
+<br>
+<font color="0033FF"><strong>Congratulations! These datasets are highly reproducible.</strong></font>
+<br>
+<br>
+<font color="FF0000"> <strong>Analysis by chromosome</font></strong>
+<br>
+<td> <strong>The difference plot</strong></td>
+ shows the L1 difference (normalized to the number of nodes) as a function of random walk iteration.
+<br>
+<td> <strong>The distance dependence plot</strong></td>
+ shows the probability of contact as a function of linear genomic distance. If 2 datasets have very difference distance dependence curves, their reproducibility will be lower than if they have similar curves.
+<br>
+<td> <strong>The remaining columns</strong></td>
+ below show the contact maps after smoothing with random walks. The upper triangular part plotted in red is HIC001, while the blue is HIC002. The colorbar shows red values as positive and blue values as negative purely for visualization purposes (in reality all values are positive).
+<br>
+<br>
+<table border="1" cellpadding="10" cellspacing="0" style="border-collapse:collapse;">
+<tr>
+<td> </td>
+<td> <strong><center>seqdepth</center></strong></td>
+<td> <strong><center>reproducibility</center></strong></td>
+<td> <strong><center>difference plot</center></strong></td>
+<td> <strong><center>distance dependence</center></td>
+</table>
+<br>
+</body>
+</html>

@@ -117,31 +117,31 @@ def quasar_makeDatasets(metadata_samples,outdir,subset_chromosomes,resolution,ru
         quasar_project=quasar_data+'/'+samplename+'.quasar_project'
         quasar_transform=quasar_data+'/'+samplename+'.quasar_transform'
         if subset_chromosomes=='NA':
-            #all chromosomes                                                                                           
+            #all chromosomes                                                                                 
             script_forquasar.write('zcat -f  '+samplefile+' | sed \'s/chr//g\' | awk \'{print "chr"$1"\\t"$2"\\tchr"$3"\\t"$4"\\t"$5}\' | gzip > '+full_dataset+'\n')
         else:
-            script_forquasar.write('rm '+full_dataset+'\n')
+            script_forquasar.write('if [ ! '+full_dataset+'.tmp ];then rm '+full_dataset+'.tmp;fi'+'\n')
             for chromosome in subset_chromosomes.split(','):
-                #TODO: keep inter-chromosomals                                                                         
+                #TODO: keep inter-chromosomals                                                               
                 script_forquasar.write('zcat -f  '+samplefile+' | awk \'{print "chr"$1"\t"$2"\tchr"$3"\t"$4"\t"$5}\' | sed \'s/chrchr/chr/g\' | awk -v chromo='+chromosome+' \'{if (($1==$3) && ($1==chromo)) print $0}\' >> '+full_dataset+'.tmp'+'\n')
             script_forquasar.write('zcat -f  '+full_dataset+'.tmp | gzip > '+full_dataset+'\n')
             script_forquasar.write('rm '+full_dataset+'.tmp'+'\n')
 
         #make quasar dataset
-        script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/software/encode_data_to_hifive.py "+full_dataset+" "+nodes_partition+' '+quasar_output+'\n')
+        script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/data_to_hifive.py "+full_dataset+" "+nodes_partition+' '+quasar_output+'\n')
         script_forquasar.write('rm '+full_dataset+'\n')
         
         #make project
         script_forquasar.write('${mypython} -c "import hifive; hic=hifive.HiC(\''+quasar_project+'\',\'w\'); hic.load_data(\''+quasar_output+'\');hic.filter_fends(mininteractions=1); hic.save()"'+'\n')
 
         #quasar tranformation
-        script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+'/software/hifive/bin/find_quasar_transform '+quasar_project+' '+quasar_transform+' -r '+resolution+'\n')
+        script_forquasar.write('${mypython} '+os.path.dirname(os.path.dirname(os.path.realpath(__file__)))+'/software/hifive/bin/find_quasar_transform '+quasar_project+' '+quasar_transform+' -r '+resolution+'\n')
 
         #plot the quasar transformation
-        script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+'/software/plot_quasar_transform.py --transform '+quasar_transform+' --out '+quasar_transform+'\n')
+        script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+'/plot_quasar_transform.py --transform '+quasar_transform+' --out '+quasar_transform+'\n')
 
         #remove intermediate files
-        script_forquasar.write('rm '+full_dataset+' '+quasar_output+' '+quasar_project+'\n')
+        script_forquasar.write('rm '+quasar_output+' '+quasar_project+'\n')
 
     script_forquasar.close()
     run_script(script_forquasar_file,running_mode)
@@ -248,13 +248,13 @@ def QuASAR_rep_wrapper(outdir,parameters,samplename1,samplename2,running_mode):
     script_comparison=open(script_comparison_file,'w')
     script_comparison.write("#!/bin/sh"+'\n')
     script_comparison.write('source '+bashrc_file+'\n')
-    outpath=outdir+'/results/QuASAR-Rep/'+samplename1+'.vs.'+samplename2+'/'+samplename1+'.vs.'+samplename2+'.QuASAR-Rep.scores.txt'
+    outpath=outdir+'/results/reproducibility/'+samplename1+'.vs.'+samplename2+'/QuASAR-Rep/'+samplename1+'.vs.'+samplename2+'.QuASAR-Rep.scores.txt'
     subp.check_output(['bash','-c','mkdir -p '+os.path.dirname(outpath)])
     quasar_data=outdir+'/data/forQuASAR'
     quasar_transform1=quasar_data+'/'+samplename1+'.quasar_transform'
     quasar_transform2=quasar_data+'/'+samplename2+'.quasar_transform'
-    script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__)))+"/software/hifive/bin/find_quasar_replicate_score"+' '+quasar_transform1+' '+quasar_transform2+' '+outpath+'\n') 
-    script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__)))+"/software/plot_quasar_scatter.py"+' '+quasar_transform1+' '+quasar_transform2+' '+outpath+'\n')
+    script_comparison.write('${mypython} '+os.path.dirname(os.path.abspath(os.path.dirname(os.path.realpath(__file__))))+"/software/hifive/bin/find_quasar_replicate_score"+' '+quasar_transform1+' '+quasar_transform2+' '+outpath+'\n') 
+    script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__)))+"/plot_quasar_scatter.py"+' '+quasar_transform1+' '+quasar_transform2+' '+outpath+'\n')
     script_comparison.close()
     run_script(script_comparison_file,running_mode)
 
@@ -264,13 +264,13 @@ def quasar_qc_wrapper(outdir,parameters,samplename,running_mode):
     script_comparison=open(script_comparison_file,'w')
     script_comparison.write("#!/bin/sh"+'\n')
     script_comparison.write('source '+bashrc_file+'\n')
-    outpath=outdir+'/results/QuASAR-QC/'+samplename+'/'+samplename+'QuASAR-QC.scores.txt'
+    outpath=outdir+'/results/qc/'+samplename+'/QuASAR-QC/'+samplename+'QuASAR-QC.scores.txt'
     subp.check_output(['bash','-c','mkdir -p '+os.path.dirname(outpath)])
     script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__))+"/software/hifive/bin/find_quasar_quality_score")+' '+quasar_transform+' '+outpath+'\n')
     script_comparison.close()
     run_script(script_comparison_file,running_mode)
 
-def HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile):
+def HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile,resolution):
     script_comparison_file=outdir+'/scripts/HiCRep/'+samplename1+'.'+samplename2+'/'+chromo+'.'+samplename1+'.vs.'+samplename2+'.sh'
     subp.check_output(['bash','-c','mkdir -p '+os.path.dirname(script_comparison_file)])
     script_comparison=open(script_comparison_file,'w')
@@ -278,10 +278,10 @@ def HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,ch
     script_comparison.write('source '+bashrc_file+'\n')
     if os.path.isfile(f1) and os.path.getsize(f1)>20:
         if os.path.isfile(f2) and os.path.getsize(f2)>20:
-            outpath=outdir+'/results/HiCRep/'+samplename1+'.vs.'+samplename2+'/'+chromo+'.'+samplename1+'.vs.'+samplename2+'.scores.txt'
+            outpath=outdir+'/results/reproducibility/'+samplename1+'.vs.'+samplename2+'/HiCRep/'+chromo+'.'+samplename1+'.vs.'+samplename2+'.scores.txt'
             subp.check_output(['bash','-c','mkdir -p '+os.path.dirname(outpath)])
-            hicrepcode=os.path.abspath(os.path.dirname(os.path.realpath(__file__))+"/software/HiCRep_wrapper.R")
-            script_comparison.write("Rscript "+hicrepcode+' '+f1+' '+f2+' '+outpath+' '+parameters['HiCRep']['maxdist']+' '+parameters['HiCRep']['resolution']+' '+nodefile+' '+parameters['HiCRep']['h']+' '+samplename1+' '+samplename2+'\n')
+            hicrepcode=os.path.abspath(os.path.dirname(os.path.realpath(__file__))+"/HiCRep_wrapper.R")
+            script_comparison.write("Rscript "+hicrepcode+' '+f1+' '+f2+' '+outpath+' '+parameters['HiCRep']['maxdist']+' '+str(resolution)+' '+nodefile+' '+parameters['HiCRep']['h']+' '+samplename1+' '+samplename2+'\n')
             script_comparison.close()
             run_script(script_comparison_file,running_mode)
     
@@ -306,7 +306,7 @@ def GenomeDISCO_wrapper(outdir,parameters,concise_analysis,samplename1,samplenam
                 subsampling_sample=parameters['GenomeDISCO']['subsampling']
                 subsampling=outdir+'/data/edges/'+subsampling_sample+'/'+subsampling_sample+'.'+chromo+'.gz'
 
-            outpath=outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2                     
+            outpath=outdir+'/results/reproducibility/'+samplename1+'.vs.'+samplename2+'/GenomeDISCO/'
             subp.check_output(['bash','-c','mkdir -p '+outpath])                                      
             script_comparison.write("$mypython -W ignore "+os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))+"/genomedisco/compute_reproducibility.py")+" --m1 "+f1+" --m2 "+f2+" --m1name "+samplename1+" --m2name "+samplename2+" --node_file "+nodefile+" --outdir "+outpath+" --outpref "+chromo+" --m_subsample "+subsampling+" --approximation 10000000 --norm "+parameters['GenomeDISCO']['norm']+" --method RandomWalks "+" --tmin "+parameters['GenomeDISCO']['tmin']+" --tmax "+parameters['GenomeDISCO']['tmax']+concise_analysis_text+'\n')                                               
             script_comparison.close()                                                                 
@@ -318,6 +318,9 @@ def compute_reproducibility(metadata_pairs,methods,parameters_file,outdir,runnin
 
     outdir=os.path.abspath(outdir)
     metadata_pairs=os.path.abspath(metadata_pairs)
+
+    resolution_file=outdir+'/data/metadata/resolution.txt'
+    resolution=open(resolution_file,'r').readlines()[0].split()[0]
 
     for line in open(metadata_pairs,'r').readlines():                                                     
         items=line.strip().split()                                                                       
@@ -338,7 +341,7 @@ def compute_reproducibility(metadata_pairs,methods,parameters_file,outdir,runnin
 
             if "HiCRep" in methods_list or "all" in methods_list:
                 print strftime("%c")+'\n'+'running HiCRep | computing reproducibility for '+samplename1+'.vs.'+samplename2+' '+chromo
-                HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile)
+                HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile,resolution)
 
             if "HiC-Spector" in methods_list or "all" in methods_list:
                 print strftime("%c")+'\n'+'running HiC-Spector | computing reproducibility for '+samplename1+'.vs.'+samplename2+' '+chromo
@@ -373,8 +376,8 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
                     if chromo not in subset_chromosomes.split(','):
                         continue
             
-                pair_text=samplename1+'.vs.'+samplename2+'/'+chromo+'.'+samplename1+'.vs.'+samplename2+'.scores.txt'
-                current_score=float(open(outdir+'/results/'+method+'/'+pair_text,'r').readlines()[0].strip().split('\t')[2])
+                pair_text=chromo+'.'+samplename1+'.vs.'+samplename2+'.scores.txt'
+                current_score=float(open(outdir+'/results/reproducibility/'+samplename1+'.vs.'+samplename2+'/'+method+'/'+pair_text,'r').readlines()[0].strip().split('\t')[2])
                 scores[method][samplename1+'.vs.'+samplename2][chromo]=current_score
                 if 'genomewide_list' not in scores[method][samplename1+'.vs.'+samplename2].keys():
                     scores[method][samplename1+'.vs.'+samplename2]['genomewide_list']=[]
@@ -416,16 +419,20 @@ def visualize(outdir,parameters_file,metadata_pairs):
     header_col='FF0000'
     picsize="200"
     topscores=0.85    
+    #TODO: add input from the calibration tables
 
     for line in open(metadata_pairs,'r').readlines():
 
         items=line.strip().split()
         samplename1,samplename2=items[0],items[1]
 
-        file_all_scores=open(outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt','w')
+        #file_all_scores=open(outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt','w')
         print 'GenomeDISCO | '+strftime("%c")+' | Writing report for '+samplename1+'.vs.'+samplename2
-
-        html=open(outdir+'/results/genomedisco/'+samplename1+'.vs.'+samplename2+'/report.'+samplename1+'.vs.'+samplename2+'.genomedisco.html','w')
+        
+        html_name=outdir+'/results/reproducibility/'+samplename1+'.vs.'+samplename2+'/report/'+samplename1+'.vs.'+samplename2+'.report.html'
+        if not os.path.exists(os.path.dirname(html_name)):
+            os.makedirs(os.path.dirname(html_name))
+        html=open(outdir+'/results/reproducibility/'+samplename1+'.vs.'+samplename2+'/report/'+samplename1+'.vs.'+samplename2+'.report.html','w')
     
         html.write("<html>"+'\n')
         html.write("<head>"+'\n')
@@ -453,10 +460,10 @@ def visualize(outdir,parameters_file,metadata_pairs):
         scoredict={}
         for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
             chromo=chromo_line.strip()
-            f=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
+            f=outdir+'/results/reproducibility/'+samplename1+".vs."+samplename2+'/GenomeDISCO/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
             if os.path.isfile(f):
                 score_num+=1
-                score=float(open(outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt','r').readlines()[0].split('\t')[2])
+                score=float(open(f,'r').readlines()[0].split('\t')[2])
                 score=float(int(1000*score))/1000.0
                 score_sum+=score
                 scores.append(score)
@@ -480,7 +487,7 @@ def visualize(outdir,parameters_file,metadata_pairs):
         plt.gcf().subplots_adjust(left=0.25)
         plt.legend(loc=3,fontsize=25)
         plt.show()
-        chrscores=outdir+'/results/genomedisco/'+samplename1+".vs."+samplename2+'/'+samplename1+'.vs.'+samplename2+'.chrScores.png'
+        chrscores=outdir+'/results/reproducibility/'+samplename1+".vs."+samplename2+'/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'.chrScores.png'
         plt.savefig(chrscores)
         plt.close()
 
@@ -532,10 +539,12 @@ def visualize(outdir,parameters_file,metadata_pairs):
         html.write("<td> <strong><center>reproducibility</center></strong></td>"+'\n')
         html.write("<td> <strong><center>difference plot</center></strong></td>"+'\n')
         html.write("<td> <strong><center>distance dependence</center></td>"+'\n')
+        '''
         for t in range(tmin,tmax+1):
             html.write("<td><center><strong>Random walk iteration "+str(t)+"</strong></center></td>"+'\n')
         html.write("</tr>"+'\n')
 
+        
         score_strings=[]
         chromo_strings=[]
         sorted_chromos=gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines()
@@ -573,7 +582,7 @@ def visualize(outdir,parameters_file,metadata_pairs):
                 html.write("</tr>"+'\n')
         file_all_scores.write('#m1'+'\t'+'m2'+'\t'+'\t'.join(chromo_strings)+'\t'+'genomewide'+'\n')
         file_all_scores.write(samplename1+'\t'+samplename2+'\t'+'\t'.join(score_strings)+'\t'+str(float("{0:.3f}".format(float(genomewide_score))))+'\n')
-
+        '''
         html.write("</table>"+'\n')
         html.write("<br>"+'\n')
         html.write("</body>"+'\n')

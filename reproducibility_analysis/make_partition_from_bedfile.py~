@@ -1,0 +1,43 @@
+import argparse
+import sys
+import os
+
+import hifive
+import h5py
+import numpy
+import gzip
+import re
+
+def main():
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('--nodes')
+    parser.add_argument('--partition')
+    parser.add_argument('--resolution',type=int)
+    parser.add_argument('--re',action='store_true')
+    parser.add_argument('--subset_chromosomes',default='NA')
+    args = parser.parse_args()
+
+    nodes_modified_file=args.partition+'.tmp'
+    nodes_modified=open(nodes_modified_file,'w')
+    for line in gzip.open(args.nodes,'r'):
+        items=line.strip().split('\t')
+        chromo,start,end,name=items[0],items[1],items[2],items[3]
+        if args.subset_chromosomes!='NA':
+            if chromo not in args.subset_chromosomes.split(','):
+                continue
+        nodes_modified.write(re.sub('chr','',chromo)+'\t'+start+'\t'+end+'\t'+name+'\n')
+    nodes_modified.close()
+
+    if args.re:
+        #restriction fragments
+        myfends=hifive.Fend(args.partition, mode='w')
+        myfends.load_fends(bins_data_filename, format='bed') 
+    else:
+        #uniform bins
+        myfends=hifive.Fend(args.partition, mode='w',binned=int(args.resolution)) 
+        myfends.load_bins(nodes_modified_file, format='bed') 
+    myfends.save() 
+
+    os.remove(args.partition+'.tmp')
+
+main()

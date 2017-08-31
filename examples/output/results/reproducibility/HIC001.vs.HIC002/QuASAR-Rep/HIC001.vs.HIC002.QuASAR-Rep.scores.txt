@@ -1,0 +1,2 @@
+Sample1	Sample2	Resolution	All	21
+HIC001.quasar_transform	HIC002.quasar_transform	40000	0.598421863269	0.598421863269

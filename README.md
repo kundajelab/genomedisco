@@ -60,7 +60,7 @@ In addition, it also computes QC scores for Hi-C data using
 
 Thanks to Michael Sauria for providing wrapper scripts around the QuASAR method, and Tao Yang and Koon-Kiu Yan for their assistance in integrating all methods into a unified software.
 
-Install other methods
+Install other methods (HiCRep, HiC-Spector, QuASAR-Rep, QuASAR-QC)
 ------
 ```
 git clone http://github.com/kundajelab/genomedisco
@@ -94,14 +94,43 @@ GenomeDISCO takes the following inputs:
 
 - `--metadata_samples` Information about the samples being compared. Tab-delimited file, with columns "samplename", "samplefile". Note: each samplename should be unique. Each samplefile listed here should follow the format "chr1 bin1 chr2 bin2 value
 
-An example line would look like this:
-```sample1 path/to/file/for/sample1```
-
 - `--metadata_pairs` Each row is a pair of sample names to be compared, in the format "samplename1 samplename2". Important: sample names used here need to correspond to the first column of the --metadata_samples file.
+
+- `--bins` A (gzipped) bed file of the all bins used in the analysis. It should have 4 columns: "chr start end name", where the name of the bin corresponds to the bins used in the contact maps.
+
+- `--re_fragments` Add this flag if the bins are not uniform bins in the genome (e.g. if they are restriction-fragment-based).By default, the code assumes the bins are of uniform length.
+
+- `--methods` Which method to use for measuring concordance or QC. Comma-delimited list. Possible methods: "GenomeDISCO", "HiCRep", "HiC-Spector", "QuASAR-Rep", "QuASAR-QC". By default all methods are run
+
+- `--parameters_file` File with parameters for reproducibility and QC analysis. For details see ["Parameters file"](#paramaters-file)
+
+- `--outdir` Name of output directory. DEFAULT: replicateQC
+
+- `--running_mode` The mode in which to run the analysis. This allows you to choose whether the analysis will be run as is, or submitted as a job through sge or slurm. Available options are: "NA" (default, no jobs are submitted). Coming soon: "sge", "slurm"
+
+- `--concise_analysis` Set this flag to obtain a concise analysis, which means replicateQC is measured but plots that might be more time/memory consuming are not created. This is useful for quick testing or running large-scale analyses on hundreds of comparisons.
+
+- `--subset_chromosomes` Comma-delimited list of chromosomes for which you want to run the analysis. By default the analysis runs on all chromosomes for which there are data. This is useful for quick testing
 
 Analyzing multiple dataset pairs
 ======
 To analyze multiple pairs of contact maps (or multiple contact maps if just computing QC), all you need to do is add any additional datasets you want to analyze to the `--metadata_samples` file and any additional pairs of datasets you want to compare to the `--metadata_pairs` files. 
+
+Parameters file
+======
+
+The parameters file specifies the parameters to be used with GenomeDISCO (and any of the other methods GenomeDISCO supports). The format of the file is: `method_name parameter_name parameter_value`. The default parameters file used by GenomeDISCO is:
+
+```
+GenomeDISCO		subsampling	lowest
+GenomeDISCO		tmin		3
+GenomeDISCO		tmax		3
+GenomeDISCO		norm		sqrtvc
+HiCRep  h       5
+HiCRep  maxdist 5000000
+HiC-Spector		n			20
+```
+Note: all of the above parameters need to be specified in the parameters file.
 
 More questions?
 ====

@@ -1,2 +1,0 @@
-#m1name	m2name	SeqDepth.m1	SeqDepth.m2	SubsampledSeqDepth.m1	SubsampledSeqDepth.m2	DistDepDiff
-HIC001	HIC002	1116468.0	1928316.0	1116468.0	1117339.0	0.0000307115
