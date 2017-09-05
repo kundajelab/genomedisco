@@ -1,2 +1,2 @@
 #Sample1	Sample2	Score
-HIC001	HIC002	0.924
+HIC001	HIC002	0.925

@@ -67,9 +67,9 @@ else
     libtext=",lib=\"${RLIB}\""
 fi
 cmd="${PATHTOR} -e 'source(\"https://bioconductor.org/biocLite.R\");biocLite(\"hicrep\"${libtext})'"
-#eval ${cmd}
+eval "${cmd}"
 cmd="${PATHTOR} -e 'install.packages(\"reshape2\"${libtext},repos=\"http://cran.rstudio.com/\")'"
-#eval ${cmd}
+eval "${cmd}"
 
 #HiC-Spector
 #===========

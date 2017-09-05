@@ -51,7 +51,7 @@ done
 
 #for plotting score heatmaps
 cmd="${PATHTOR} -e 'install.packages(\"pheatmap\"${libtext},repos=\"http://cran.rstudio.com/\")'"
-#eval ${cmd}
+eval ${cmd}
 
 #==================
 #make a bashrc file

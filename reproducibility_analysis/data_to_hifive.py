@@ -73,7 +73,7 @@ class Encode_Data(hifive.HiCData):
                 temp[2] = temp[2].strip('chr')
                 if temp[0] not in self.chr2int or temp[2] not in self.chr2int:
                     self.stats['chr_not_in_fends'] += 1
-                    print 'dont like chromo'
+                    #print 'dont like chromo'
                     continue
                 chrint1 = self.chr2int[temp[0]]
                 chrint2 = self.chr2int[temp[2]]
