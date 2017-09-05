@@ -48,8 +48,6 @@ To run reproducibility analysis in batches (more than one comparison), all you n
 Running other methods for measuring concordance and QC of Hi-C data
 ====
 
-**under development**
-
 GenomeDISCO supports computing concordance scores for Hi-C data using not only the GenomeDISCO framework, but also:
 - HiCRep (http://github.com/qunhualilab/hicrep) 
 - HiC-Spector (http://github.com/gersteinlab/HiC-spector) 
