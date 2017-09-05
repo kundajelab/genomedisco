@@ -380,12 +380,14 @@ def compute_reproducibility(metadata_pairs,methods,parameters_file,outdir,runnin
                 QuASAR_rep_wrapper(outdir,parameters,samplename1,samplename2,running_mode)
             '''
 def get_qc(metadata_samples,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes):
-    #TODO: have fewer parameters for this function
-    for line in open(metadata_samples,'r').readlines():
-        items=line.strip().split()
-        samplename=items[0]
-        samplefile=items[1]
-        quasar_qc_wrapper(outdir,None,samplename,running_mode)
+    methods_list=methods.strip().split('\t')
+    if 'QuASAR-QC' in methods_list or 'all' in methods_list:
+        #TODO: have fewer parameters for this function
+        for line in open(metadata_samples,'r').readlines():
+            items=line.strip().split()
+            samplename=items[0]
+            samplefile=items[1]
+            quasar_qc_wrapper(outdir,None,samplename,running_mode)
 
 def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes):
     
