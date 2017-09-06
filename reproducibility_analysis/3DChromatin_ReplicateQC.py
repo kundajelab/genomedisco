@@ -273,7 +273,7 @@ def quasar_qc_wrapper(outdir,parameters,samplename,running_mode):
     quasar_data=outdir+'/data/forQuASAR'
     quasar_transform=quasar_data+'/'+samplename+'.quasar_transform'
     subp.check_output(['bash','-c','mkdir -p '+os.path.dirname(outpath)])
-    script_comparison.write('${mypython} '+os.path.dirname(os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/hifive/bin/find_quasar_quality_score")+' '+quasar_transform+' '+outpath+'\n')
+    script_comparison.write('${mypython} '+os.path.dirname(os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))+"/hifive/bin/find_quasar_quality_score"+' '+quasar_transform+' '+outpath+'\n')
     script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__)))+"/quasar_split_by_chromosomes_qc.py"+' '+outpath+' '+samplename+'\n')
     script_comparison.close()
     run_script(script_comparison_file,running_mode)
