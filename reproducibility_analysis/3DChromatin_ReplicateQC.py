@@ -131,6 +131,8 @@ def quasar_makeDatasets(metadata_samples,outdir,subset_chromosomes,resolution,ru
             script_forquasar.write('rm '+full_dataset+'.tmp'+'\n')
 
         #make quasar dataset
+        print "before data_to_hifive"
+        print os.path.dirname(os.path.realpath(__file__))
         script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/data_to_hifive.py "+full_dataset+" "+nodes_partition+' '+quasar_output+'\n')
         script_forquasar.write('rm '+full_dataset+'\n')
         

@@ -5,7 +5,6 @@ import re
 import os
 import sys
 sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))
-print os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from time import gmtime, strftime
 from genomedisco import data_operations, processing, visualization
 
@@ -27,8 +26,8 @@ def tryimport(name, globals={}, locals={}, fromlist=[], level=-1):
 
 realimport, __builtin__.__import__ = __builtin__.__import__, tryimport
 #=======================================
-sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/software/HiC-spector/")
-print os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/software/HiC-spector/"
+sys.path.append(os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))+"/software/HiC-spector/")
+print os.path.abspath(os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))))+"/software/HiC-spector/"
 from run_reproducibility import get_Laplacian, evec_distance, get_ipr, get_reproducibility 
 import StringIO
 
