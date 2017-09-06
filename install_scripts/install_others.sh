@@ -43,6 +43,8 @@ done
 dir_of_script="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 repo_dir=$(dirname ${dir_of_script})
 repo_dir=$(dirname ${repo_dir})
+echo ${repo_dir}
+exit
 
 #============================
 # install different software
@@ -85,7 +87,8 @@ ${pythondir}/python setup.py install
 #==================
 #make a bashrc file
 #==================
-bashrc_file=${repo_dir}/scripts/bashrc.allMethods
+bashrc_file=${repo_dir}/software/genomedisco/scripts/bashrc.allMethods
+bashrc_file_disco=${repo_dir}/software/genomedisco/scripts/bashrc.genomedisco
 
 #for genomedisco
 echo "CODEDIR=${repo_dir}" > ${bashrc_file}
@@ -110,3 +113,5 @@ echo "mybedtools=${PATHTOBEDTOOLS}" >> ${bashrc_file}
 
 #point to hifive
 echo "myhifive=${pythondir}/hifive" >> ${bashrc_file}
+
+cat ${bashrc_file} > ${bashrc_file_disco}
