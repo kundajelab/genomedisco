@@ -90,7 +90,7 @@ bashrc_file=${repo_dir}/software/genomedisco/scripts/bashrc.allMethods
 bashrc_file_disco=${repo_dir}/software/genomedisco/scripts/bashrc.genomedisco
 
 #for genomedisco
-echo "CODEDIR=${repo_dir}" > ${bashrc_file}
+echo "CODEDIR=${repo_dir}/software/genomedisco" > ${bashrc_file}
 echo "mypython=${PATHTOPYTHON}" >> ${bashrc_file}
 echo "export PYTHONPATH=\""'$'"{PYTHONPATH}:"'$'"{CODEDIR}:"'$'"{CODEDIR}/genomedisco/comparison_types/\"" >> ${bashrc_file}
 
