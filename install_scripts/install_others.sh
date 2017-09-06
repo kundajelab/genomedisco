@@ -43,8 +43,7 @@ done
 dir_of_script="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 repo_dir=$(dirname ${dir_of_script})
 repo_dir=$(dirname ${repo_dir})
-echo ${repo_dir}
-exit
+repo_dir=$(dirname ${repo_dir})
 
 #============================
 # install different software
