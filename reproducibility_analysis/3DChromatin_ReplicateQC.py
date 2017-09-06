@@ -421,7 +421,7 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
                 scores[method][samplename1+'.vs.'+samplename2]['genomewide_list'].append(current_score)
 
     for method in methods_list:
-        if method=='QuASAR-QC':
+        if method=='QuASAR-QC' or 'all' in methods_list:
             scores['QuASAR-QC']={}
             for line in open(metadata_samples,'r').readlines():
                 items=line.strip().split()
@@ -460,8 +460,9 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
             genomewide_file.write(samplename1+'\t'+samplename2+'\t'+str(np.mean(np.array(scores[method][samplename1+'.vs.'+samplename2]['genomewide_list'])))+'\n')
         genomewide_file.close()
 
+        
     for method in methods_list:
-        if method=='QuASAR-QC':
+        if method=='QuASAR-QC' or 'all' in methods_list:
             for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
                 chromo=chromo_line.strip()
                 if subset_chromosomes!='NA':
