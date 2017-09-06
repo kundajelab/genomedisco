@@ -258,7 +258,7 @@ def QuASAR_rep_wrapper(outdir,parameters,samplename1,samplename2,running_mode):
     quasar_data=outdir+'/data/forQuASAR'
     quasar_transform1=quasar_data+'/'+samplename1+'.quasar_transform'
     quasar_transform2=quasar_data+'/'+samplename2+'.quasar_transform'
-    script_comparison.write('${mypython} '+os.path.dirname(os.path.abspath(os.path.dirname(os.path.realpath(__file__))))+"/software/hifive/bin/find_quasar_replicate_score"+' '+quasar_transform1+' '+quasar_transform2+' '+outpath+'\n') 
+    script_comparison.write('${mypython} '+os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(os.path.realpath(__file__)))))+"/hifive/bin/find_quasar_replicate_score"+' '+quasar_transform1+' '+quasar_transform2+' '+outpath+'\n') 
     script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__)))+"/plot_quasar_scatter.py"+' '+quasar_transform1+' '+quasar_transform2+' '+outpath+'\n')
     #split the scores by chromosomes
     script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__)))+"/quasar_split_by_chromosomes.py"+' '+outpath+'\n')
