@@ -131,8 +131,6 @@ def quasar_makeDatasets(metadata_samples,outdir,subset_chromosomes,resolution,ru
             script_forquasar.write('rm '+full_dataset+'.tmp'+'\n')
 
         #make quasar dataset
-        print "before data_to_hifive"
-        print os.path.dirname(os.path.realpath(__file__))
         script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/data_to_hifive.py "+full_dataset+" "+nodes_partition+' '+quasar_output+'\n')
         script_forquasar.write('rm '+full_dataset+'\n')
         
@@ -275,7 +273,7 @@ def quasar_qc_wrapper(outdir,parameters,samplename,running_mode):
     quasar_data=outdir+'/data/forQuASAR'
     quasar_transform=quasar_data+'/'+samplename+'.quasar_transform'
     subp.check_output(['bash','-c','mkdir -p '+os.path.dirname(outpath)])
-    script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__)))+"/software/hifive/bin/find_quasar_quality_score")+' '+quasar_transform+' '+outpath+'\n')
+    script_comparison.write('${mypython} '+os.path.dirname(os.path.abspath(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+"/hifive/bin/find_quasar_quality_score")+' '+quasar_transform+' '+outpath+'\n')
     script_comparison.write('${mypython} '+os.path.abspath(os.path.dirname(os.path.realpath(__file__)))+"/quasar_split_by_chromosomes_qc.py"+' '+outpath+' '+samplename+'\n')
     script_comparison.close()
     run_script(script_comparison_file,running_mode)
