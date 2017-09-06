@@ -397,12 +397,12 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
     scores={}
     subp.check_output(['bash','-c','mkdir -p '+outdir+'/results/summary'])
     if methods_list==['all']:
-        methods_list=['GenomeDISCO','HiCRep','HiC-Spector','QuASAR-Rep']
+        methods_list=['GenomeDISCO','HiCRep','HiC-Spector','QuASAR-Rep','QuASAR-QC']
     for method in methods_list:
+        subp.check_output(['bash','-c','mkdir -p '+outdir+'/results/summary/'+method])
         if method=="QuASAR-QC":
             continue
         scores[method]={}
-        subp.check_output(['bash','-c','mkdir -p '+outdir+'/results/summary/'+method])
         for line in open(metadata_pairs,'r').readlines():
             items=line.strip().split()
             samplename1,samplename2=items[0],items[1]
@@ -460,7 +460,8 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
             genomewide_file.write(samplename1+'\t'+samplename2+'\t'+str(np.mean(np.array(scores[method][samplename1+'.vs.'+samplename2]['genomewide_list'])))+'\n')
         genomewide_file.close()
 
-        
+    print "methods list"
+    print methods_list
     for method in methods_list:
         if method=='QuASAR-QC' or 'all' in methods_list:
             for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
