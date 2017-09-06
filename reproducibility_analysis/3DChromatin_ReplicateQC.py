@@ -140,7 +140,7 @@ def quasar_makeDatasets(metadata_samples,outdir,subset_chromosomes,resolution,ru
         script_forquasar.write('${mypython} -c "import hifive; hic=hifive.HiC(\''+quasar_project+'\',\'w\'); hic.load_data(\''+quasar_output+'\');hic.filter_fends(mininteractions=1); hic.save()"'+'\n')
 
         #quasar tranformation
-        script_forquasar.write('${mypython} '+os.path.dirname(os.path.dirname(os.path.realpath(__file__)))+'/software/hifive/bin/find_quasar_transform '+quasar_project+' '+quasar_transform+' -r '+resolution+'\n')
+        script_forquasar.write('${mypython} '+os.path.dirname(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))+'/hifive/bin/find_quasar_transform '+quasar_project+' '+quasar_transform+' -r '+resolution+'\n')
 
         #plot the quasar transformation
         script_forquasar.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+'/plot_quasar_transform.py --transform '+quasar_transform+' --out '+quasar_transform+'\n')
