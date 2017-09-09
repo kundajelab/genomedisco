@@ -48,35 +48,13 @@ To run reproducibility analysis in batches (more than one comparison), all you n
 Running other methods for measuring concordance and QC of Hi-C data
 ====
 
-GenomeDISCO supports computing concordance scores for Hi-C data using not only the GenomeDISCO framework, but also:
+To run other available methods for computing the reproducibility of Hi-C data, refer to the repository http://github.com/kundajelab/3DChromatin_ReplicateQC and follow the instructions there.
+
+The reproducibility methods supported in 3DChromatin_ReplicateQC are:
+- GenomeDISCO (http://github.com/kundajelab/genomedisco)
 - HiCRep (http://github.com/qunhualilab/hicrep) 
 - HiC-Spector (http://github.com/gersteinlab/HiC-spector) 
 - QuASAR-Rep (part of the hifive suite at http://github.com/bxlab/hifive) 
-
-In addition, it also computes QC scores for Hi-C data using 
-- QuASAR-QC (part of the hifive suite at http://github.com/bxlab/hifive)
-
-Thanks to Michael Sauria for providing wrapper scripts around the QuASAR method, and Tao Yang and Koon-Kiu Yan for their assistance in integrating all methods into a unified software.
-
-Install other methods (HiCRep, HiC-Spector, QuASAR-Rep, QuASAR-QC)
-------
-```
-genomedisco/install_scripts/install_others.sh
-```
-As before, if you are installing locally, then do:
-```
-genomedisco/install_scripts/install_others.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
-```
-
-Run all methods on your data
-------
-
-```
-cd genomedisco
-python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Nodes.w40000.bed.gz --outdir examples/output
-```
-
-The only difference to before is that `--methods GenomeDISCO` was omitted, and by default all methods are run. If you want to run a subset of methods, you can provide them as a comma-delimited list; for instance to run QuASAR-QC and QuASAR-Rep, you would set `--methods QuASAR-QC,QuASAR-Rep`.
 
 Inputs
 =============
@@ -97,7 +75,7 @@ GenomeDISCO takes the following inputs:
 
 - `--re_fragments` Add this flag if the bins are not uniform bins in the genome (e.g. if they are restriction-fragment-based).By default, the code assumes the bins are of uniform length.
 
-- `--methods` Which method to use for measuring concordance or QC. Comma-delimited list. Possible methods: "GenomeDISCO", "HiCRep", "HiC-Spector", "QuASAR-Rep", "QuASAR-QC". By default all methods are run
+- `--methods` Which method to use for measuring concordance or QC. Set this to "GenomeDISCO". For other methods, refer to the repository "http://github.com/kundajelab/3DChromatin_ReplicateQC"
 
 - `--parameters_file` File with parameters for reproducibility and QC analysis. For details see ["Parameters file"](#parameters-file)
 

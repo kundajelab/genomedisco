@@ -1,7 +1,8 @@
-CODEDIR=/oak/stanford/groups/akundaje/oursu/code/new_genomedisco/genomedisco/
+CODEDIR=/oak/stanford/groups/akundaje/oursu/code/testing/3DChromatin_ReplicateQC/software/genomedisco
 mypython=/oak/stanford/groups/akundaje/oursu/software/anaconda2/bin/python
 export PYTHONPATH="${PYTHONPATH}:${CODEDIR}:${CODEDIR}/genomedisco/comparison_types/"
 module load R/3.4.0
-export R_LIBS="/oak/stanford/groups/akundaje/oursu/code/R"
+export R_LIBS="/oak/stanford/groups/akundaje/oursu/code/R/"
 export R_LIBS_USER=${R_LIBS}
 mybedtools=/oak/stanford/groups/akundaje/oursu/software/bedtools2/bin/bedtools
+myhifive=/oak/stanford/groups/akundaje/oursu/software/anaconda2/bin/hifive
