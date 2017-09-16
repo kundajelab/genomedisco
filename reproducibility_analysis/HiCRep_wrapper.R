@@ -95,11 +95,11 @@ scores=data.frame(M1=m1name,M2=m2name,score=SCC.out[['scc']],sd=SCC.out[['std']]
 write.table(scores,file=out,quote=FALSE,row.names=FALSE,col.names=FALSE,sep='\t')
 
 #also, plot the correlations and the weights
-png(paste(out,'.png',sep=''))
-par(mfrow=c(2,1))
-plot(0.000001*resol*c(1:length(SCC.out[['corr']])),SCC.out[['corr']],xlab='Genomic distance (Mb)',
-ylab='Pearson correlation',ylim=c(-1,1))
-plot(0.000001*resol*c(1:length(SCC.out[['wei']])),SCC.out[['wei']],xlab='Genomic distance (Mb)',
-ylab='Weights',ylim=c(0,max(SCC.out[['wei']])))
-dev.off()
+#png(paste(out,'.png',sep=''))
+#par(mfrow=c(2,1))
+#plot(0.000001*resol*c(1:length(SCC.out[['corr']])),SCC.out[['corr']],xlab='Genomic distance (Mb)',
+#ylab='Pearson correlation',ylim=c(-1,1))
+#plot(0.000001*resol*c(1:length(SCC.out[['wei']])),SCC.out[['wei']],xlab='Genomic distance (Mb)',
+#ylab='Weights',ylim=c(0,max(SCC.out[['wei']])))
+#dev.off()
 
