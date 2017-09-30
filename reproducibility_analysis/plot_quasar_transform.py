@@ -47,6 +47,8 @@ def main():
     data1 = load_data(infile1, chroms, resolutions)
     infile1.close()
 
+    '''
+    #for now, don't plot this
     for resolution in data1.keys():
         for chromo in chroms:
             N = data1[resolution][chromo][1].shape[0]
@@ -55,12 +57,12 @@ def main():
             for i in range(100):
                 temp1 = numpy.arange(N - i - 1)
                 temp2 = numpy.arange(i+1, N)
-                full[temp1, temp2] = data1[40000][chromo][1][temp1, i]
+                full[temp1, temp2] = data1[resolution][chromo][1][temp1, i]
                 full[temp2, temp1] = full[temp1, temp2]
             x=0.8
             plt.matshow(full,cmap='seismic',vmin=-x,vmax=x)
             plt.colorbar()
             plt.show()
             plt.savefig(args.out+'.res'+str(resolution)+'.chr'+chromo+'.pdf')    
-
+   '''
 main()
