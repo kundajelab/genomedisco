@@ -22,10 +22,19 @@ class Encode_Data(hifive.HiCData):
         self.fendfilename = "%s/%s" % (os.path.relpath(os.path.dirname(os.path.abspath(fendfilename)),
                                        os.path.dirname(self.file)), os.path.basename(fendfilename))
         self.fends = h5py.File(fendfilename, 'r')
+        idx2index = {}
         if 'binned' in self.fends['/'].attrs and self.fends['/'].attrs['binned'] is not None:
             self.binned = True
+            f = self.fends['bins'][...]
+            for i in range(f.shape[0]):
+                idx2index[f['idx'][i]] = (f['chr'][i], i)
+            chr_indices = self.fends['bin_indices'][...]
         else:
             self.binned = False
+            f = self.fends['fends'][...]
+            for i in range(f.shape[0]):
+                idx2index[f['idx'][i]] = (f['chr'][i], i)
+            chr_indices = self.fends['chr_indices'][...]
         if 'fends' in self.fends and self.fends['fends'] is not None:
             self.re = True
         else:
@@ -35,8 +44,6 @@ class Encode_Data(hifive.HiCData):
         chroms = self.fends['chromosomes'][...]
         for i, j in enumerate(chroms):
             self.chr2int[j] = i
-        self.insert_distribution = numpy.zeros((182, 2), dtype=numpy.int32)
-        self.insert_distribution[1:, 1] = numpy.round(numpy.exp(numpy.linspace(3.8, 12.8, 181))).astype(numpy.int32)
         # load data from all files, skipping if chromosome not in the fend file.
         if isinstance(filelist, str):
             filelist = [filelist]
@@ -51,12 +58,12 @@ class Encode_Data(hifive.HiCData):
             for j in range(i + 1):
                 fend_pairs[i].append({})
         total_reads = 0
+        data = []
+        for i in range(chroms.shape[0]):
+            data.append([])
+            for j in range(i + 1):
+                data[-1].append({})
         for fname in filelist:
-            data = []
-            for i in range(len(chroms)):
-                data.append([])
-                for j in range(i + 1):
-                    data[i].append({})
             if not os.path.exists(fname):
                 if not self.silent:
                     print >> sys.stderr, ("The file %s was not found...skipped.\n") % (fname.split('/')[-1]),
@@ -64,94 +71,43 @@ class Encode_Data(hifive.HiCData):
                 continue
             if not self.silent:
                 print >> sys.stderr, ("Loading data from %s...") % (fname.split('/')[-1]),
-            a = 0
             input = gzip.open(fname, 'r', 1)
             new_reads = 0
             for line in input:
                 temp = line.strip('\n').split('\t')
-                temp[0] = temp[0].strip('chr')
-                temp[2] = temp[2].strip('chr')
-                if temp[0] not in self.chr2int or temp[2] not in self.chr2int:
-                    self.stats['chr_not_in_fends'] += 1
-                    #print 'dont like chromo'
+                try:
+                    chrint1, bin1 = idx2index[int(temp[1])]
+                    chrint2, bin2 = idx2index[int(temp[3])]
+                    count = int(temp[4])
+                except:
                     continue
-                chrint1 = self.chr2int[temp[0]]
-                chrint2 = self.chr2int[temp[2]]
-                start1 = int(temp[1])
-                start2 = int(temp[3])
-                if chrint1 == chrint2:
-                    if start1 > start2:
-                        start1, start2 = start2, start1
-                elif chrint2 < chrint1:
-                    chrint1, chrint2, start1, start2 = chrint2, chrint1, start2, start1
-                key = (start1, start2)
+                if chrint2 < chrint1:
+                    chrint1, chrint2, bin1, bin2 = chrint2, chrint1, bin2, bin1
+                elif chrint1 == chrint2 and bin2 < bin1:
+                    bin1, bin2 = bin2, bin1
+                key = (bin1 - chr_indices[chrint1], bin2 - chr_indices[chrint2])
                 if key not in data[chrint2][chrint1]:
-                    data[chrint2][chrint1][key] = 1
-                else:
-                    data[chrint2][chrint1][key] += 1
-                a += 1
-                if a >= 10000000:
-                    for i in range(len(data)):
-                        for j in range(len(data[i])):
-                            temp = numpy.zeros((len(data[i][j]), 3), dtype=numpy.int32)
-                            k = 0
-                            for key, count in data[i][j].iteritems():
-                                temp[k, :] = (key[0], key[1], count)
-                                self.stats['pcr_duplicates'] += count - 1
-                                k += 1
-                            data[i][j] = temp
-                            new_reads += numpy.sum(data[i][j][:, 2])
-                    if self.re:
-                        self._find_fend_pairs(data, fend_pairs, True)
-                    else:
-                        self._find_bin_pairs(data, fend_pairs, True)
-                    if not self.silent:
-                        print >> sys.stderr, ("\r%s\rLoading data from %s...") % (' '*50, fname.split('/')[-1]),
-                    for i in range(len(data)):
-                        for j in range(len(data[i])):
-                            data[i][j] = {}
-                    a = 0
+                    data[chrint2][chrint1][key] = 0
+                data[chrint2][chrint1][key] += count
+                new_reads += count
             input.close()
-            if a > 0:
-                for i in range(len(data)):
-                    for j in range(len(data[i])):
-                        temp = numpy.zeros((len(data[i][j]), 3), dtype=numpy.int32)
-                        k = 0
-                        for key, count in data[i][j].iteritems():
-                            temp[k, :] = (key[0], key[1], count)
-                            self.stats['pcr_duplicates'] += count - 1
-                            k += 1
-                        data[i][j] = temp
-                        new_reads += numpy.sum(data[i][j][:, 2])
-                # map data to fends, filtering as needed
-                if new_reads > 0 and a > 0:
-                    if self.re:
-                        self._find_fend_pairs(data, fend_pairs, True)
-                    else:
-                        self._find_bin_pairs(data, fend_pairs, True)
             total_reads += new_reads
             if not self.silent:
-                print >> sys.stderr, ("\r%s\r%i validly-mapped reads pairs loaded.\n") % (' ' * 50, new_reads),
-        self.stats['total_reads'] = total_reads + self.stats['chr_not_in_fends']
-        if self.re:
-            self._clean_fend_pairs(fend_pairs)
-        total_fend_pairs = 0
-        for i in range(len(fend_pairs)):
-            for j in range(len(fend_pairs[i])):
-                total_fend_pairs += len(fend_pairs[i][j])
-        if total_fend_pairs == 0:
+                print >> sys.stderr, ("\r%s\r%i validly-mapped read pairs loaded.\n") % (' ' * 50, new_reads),
+        total_bin_pairs = 0
+        for i in range(len(data)):
+            for j in range(len(data[i])):
+                total_bin_pairs += len(data[i][j])
+        if total_bin_pairs == 0:
             if not self.silent:
                 print >> sys.stderr, ("No valid data was loaded.\n"),
             self.history += "Error: no valid data loaded\n"
             return None
         if not self.silent:
-            print >> sys.stderr, ("%i total validly-mapped read pairs loaded. %i valid fend pairs\n") %\
-                             (total_reads, total_fend_pairs),
+            print >> sys.stderr, ("%i total validly-mapped read pairs loaded. %i valid bin pairs\n") %\
+                             (total_reads, total_bin_pairs),
         # write fend pairs to h5dict
-        if self.re and self.binned:
-            self._parse_binned_fend_pairs(fend_pairs)
-        else:
-            self._parse_fend_pairs(fend_pairs)
+        self._parse_fend_pairs(data)
         self.history += 'Success\n'
         return None
 

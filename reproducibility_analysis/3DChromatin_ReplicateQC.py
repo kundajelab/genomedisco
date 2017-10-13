@@ -96,10 +96,7 @@ def quasar_makePartition(outdir,nodes,resolution,restriction_fragment_level,subs
     partition_script=open(partition_script_file,'w')
     partition_script.write("#!/bin/sh"+'\n')
     partition_script.write('. '+bashrc_file+'\n')
-    re_text=''
-    if restriction_fragment_level==True:
-        re_text=' --re'
-    partition_script.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/make_partition_from_bedfile.py --nodes "+nodes+' --partition '+nodes_partition+' --subset_chromosomes '+subset_chromosomes+' --resolution '+resolution+re_text+'\n')
+    partition_script.write('${mypython} '+os.path.dirname(os.path.realpath(__file__))+"/make_partition_from_bedfile.py --nodes "+nodes+' --partition '+nodes_partition+' --subset_chromosomes '+subset_chromosomes+' --resolution '+resolution+'\n')
     partition_script.close()
     run_script(partition_script_file,running_mode)
 
