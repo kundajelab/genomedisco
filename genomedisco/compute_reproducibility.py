@@ -99,29 +99,28 @@ def main():
     out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.scores.txt','w')
     out.write(args.m1name+'\t'+args.m2name+'\t'+str('{:.3f}'.format(score))+'\n')
     out.close()
-    out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.scoresByStep.txt','w')
-    t_strings=[]
-    score_strings=[]
-    t_counter=0
-    for t in range(1,(args.tmax+1)):
-        if t>=args.tmin:
-            score_strings.append(str('{:.3f}'.format(scores[t_counter])))
-            t_counter+=1
-        else:
-            score_strings.append('NA')
-        t_strings.append(str(t))
-    out.write('#m1'+'\t'+'m2'+'\t'+'\t'.join(t_strings)+'\n')
-    out.write(args.m1name+'\t'+args.m2name+'\t'+'\t'.join(score_strings)+'\n')
-    out.close()
-    out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.datastats.txt','w')
-    out.write('#m1name'+'\t'+'m2name'+'\t'+'SeqDepth.m1'+'\t'+'SeqDepth.m2'+'\t'+'SubsampledSeqDepth.m1'+'\t'+'SubsampledSeqDepth.m2'+'\t'+'DistDepDiff'+'\n')
-    dd_value='NA'
+
     if not args.concise_analysis:
+        out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.scoresByStep.txt','w')
+        t_strings=[]
+        score_strings=[]
+        t_counter=0
+        for t in range(1,(args.tmax+1)):
+            if t>=args.tmin:
+                score_strings.append(str('{:.3f}'.format(scores[t_counter])))
+                t_counter+=1
+            else:
+                score_strings.append('NA')
+            t_strings.append(str(t))
+        out.write('#m1'+'\t'+'m2'+'\t'+'\t'.join(t_strings)+'\n')
+        out.write(args.m1name+'\t'+args.m2name+'\t'+'\t'.join(score_strings)+'\n')
+        out.close()
+        out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.datastats.txt','w')
+        out.write('#m1name'+'\t'+'m2name'+'\t'+'SeqDepth.m1'+'\t'+'SeqDepth.m2'+'\t'+'SubsampledSeqDepth.m1'+'\t'+'SubsampledSeqDepth.m2'+'\t'+'DistDepDiff'+'\n')
+        dd_value='NA'
         dd_value=str('{:.10f}'.format(dd_diff))
-    out.write(args.m1name+'\t'+args.m2name+'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\t'+dd_value+'\n')
-    out.close()
-    print "GenomeDISCO | Differences by random walk step: "+'\t'.join(score_strings)
-    print "GenomeDISCO | "+strftime("%c")+" | DONE"
+        out.write(args.m1name+'\t'+args.m2name+'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\t'+dd_value+'\n')
+        out.close()
 
 def get_dd_diff(m1dd,m2dd):
     d=0.0

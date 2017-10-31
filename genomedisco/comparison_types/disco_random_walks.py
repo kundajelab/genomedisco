@@ -149,7 +149,8 @@ class DiscoRandomWalks:
         plt.gcf().subplots_adjust(bottom=adj)
         plt.gcf().subplots_adjust(left=adj)
         fname=args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.DiscoRandomWalks.Differences.png'
-        plt.savefig(fname)
+        if not args.concise_analysis:
+            plt.savefig(fname)
         reproducibility_text=reproducibility_text+'<img src="'+os.path.basename(fname)+'" width="400" height="400"></td>'+'\n'
 
         reproducibility_text_rw=''
