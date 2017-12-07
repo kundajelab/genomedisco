@@ -3,8 +3,13 @@ import copy
 import random
 import numpy as np
 from scipy.sparse import csr_matrix
+from scipy.sparse import coo_matrix
+import scipy as scipy
 import math
 from time import gmtime, strftime
+import cProfile
+import timeit
+import scipy.sparse as sps
 
 #todo: add bait vs not bait information
 def get_distance_dep_using_nodes_capturec(m,nodes,nodes_idx,approximation=10000):
@@ -65,21 +70,9 @@ def sqrtvc(m):
     mdown.setdiag(0)
     mtogether=mup+mdown
     sums_sq=np.sqrt(mtogether.sum(axis=1)) 
-    nonzeros=m.nonzero()
-    num_elts=len(nonzeros[0])
-    rows=[]
-    cols=[]
-    m_norm_data=[]
-    for elt in range(num_elts):
-        i=nonzeros[0][elt]
-        j=nonzeros[1][elt]
-        rows.append(i)
-        cols.append(j)
-        if sums_sq[i,0]>0 and sums_sq[j,0]>0:
-            m_norm_data.append(float(m[i,j])/(float(sums_sq[i,0])*float(sums_sq[j,0])))
-        else:
-            m_norm_data.append(0)
-    return csr_matrix((m_norm_data,(rows,cols)),shape=m.get_shape(),dtype=float)
+    D_sq = sps.spdiags(1.0/sums_sq.flatten(), [0], mtogether.get_shape()[0], mtogether.get_shape()[1], format='csr')
+    return sps.triu(D_sq.dot(mtogether.dot(D_sq)))
+
 
 def coverage_norm(m):
     mup=m
@@ -87,21 +80,8 @@ def coverage_norm(m):
     mdown.setdiag(0)
     mtogether=mup+mdown
     sums=mtogether.sum(axis=1)
-    nonzeros=m.nonzero()
-    num_elts=len(nonzeros[0])
-    rows=[]
-    cols=[]
-    m_norm_data=[]
-    for elt in range(num_elts):
-        i=nonzeros[0][elt]
-        j=nonzeros[1][elt]
-        rows.append(i)
-        cols.append(j)
-        if sums[i,0]>0 and sums[j,0]>0:
-            m_norm_data.append(float(m[i,j])/(float(sums[i,0])*float(sums[j,0])))
-        else:
-            m_norm_data.append(0)
-    return csr_matrix((m_norm_data,(rows,cols)),shape=m.get_shape(),dtype=float)
+    D = sps.spdiags(1.0/sums.flatten(), [0], mtogether.get_shape()[0], mtogether.get_shape()[1], format='csr')
+    return sps.triu(D.dot(mtogether.dot(D)))
 
 #assumes matrix is upper triangular
 def matrix_2_coverageVector(m):
@@ -152,18 +132,13 @@ def subsample_to_depth_csr_upperTri(m,seq_depth):
     depthm=m.sum()
     assert seq_depth<=depthm
     subsampling_prob=seq_depth/depthm
-    nonzeros=m.nonzero()
-    num_elts=len(nonzeros[0])
-    rows=[]
-    cols=[]
-    m_subsampled_data=[]
-    for elt in range(num_elts):
-        i=nonzeros[0][elt]
-        j=nonzeros[1][elt]
-        rows.append(i)
-        cols.append(j)
-        n=m[i,j]
-        m_subsampled_data.append(np.random.binomial(n,subsampling_prob,1)[0])
-    return csr_matrix((m_subsampled_data,(rows,cols)),shape=m.get_shape(),dtype=float)
 
-
+    vals=m.data
+    num_elts=len(vals)
+    m_subsampled_data=[]#np.random.binomial(value,subsampling_prob)
+    elt=0
+    while elt<num_elts:
+        m_subsampled_data.append(np.random.binomial(vals[elt],subsampling_prob,1)[0])
+        elt+=1
+    return csr_matrix((m_subsampled_data, m.indices, m.indptr), dtype=int,shape=m.shape)
+    

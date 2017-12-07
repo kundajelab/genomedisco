@@ -54,8 +54,10 @@ def main():
     if args.m_subsample!='NA':
         if args.m_subsample=='lowest':
             if stats[args.m1name]['depth']>=stats[args.m2name]['depth']:
+                print 'subsampling m1'
                 m_subsample=copy.deepcopy(m2)
             if stats[args.m1name]['depth']<stats[args.m2name]['depth']:
+                print 'subsampling m2'
                 m_subsample=copy.deepcopy(m1)
         else:
             m_subsample=processing.construct_csr_matrix_from_data_and_nodes(args.m_subsample,nodes,blacklist_nodes,args.remove_diagonal)
@@ -72,12 +74,15 @@ def main():
     stats[args.m2name]['subsampled_depth']=m2_subsample.sum()
 
     print "GenomeDISCO | "+strftime("%c")+' | Normalizing with '+args.norm
+    print 'norm1'
     m1_norm=data_operations.process_matrix(m1_subsample,args.norm)
+    print 'norm2'
     m2_norm=data_operations.process_matrix(m2_subsample,args.norm)
 
     if not args.concise_analysis:
         #distance dependence analysis
         print "GenomeDISCO | "+strftime("%c")+" | Distance dependence analysis"
+        '''
         if args.datatype=='hic':
             m1dd=data_operations.get_distance_dep(m1_subsample)
             m2dd=data_operations.get_distance_dep(m2_subsample)
@@ -86,7 +91,7 @@ def main():
             m2dd=data_operations.get_distance_dep_using_nodes_capturec(m2_subsample,nodes,nodes_idx,args.approximation)
         dd_diff=get_dd_diff(m1dd,m2dd)
         visualization.plot_dds([m1dd,m2dd],[args.m1name,args.m2name],args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.distDep',args.approximation)
-
+        '''
     print "GenomeDISCO | "+strftime("%c")+" | Computing reproducibility score"
     if args.method=='RandomWalks':
         comparer=DiscoRandomWalks(args)
@@ -118,7 +123,8 @@ def main():
         out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.datastats.txt','w')
         out.write('#m1name'+'\t'+'m2name'+'\t'+'SeqDepth.m1'+'\t'+'SeqDepth.m2'+'\t'+'SubsampledSeqDepth.m1'+'\t'+'SubsampledSeqDepth.m2'+'\t'+'DistDepDiff'+'\n')
         dd_value='NA'
-        dd_value=str('{:.10f}'.format(dd_diff))
+        #dd_value=str('{:.10f}'.format(dd_diff))
+        dd_value='00'
         out.write(args.m1name+'\t'+args.m2name+'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\t'+dd_value+'\n')
         out.close()
 

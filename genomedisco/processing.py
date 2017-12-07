@@ -78,9 +78,33 @@ def filter_nodes(m,to_remove):
     
     coo_mat=m.tocoo()
         
-    return csr_matrix((coo_mat.data[keep],(coo_mat.row[keep],coo_mat.col[keep])),shape=m.get_shape(),dtype=float)    
+    return csr_matrix((coo_mat.data[keep],(coo_mat.row[keep],coo_mat.col[keep])),shape=m.get_shape(),dtype=float) 
+    
 
 def construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes,remove_diag=True):
+    print "GenomeDISCO | "+strftime("%c")+" | processing: Loading interaction data from "+f
+
+    total_nodes=len(nodes.keys())
+    i=[]
+    j=[]
+    v=[]
+
+    #print strftime("%c")
+    c=0
+    for line in gzip.open(f):
+        items=line.strip().split('\t')
+        n1,n2,val=nodes[items[0]]['idx'],nodes[items[1]]['idx'],float(items[2])
+        i.append(n1)
+        j.append(n2)
+        v.append(val)
+        c+=1
+
+    csr_m=csr_matrix( (v,(i,j)), shape=(total_nodes,total_nodes),dtype=float)
+    if remove_diag:
+        csr_m.setdiag(0)
+    return filter_nodes(csr_m,blacklisted_nodes)
+
+def old_construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes,remove_diag=True):
     print "GenomeDISCO | "+strftime("%c")+" | processing: Loading interaction data from "+f
 
     total_nodes=len(nodes.keys())
