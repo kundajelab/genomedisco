@@ -73,6 +73,20 @@ def sqrtvc(m):
     D_sq = sps.spdiags(1.0/sums_sq.flatten(), [0], mtogether.get_shape()[0], mtogether.get_shape()[1], format='csr')
     return sps.triu(D_sq.dot(mtogether.dot(D_sq)))
 
+def hichip_add_diagonal(m):
+    mup=m
+    mdown=mup.transpose()
+    mdown.setdiag(0)
+    mtogether=mup+mdown
+    sums=mtogether.sum(axis=1)
+    max_sum=np.max(sums)
+    to_add=1.0*max_sum-1.0*sums
+    to_add_values=[]
+    for i in range(m.shape[0]):
+        to_add_values.append(to_add[i,0])
+    mtogether.setdiag(np.array(to_add_values))
+    D = sps.spdiags(1.0/sums.flatten(), [0], mtogether.get_shape()[0], mtogether.get_shape()[1], format='csr')
+    return sps.triu(D.dot(mtogether))
 
 def coverage_norm(m):
     mup=m
@@ -107,6 +121,8 @@ def process_matrix(m,matrix_processing):
         return coverage_norm(m)
     if matrix_processing=='sqrtvc':
         return sqrtvc(m)
+    if matrix_processing=='fill_diagonal':
+        return hichip_add_diagonal(m)
 
 def subsample_to_depth(m,seq_depth):
     if type(m) is csr_matrix:
