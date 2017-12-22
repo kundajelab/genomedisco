@@ -55,10 +55,8 @@ def main():
     if args.m_subsample!='NA':
         if args.m_subsample=='lowest':
             if stats[args.m1name]['depth']>=stats[args.m2name]['depth']:
-                print 'subsampling m1'
                 m_subsample=copy.deepcopy(m2)
             if stats[args.m1name]['depth']<stats[args.m2name]['depth']:
-                print 'subsampling m2'
                 m_subsample=copy.deepcopy(m1)
         else:
             m_subsample=processing.construct_csr_matrix_from_data_and_nodes(args.m_subsample,nodes,blacklist_nodes,args.remove_diagonal)

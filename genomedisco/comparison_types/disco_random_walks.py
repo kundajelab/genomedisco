@@ -288,14 +288,17 @@ class DiscoRandomWalks:
         self.args = args
     
     def compute_reproducibility(self,m1_csr,m2_csr,args):
-        
-        #make symmetric
-        m1=m1_csr+m1_csr.transpose()
-        m2=m2_csr+m2_csr.transpose()
 
-        #set diagonal to 0
-        m1.setdiag(0)
-        m2.setdiag(0)
+        #make symmetric
+        m1up=m1_csr
+        m1down=m1up.transpose()
+        m1down.setdiag(0)
+        m1=m1up+m1down
+
+        m2up=m2_csr
+        m2down=m2up.transpose()
+        m2down.setdiag(0)
+        m2=m2up+m2down
 
         #convert to an actual transition matrix
         if args.transition:
@@ -304,14 +307,11 @@ class DiscoRandomWalks:
 
         #count nonzero nodes (note that we take the average number of nonzero nodes in the 2 datasets)
 	rowsums_1=m1.sum(axis=1)                                                                          
-        #for r in rowsums_1:
-        #    print r
         nonzero_1=[i for i in range(rowsums_1.shape[0]) if rowsums_1[i]>0.0]
 	rowsums_2=m2.sum(axis=1)                                                                           
         nonzero_2=[i for i in range(rowsums_2.shape[0]) if rowsums_2[i]>0.0]
 	nonzero_total=len(list(set(nonzero_1).union(set(nonzero_2))))
         nonzero_total=0.5*(1.0*len(list(set(nonzero_1)))+1.0*len(list(set(nonzero_2))))
-        print nonzero_total
 
         scores=[]
         big_threshold=30000
@@ -364,37 +364,39 @@ class DiscoRandomWalks:
         reproducibility=1.0-auc
 
         #for the report
-        reproducibility_text='<br>\n'
-        reproducibility_text=reproducibility_text+'<br>\n'
-        reproducibility_text=reproducibility_text+'Reproducibility score = '+str(reproducibility)+'\n'
-        reproducibility_text=reproducibility_text+'<br>\n'
-        rcParams['font.size']= 30
-        rcParams['figure.figsize'] = 7,7
-        rcParams['xtick.labelsize'] = 20
-        rcParams['ytick.labelsize'] = 20
-        plt.close("all")
-        plt.plot(range(args.tmin,args.tmax+1),scores,'bo-')
-        eps=0.02
-        for i in range(len(ts)):
-            x=range(args.tmin,args.tmax+1)[i]
-            y=scores[i]
-            plt.text(x,y+eps,str(float("{0:.2f}".format(y))),fontsize=15)
-        plt.xlabel('t')
-        plt.xticks(range(min(1,args.tmin),args.tmax+2))
-        plt.yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
-        plt.ylim(0,1.0)
-        plt.ylabel('difference/node')
-        plt.xlabel('random walk iteration')
-        plt.axvline(args.tmax, color='gray', linestyle='dashed', linewidth=2)
-        plt.axvline(args.tmin, color='gray', linestyle='dashed', linewidth=2)
-        plt.show()
-        adj=0.2
-        plt.gcf().subplots_adjust(bottom=adj)
-        plt.gcf().subplots_adjust(left=adj)
-        fname=args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.DiscoRandomWalks.Differences.png'
+        reproducibility_text=''
+        if not args.concise_analysis:
+            reproducibility_text='<br>\n'
+            reproducibility_text=reproducibility_text+'<br>\n'
+            reproducibility_text=reproducibility_text+'Reproducibility score = '+str(reproducibility)+'\n'
+            reproducibility_text=reproducibility_text+'<br>\n'
+            rcParams['font.size']= 30
+            rcParams['figure.figsize'] = 7,7
+            rcParams['xtick.labelsize'] = 20
+            rcParams['ytick.labelsize'] = 20
+            plt.close("all")
+            plt.plot(range(args.tmin,args.tmax+1),scores,'bo-')
+            eps=0.02
+            for i in range(len(ts)):
+                x=range(args.tmin,args.tmax+1)[i]
+                y=scores[i]
+                plt.text(x,y+eps,str(float("{0:.2f}".format(y))),fontsize=15)
+            plt.xlabel('t')
+            plt.xticks(range(min(1,args.tmin),args.tmax+2))
+            plt.yticks([0.0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0])
+            plt.ylim(0,1.0)
+            plt.ylabel('difference/node')
+            plt.xlabel('random walk iteration')
+            plt.axvline(args.tmax, color='gray', linestyle='dashed', linewidth=2)
+            plt.axvline(args.tmin, color='gray', linestyle='dashed', linewidth=2)
+            plt.show()
+            adj=0.2
+            plt.gcf().subplots_adjust(bottom=adj)
+            plt.gcf().subplots_adjust(left=adj)
+            fname=args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.DiscoRandomWalks.Differences.png'
         if not args.concise_analysis:
             plt.savefig(fname)
-        reproducibility_text=reproducibility_text+'<img src="'+os.path.basename(fname)+'" width="400" height="400"></td>'+'\n'
+            reproducibility_text=reproducibility_text+'<img src="'+os.path.basename(fname)+'" width="400" height="400"></td>'+'\n'
 
         reproducibility_text_rw=''
         if not args.concise_analysis:
