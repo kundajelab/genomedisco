@@ -30,6 +30,7 @@ def main():
     parser.add_argument('--approximation',type=int,default=40000)
     parser.add_argument('--transition',action='store_true')
     parser.add_argument('--blacklist',default='NA')
+    parser.add_argument('--scoresByStep',action='store_true')
     args = parser.parse_args()
 
     #write_arguments(args)
@@ -74,9 +75,7 @@ def main():
     stats[args.m2name]['subsampled_depth']=m2_subsample.sum()
 
     print "GenomeDISCO | "+strftime("%c")+' | Normalizing with '+args.norm
-    print 'norm1'
     m1_norm=data_operations.process_matrix(m1_subsample,args.norm)
-    print 'norm2'
     m2_norm=data_operations.process_matrix(m2_subsample,args.norm)
 
     if not args.concise_analysis:
@@ -105,7 +104,7 @@ def main():
     out.write(args.m1name+'\t'+args.m2name+'\t'+str('{:.3f}'.format(score))+'\n')
     out.close()
 
-    if not args.concise_analysis:
+    if args.scoresByStep:
         out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.scoresByStep.txt','w')
         t_strings=[]
         score_strings=[]
@@ -120,6 +119,7 @@ def main():
         out.write('#m1'+'\t'+'m2'+'\t'+'\t'.join(t_strings)+'\n')
         out.write(args.m1name+'\t'+args.m2name+'\t'+'\t'.join(score_strings)+'\n')
         out.close()
+    if not args.concise_analysis:
         out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.datastats.txt','w')
         out.write('#m1name'+'\t'+'m2name'+'\t'+'SeqDepth.m1'+'\t'+'SeqDepth.m2'+'\t'+'SubsampledSeqDepth.m1'+'\t'+'SubsampledSeqDepth.m2'+'\t'+'DistDepDiff'+'\n')
         dd_value='NA'

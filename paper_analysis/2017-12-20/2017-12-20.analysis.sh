@@ -92,7 +92,7 @@ then
 	    echo ${cellline}
 	    for res in $(echo ${resolutions} | sed 's/,/ /g');
 	    do
-		zcat -f ${DATA}/Rao_data/hic/res${res}/*${cellline}* | gzip > ${DATA}/Rao_data/hic/res${res}/${cellline}.res${res}.gz
+		zcat -f ${DATA}/Rao_data/hic/res${res}/*${cellline}*chr*gz | gzip > ${DATA}/Rao_data/hic/res${res}/${cellline}.res${res}.gz
 	    done
 	done
     fi
