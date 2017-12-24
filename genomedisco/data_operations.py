@@ -10,6 +10,9 @@ from time import gmtime, strftime
 import cProfile
 import timeit
 import scipy.sparse as sps
+import warnings
+from scipy.sparse import SparseEfficiencyWarning
+warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
 #todo: add bait vs not bait information
 def get_distance_dep_using_nodes_capturec(m,nodes,nodes_idx,approximation=10000):
@@ -70,6 +73,8 @@ def sqrtvc(m):
     mdown.setdiag(0)
     mtogether=mup+mdown
     sums_sq=np.sqrt(mtogether.sum(axis=1)) 
+    #make the ones that are 0, so that we don't divide by 0
+    sums_sq[sums_sq==0.0]=1.0
     D_sq = sps.spdiags(1.0/sums_sq.flatten(), [0], mtogether.get_shape()[0], mtogether.get_shape()[1], format='csr')
     return sps.triu(D_sq.dot(mtogether.dot(D_sq)))
 

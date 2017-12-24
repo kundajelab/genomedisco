@@ -37,7 +37,7 @@ def main():
 
     os.system('mkdir -p '+args.outdir)
 
-    print "GenomeDISCO | "+strftime("%c")+" | Starting reproducibility analysis"
+    print "GenomeDISCO | "+strftime("%c")+" | :::::::::: Starting reproducibility analysis"
     nodes,nodes_idx,blacklist_nodes=processing.read_nodes_from_bed(args.node_file,args.blacklist)
 
     print "GenomeDISCO | "+strftime("%c")+" | Loading contact maps"
@@ -109,7 +109,7 @@ def main():
         t_counter=0
         for t in range(1,(args.tmax+1)):
             if t>=args.tmin:
-                score_strings.append(str('{:.3f}'.format(scores[t_counter])))
+                score_strings.append(str('{:.3f}'.format(1.0-scores[t_counter])))
                 t_counter+=1
             else:
                 score_strings.append('NA')
