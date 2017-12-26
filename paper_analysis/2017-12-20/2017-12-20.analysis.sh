@@ -357,15 +357,18 @@ then
     
 	if [[ ${substep} == "split" ]];
 	then
-            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.res${res} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge 
 	fi
 	
 	if [[ ${substep} == "run" ]];
 	then
-            echo "here"
-            echo ${metadata_pairs}
-            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.res${res} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge 
 	fi
     done
+
+    #call peaks using simple macs
+    #compare peaks called with the chip-seq
+    #re-bin reads by peaks
+    #re-run GenomeDISCO
 
 fi
