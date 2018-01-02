@@ -8,6 +8,7 @@ MYCODE=/srv/gsfs0/projects/kundaje/users/oursu/code
 MAPQ=30
 mypython=/srv/gsfs0/projects/kundaje/users/oursu/code/anaconda2/mypython/bin/python
 chrSizes=${DATA}/data/chrSizes.hg19.txt
+macs2=/srv/gsfs0/projects/kundaje/users/oursu/code/anaconda2/mypython/bin/macs2
 #=======================================
 
 
@@ -32,7 +33,8 @@ then
     wget http://hicfiles.tc4ga.com.s3.amazonaws.com/public/juicer/juicer_tools.1.7.5_linux_x64_jcuda.0.8.jar
     #genome_utils
     git clone https://github.com/oursu/genome_utils
-    
+    #macs2
+    /srv/gsfs0/projects/kundaje/users/oursu/code/anaconda2/mypython/bin/pip install MACS2
 fi
 
 if [[ ${step} == "get_Rao_data" ]];
@@ -359,12 +361,215 @@ then
 	then
             ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.res${res} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge 
 	fi
+
+	if [[ ${substep} == "split_keepDiag" ]];
+        then
+	    out=${DATA}/results/HiChIP/res${res}_keepDiag
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.res${res} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+        fi
 	
 	if [[ ${substep} == "run" ]];
 	then
-            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.res${res} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge 
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.res${res} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge 
+	fi
+
+	if [[ ${substep} == "run_keepDiag" ]];
+        then
+	    out=${DATA}/results/HiChIP/res${res}_keepDiag
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.res${res} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.keepDiag.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge
+        fi
+	 
+	if [[ ${substep} == "count_reads" ]];
+	then
+	    rm ${metadata_samples}.res${res}.counts
+	    while read line
+	    do
+		read -a items <<< "$line"
+		samplename=${items[0]}
+		samplefile=${items[1]}
+		echo ${samplename}
+		zcat -f ${samplefile} | awk -v sname=${samplename} '{sum+=$5} END {print sname"\t"sum}' >> ${metadata_samples}.res${res}.counts
+	    done < ${metadata_samples}.res${res}
 	fi
     done
+
+    if [[ ${substep} == "compare_k562peaks" ]];
+    then
+	module load bedtools/2.26.0
+	#scp oursu@nandi.stanford.edu:/mnt/data/epigenomeRoadmap/peaks/consolidated/narrowPeak/E123-H3K27ac.narrowPeak.gz ${DATA}/data/
+	total_chip=$(zcat -f ${DATA}/data/E123-H3K27ac.narrowPeak.gz | wc -l)
+	for w in 0 100 500 1000;
+	do
+	    echo "window: ${w}=============="
+	    for q in 1 5 10 15 20;
+	    do
+		total_hichip=$(zcat -f ${DATA}/HiChIP_data/self_ligations/dist8000/HiChIP.K562_H3K27ac.Rep2.self_lig.gz_peaks/HiChIP.K562_H3K27ac.Rep2_peaks.narrowPeak | awk -v qval=${q} '{if ($9>=qval) print $0}' | wc -l)
+		overlapping_chip=$(zcat -f ${DATA}/HiChIP_data/self_ligations/dist8000/HiChIP.K562_H3K27ac.Rep2.self_lig.gz_peaks/HiChIP.K562_H3K27ac.Rep2_peaks.narrowPeak | awk -v qval=${q} '{if ($9>=qval) print $0}' | bedtools window -w ${w} -u -a stdin -b ${DATA}/data/E123-H3K27ac.narrowPeak.gz | wc -l)
+		overlapping_hichip=$(zcat -f ${DATA}/HiChIP_data/self_ligations/dist8000/HiChIP.K562_H3K27ac.Rep2.self_lig.gz_peaks/HiChIP.K562_H3K27ac.Rep2_peaks.narrowPeak | awk -v qval=${q} '{if ($9>=qval) print $0}' | bedtools window -w ${w} -u -a ${DATA}/data/E123-H3K27ac.narrowPeak.gz -b stdin | wc -l)
+		echo "-log10qvalue ${q}: ${overlapping_chip}/${total_hichip} hichip peaks overlap ChIP-seq peaks, and ${overlapping_hichip}/${total_chip} ChIP-seq peaks covered"
+	    done
+	done
+    fi
+
+    if [[ ${substep} == "validPairs_2_macs2reads" ]];
+    then
+	while read line
+        do
+            read -a items <<< "$line"
+            samplename=$(echo ${items[0]} | sed 's/_res50000//g')
+	    dataname=$(echo ${samplename} | sed 's/[.]reads[.]gz//g')
+            samplefile=${items[1]}
+	    validPairs=${DATA}/HiChIP_data/merged_techreps/${samplename}
+	    echo ${dataname}
+            #make validPairs into reads for input to macs2
+	    selfligation_dist=8000
+	    mkdir -p ${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}
+	    self_lig=${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}/${dataname}.self_lig.gz
+	    s=${self_lig}.sh
+	    echo '#!/bin/sh' > ${s}
+	    echo "zcat -f ${validPairs} | awk -v selflig_dist=${selfligation_dist} '{dist="'$'"4-"'$'"8}{if (dist<0) dist=-dist}{if ((dist<=selflig_dist) && ("'$'"3=="'$'"7)) print "'$'"3\"\t\"("'$'"4-37)\"\t\"("'$'"4+38)\"\n\""'$'"7\"\t\"("'$'"8-37)\"\t\"("'$'"8+38)}' | gzip > ${self_lig}" >> ${s}
+	    gsize=2700000000
+	    mkdir -p ${self_lig}_peaks
+	    peaksfile=${self_lig}_peaks/${dataname}
+	    qvalue=0.1
+	    echo "${macs2} callpeak -t ${self_lig} --tempdir ${self_lig}_peaks/ --nomodel --extsize 147  -g ${gsize}  -f BED -n ${peaksfile} -q ${qvalue}" >> ${s}
+	    chmod 755 ${s}
+            #cat ${s}
+            #echo "=========="
+            qsub -l h_vmem=20G -o ${s}.o -e ${s}.e ${s}
+        done < ${metadata_samples}.res50000
+    fi
+
+    if [[ ${substep} == "merge_peak_sets" ]];
+    then
+	for qval_threshold in 1 20;
+	do
+	    module load bedtools/2.26.0
+	    selfligation_dist=8000
+            zcat -f ${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}/*peaks/*narrowPeak | awk -v qt=${qval_threshold} '{if ($9>=qt) print $0}' | cut -f1-3 | sort -k1,1 -k2,2n | uniq | bedtools merge -i stdin | awk '{print $1"\t"$2"\t"$3"\t"$2}' | gzip > ${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}/mergedPeaks.q${qval_threshold}.bed.gz
+	    echo "done"
+	done
+    fi
+
+    if [[ ${substep} == "assign_reads_to_peaks" ]];
+    then
+	selfligation_dist=8000
+	while read line
+        do
+            read -a items <<< "$line"
+            samplename=$(echo ${items[0]} | sed 's/_res50000//g')
+            dataname=$(echo ${samplename} | sed 's/[.]reads[.]gz//g')
+            samplefile=${items[1]}
+            validPairs=${DATA}/HiChIP_data/merged_techreps/${samplename}
+	    all_reads_bedpe=${DATA}/HiChIP_data/merged_techreps/${dataname}.allReads.gz
+	    s=${all_reads_bedpe}.sh
+	    echo "module load bedtools/2.26.0" > ${s}
+	    ####TODO: remove chr21 part
+	    echo "zcat -f ${validPairs} | grep chr21 | awk '{if ("'$'"3=="'$'"7) print "'$'"3\"\t\"("'$'"4-37)\"\t\"("'$'"4+38)\"\t\""'$'"7\"\t\"("'$'"8-37)\"\t\"("'$'"8+38)\"\tNA\tNA\"}' | bedtools slop -b 0 -i stdin -g ${chrSizes} | gzip > ${all_reads_bedpe}" >> ${s}
+	    #qsub -o ${s}.o -e ${s}.e ${s}
+	    for qval_thresh in 1 20;
+	    do
+		for method in 0_for_nonoverlapping_peaks all_reads_per_peak;
+		do
+		    if [[ ${method} == "0_for_nonoverlapping_peaks" ]];
+		    then
+			mkdir -p ${DATA}/HiChIP_data/merged_techreps/${method}
+		        #keep only reads that fall in the peaks for this sample
+			sample_peaks=${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}/${dataname}.self_lig.gz_peaks/${dataname}_peaks.narrowPeak
+			cur_peaks=${sample_peaks}.q${qval_thresh}.gz
+			zcat -f ${sample_peaks} | awk -v qt=${qval_thresh} '{if ($9>=qt) print $0}' | gzip > ${cur_peaks}
+			out_bedpe=${DATA}/HiChIP_data/merged_techreps/${method}/${dataname}.q${qval_thresh}.bedpe.gz
+			s=${out_bedpe}.sh
+			reads_keep=${DATA}/HiChIP_data/merged_techreps/${method}/${dataname}.mergedPeaks.q${qval_thresh}.bedpe.gz
+			contact_map=${DATA}/HiChIP_data/merged_techreps/${method}/${dataname}.q${qval_thresh}.contactMap.gz
+			echo "module load bedtools/2.26.0" > ${s}
+			echo "${MYCODE}/genome_utils/3Dutils/translate_bedpe.sh ${all_reads_bedpe} ${cur_peaks} ${out_bedpe} 0" >> ${s}
+			echo "${MYCODE}/genome_utils/3Dutils/translate_bedpe.sh ${out_bedpe} ${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}/mergedPeaks.q${qval_thresh}.bed.gz ${reads_keep} 0" >> ${s}
+			echo "zcat -f ${reads_keep} | cut -f1,2,4,5 | awk '{print "'$'"1\"_\""'$'"2\"_\""'$'"3\"_\""'$'"4}' | awk '{count["'$'"1]++} END {for (word in count) print word\"\t\"count[word]}' | sed 's/_/\t/g' | gzip > ${contact_map}" >> ${s}
+			echo "rm ${out_bedpe} ${reads_keep}" >> ${s}
+			chmod 755 ${s}
+		        qsub -o ${s}.o -e ${s}.e ${s}
+		    fi
+
+		    if [[ ${method} == "all_reads_per_peak" ]];
+		    then
+		        #keep all reads
+			echo "coming soon"
+		    fi
+		done
+	    done
+	done < ${metadata_samples}.res50000
+    fi
+
+    if [[ ${substep} == "zero_metadata" ]];
+    then
+	for qval_thresh in 1 20;
+	do
+	    #samples
+	    zcat -f ${metadata_samples}.res50000 | sed 's/[.]reads[.]gz_res50000//g' | cut -f1 | awk -v dir=${DATA}/HiChIP_data/merged_techreps/0_for_nonoverlapping_peaks -v qt=${qval_thresh} '{print $1"\t"dir"/"$1".q"qt".contactMap.gz"}' > ${metadata_samples}.q${qval_thresh}.0_for_nonoverlapping_peaks
+	    #pairs
+	    zcat -f ${metadata_pairs}.res50000 | sed 's/[.]reads[.]gz_res50000//g' > ${metadata_pairs}.q${qval_thresh}.0_for_nonoverlapping_peaks
+	    echo ${metadata_pairs}
+	done
+    fi
+
+    if [[ ${substep} == "zero_split" ]];
+    then
+	selfligation_dist=8000
+	for qval_thresh in 1 20;
+        do
+	    out=${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}
+	    bins=${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}/mergedPeaks.q${qval_thresh}.bed.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.q${qval_thresh}.0_for_nonoverlapping_peaks --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+	done
+    fi
+
+    if [[ ${substep} == "zero_run" ]];
+    then
+	for qval_thresh in 1 20;
+        do
+	    out=${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.q${qval_thresh}.0_for_nonoverlapping_peaks --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge
+        done
+    fi
+
+    if [[ ${substep} == "zero_compile_scores" ]];
+    then
+	for qval_thresh in 1 20;
+        do
+            mkdir -p ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores
+            for chromo in 21;
+            do
+		zcat -f ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+		zcat -f ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+            zcat -f ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+            done
+	done
+    fi
+
+    if [[ ${substep} == "compile_scores" ]];
+    then
+        mkdir -p ${DATA}/results/HiChIP/res${res}/compiled_scores
+        for chromo in 21;
+        do
+            zcat -f ${DATA}/results/HiChIP/res${res}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${DATA}/results/HiChIP/res${res}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+            zcat -f ${DATA}/results/HiChIP/res${res}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${DATA}/results/HiChIP/res${res}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+            zcat -f ${DATA}/results/HiChIP/res${res}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${DATA}/results/HiChIP/res${res}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+        done
+    fi
+
+    if [[ ${substep} == "compile_scores_keepDiag" ]];
+    then
+	d=${DATA}/results/HiChIP/res${res}_keepDiag
+        mkdir -p ${d}/compiled_scores
+        for chromo in 21;
+        do
+            zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+            zcat -f ${d}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+            zcat -f ${d}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+        done
+    fi
+
 
     #call peaks using simple macs
     #compare peaks called with the chip-seq

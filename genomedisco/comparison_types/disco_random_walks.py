@@ -328,9 +328,9 @@ class DiscoRandomWalks:
                     rw1=rw1.dot(m1)
                     rw2=rw2.dot(m2)
                 if t>=args.tmin:
-                    extra_text=''
                     diff=abs(rw1-rw2).sum()#+euclidean(rw1.toarray().flatten(),rw2.toarray().flatten()))
-                    scores.append(1.0*diff/nonzero_total)
+                    scores.append(1.0*float(diff)/float(nonzero_total))
+                    extra_text=' | score='+str('{:.3f}'.format(1.0-float(diff)/float(nonzero_total)))
                 print 'GenomeDISCO | '+strftime("%c")+' | done t='+str(t)+extra_text
             
                 #plot the random walk data

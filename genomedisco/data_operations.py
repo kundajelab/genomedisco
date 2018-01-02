@@ -14,6 +14,7 @@ import warnings
 from scipy.sparse import SparseEfficiencyWarning
 warnings.simplefilter('ignore', SparseEfficiencyWarning)
 
+np.random.seed(7)
 #todo: add bait vs not bait information
 def get_distance_dep_using_nodes_capturec(m,nodes,nodes_idx,approximation=10000):
     assert m.shape[0]==m.shape[1]
@@ -154,6 +155,7 @@ def subsample_to_depth_csr_upperTri(m,seq_depth):
     assert seq_depth<=depthm
     subsampling_prob=seq_depth/depthm
 
+    m.eliminate_zeros()
     vals=m.data
     num_elts=len(vals)
     m_subsampled_data=[]#np.random.binomial(value,subsampling_prob)
@@ -161,5 +163,5 @@ def subsample_to_depth_csr_upperTri(m,seq_depth):
     while elt<num_elts:
         m_subsampled_data.append(np.random.binomial(vals[elt],subsampling_prob,1)[0])
         elt+=1
-    return csr_matrix((m_subsampled_data, m.indices, m.indptr), dtype=int,shape=m.shape)
+    return csr_matrix((m_subsampled_data, m.indices, m.indptr), dtype=float,shape=m.shape)
     

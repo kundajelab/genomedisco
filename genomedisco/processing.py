@@ -94,8 +94,10 @@ def construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes,remove_di
     for line in gzip.open(f):
         items=line.strip().split('\t')
         n1,n2,val=nodes[items[0]]['idx'],nodes[items[1]]['idx'],float(items[2])
-        i.append(n1)
-        j.append(n2)
+        mini=min(n1,n2)
+        maxi=max(n1,n2)
+        i.append(mini)
+        j.append(maxi)
         v.append(val)
         c+=1
 
