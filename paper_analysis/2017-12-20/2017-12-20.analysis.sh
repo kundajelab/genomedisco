@@ -189,12 +189,25 @@ then
 	    ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
 	fi
 
+	if [[ ${substep} == "split_transition" ]];
+        then
+	    out=${DATA}/results/rao/res${res}.keepDiag.transition
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+        fi
+
 	if [[ ${substep} == "run" ]];
         then
 	    echo "here"
 	    echo ${metadata_pairs}
-            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.txt --subset_chromosomes chr2 --concise_analysis --running_mode sge
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.txt --subset_chromosomes chr2 --concise_analysis --running_mode sge #--parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.transition.txt
 	fi
+
+	if [[ ${substep} == "run_transition" ]];
+        then
+	    out=${DATA}/results/rao/res${res}.keepDiag.transition
+            echo ${metadata_pairs}
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods GenomeDISCO --subset_chromosomes chr21 --concise_analysis --running_mode sge --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.transition.txt                                                   
+        fi
 
 	if [[ ${substep} == "compile_scores" ]];
         then
@@ -208,6 +221,20 @@ then
 		zcat -f ${DATA}/results/rao/res${res}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${DATA}/results/rao/res${res}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
 	    done
 	fi
+
+	if [[ ${substep} == "compile_scores_transition" ]];
+        then
+            echo "here"
+	    d=${DATA}/results/rao/res${res}.keepDiag.transition
+            mkdir -p ${d}/compiled_scores
+            for chromo in 21;
+            do
+                zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+                zcat -f ${d}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+                zcat -f ${d}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+            done
+        fi
+
     done
 fi
 
@@ -367,6 +394,12 @@ then
 	    out=${DATA}/results/HiChIP/res${res}_keepDiag
             ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.res${res} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
         fi
+
+	if [[ ${substep} == "split_transition" ]];
+        then
+            out=${DATA}/results/HiChIP/res${res}_transition
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.res${res} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+        fi
 	
 	if [[ ${substep} == "run" ]];
 	then
@@ -377,6 +410,12 @@ then
         then
 	    out=${DATA}/results/HiChIP/res${res}_keepDiag
             ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.res${res} --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.keepDiag.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge
+        fi
+
+	if [[ ${substep} == "run_transition" ]];
+        then
+            out=${DATA}/results/HiChIP/res${res}_transition
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.res${res} --outdir ${out} --methods HiCRep,HiC-Spector --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.transition.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge
         fi
 	 
 	if [[ ${substep} == "count_reads" ]];
@@ -518,7 +557,7 @@ then
 	selfligation_dist=8000
 	for qval_thresh in 1 20;
         do
-	    out=${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}
+	    out=${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}.keepdiag.transition
 	    bins=${DATA}/HiChIP_data/self_ligations/dist${selfligation_dist}/mergedPeaks.q${qval_thresh}.bed.gz
             ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.q${qval_thresh}.0_for_nonoverlapping_peaks --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
 	done
@@ -528,21 +567,22 @@ then
     then
 	for qval_thresh in 1 20;
         do
-	    out=${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}
-            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.q${qval_thresh}.0_for_nonoverlapping_peaks --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge
+	    out=${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}.keepdiag.transition
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.q${qval_thresh}.0_for_nonoverlapping_peaks --outdir ${out} --methods GenomeDISCO --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.transition.txt --subset_chromosomes chr21 --concise_analysis --running_mode sge
         done
     fi
 
-    if [[ ${substep} == "zero_compile_scores" ]];
+    if [[ ${substep} == "zero_compile_scores_transition" ]];
     then
 	for qval_thresh in 1 20;
         do
-            mkdir -p ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores
+	    d=${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}.keepdiag.transition
+            mkdir -p ${d}/compiled_scores
             for chromo in 21;
             do
-		zcat -f ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
-		zcat -f ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores/chr${chromo}.HiCRep.scores.txt
-            zcat -f ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${DATA}/results/HiChIP/0_for_nonoverlapping_peaks.q${qval_thresh}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+		zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+		zcat -f ${d}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+            zcat -f ${d}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
             done
 	done
     fi
@@ -567,6 +607,18 @@ then
             zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
             zcat -f ${d}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
             zcat -f ${d}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+        done
+    fi
+
+    if [[ ${substep} == "compile_scores_transition" ]];
+    then
+        d=${DATA}/results/HiChIP/res${res}_transition
+        mkdir -p ${d}/compiled_scores
+        for chromo in 21;
+        do
+            zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+            zcat -f ${d}/results/reproducibility/HiCRep/*txt | grep "chr"${chromo} | cut -f1,2,4 > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+            zcat -f ${d}/results/reproducibility/HiC-Spector/*.txt | grep "chr"${chromo} | cut -f1,2,4> ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
         done
     fi
 
