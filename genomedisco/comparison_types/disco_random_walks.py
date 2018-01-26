@@ -16,29 +16,14 @@ from scipy.sparse import csr_matrix
 from scipy import sparse
 import h5py
 import psutil
+import scipy.sparse as sps
 
-def to_transition(m):
-    mup=m
-    mdown=mup.transpose()
-    mdown.setdiag(0)
-    mtogether=mup+mdown
+def to_transition(mtogether):
     sums=mtogether.sum(axis=1)
-    nonzeros=mtogether.nonzero()
-    num_elts=len(nonzeros[0])
-    rows=[]
-    cols=[]
-    m_norm_data=[]
-    for elt in range(num_elts):
-        i=nonzeros[0][elt]
-        j=nonzeros[1][elt]
-        rows.append(i)
-        cols.append(j)
-        if sums[i,0]>0:
-            m_norm_data.append(float(mtogether[i,j])/(float(sums[i,0])))
-        else:
-            m_norm_data.append(0)
-    return csr_matrix((m_norm_data,(rows,cols)),shape=mtogether.get_shape(),dtype=float)
-
+    #make the ones that are 0, so that we don't divide by 0                                                
+    sums[sums==0.0]=1.0
+    D = sps.spdiags(1.0/sums.flatten(), [0], mtogether.get_shape()[0], mtogether.get_shape()[1], format='csr')
+    return D.dot(mtogether)
 
 def random_walk(m_input,t):
     #return m_input.__pow__(t)
