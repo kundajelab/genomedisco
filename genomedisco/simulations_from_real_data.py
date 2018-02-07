@@ -21,10 +21,18 @@ def main():
     parser.add_argument('--depth',type=int,default=1000000)
     parser.add_argument('--outdir',default='/ifs/scratch/oursu/test/testmat')
     parser.add_argument('--resolution',type=int,default=40000)
+    parser.add_argument('--mini',type=int,default=-1)
+    parser.add_argument('--maxi',type=int,default=-1)
     args = parser.parse_args()
 
     #setup nodes
-    nodes,nodes_idx=processing.read_nodes_from_bed(args.nodes)
+    nodes,nodes_idx,blacklisted_nodes=processing.read_nodes_from_bed(args.nodes)
+
+    #set mini and maxi coordinates to focus on when simulating
+    if args.mini<=-1:
+        args.mini=0
+    if args.maxi<=-1:
+        args.maxi=len(nodes.keys())
 
     #now go through each of the matrices, and simulate from them
     matrices=args.matrices.split(',')
@@ -46,7 +54,7 @@ def main():
                         for ddfile_idx in range(len(ddfiles)):
                             ddfile=ddfiles[ddfile_idx]
                             dd=read_in_data(ddfile,nodes)
-                            prob_matrix=get_probability_matrix(my_matrix,dd,float(edgenoise),float(nodenoise))
+                            prob_matrix=get_probability_matrix(my_matrix,dd,float(edgenoise),float(nodenoise),args.mini,args.maxi)
                             print prob_matrix
                             
                             intro=args.outdir+'/Depth_'+str(args.depth)+'.'+mname
@@ -65,7 +73,7 @@ def sample_interactions(prob_matrix,depth):
             new_m[j,i]=reads
     return new_m
 
-def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,maxdist=2000):
+def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,mini,maxi):#,maxdist=2000):
     #convert matrix to probabilities
     total_probs=np.triu(copy.deepcopy(my_matrix)).sum()
     mat=copy.deepcopy(my_matrix)/total_probs #this is the probability matrix
@@ -94,12 +102,18 @@ def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,maxdist=2000):
                 val=1.0*mat[i,j]*mat_total*desired_ddsums[d]/(desired_total*mat_ddsums[d])
             new_mat[i,j]=val
             new_mat[j,i]=val
+    #0 out things that are not within mini<->maxi
+    for i in range(new_mat.shape[0]):
+        if i>=mini and i<=maxi:
+            continue
+        new_mat[i,:]=0.0
+        new_mat[:,i]=0.0
     #rescale the new matrix to be a probability matrix
     new_mat=copy.deepcopy(new_mat)/np.triu(copy.deepcopy(new_mat)).sum()
 
     #edge noise
     for i in range(new_mat.shape[0]):
-        for j in range(i,min(new_mat.shape[0],i+maxdist+1)):
+        for j in range(i,new_mat.shape[0]): #min(new_mat.shape[0],i+maxdist+1)):
             pij=new_mat[i,j]
             noise_addition=0.0
             add_edge_noise=np.random.binomial(1, edge_noise, size=1)[0]
@@ -126,11 +140,13 @@ def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,maxdist=2000):
     return new_mat/total_probs
     
 def read_in_data(mname_full,nodes):
-    mat=processing.construct_csr_matrix_from_data_and_nodes(mname_full,nodes,True).toarray()
+    mat=processing.construct_csr_matrix_from_data_and_nodes(mname_full,nodes,[],True).toarray()
     mat=mat + mat.T
     return mat
 
-def write_matrix(sampled_matrix,fname,args,mini=400,maxi=900):
+def write_matrix(sampled_matrix,fname,args,chromo='chr21'):
+    mini=args.mini
+    maxi=args.maxi
     f=gzip.open(fname,'w')
     for i in range(mini,min(maxi,sampled_matrix.shape[0])):
         for j in range(i,min(maxi,sampled_matrix.shape[0])):
@@ -138,7 +154,7 @@ def write_matrix(sampled_matrix,fname,args,mini=400,maxi=900):
             if v>0.0:
                 n1=i*args.resolution
                 n2=j*args.resolution
-                f.write(str(n1)+'\t'+str(n2)+'\t'+str(v)+'\n')
+                f.write(chromo+'\t'+str(n1)+'\t'+chromo+'\t'+str(n2)+'\t'+str(v)+'\n')
     f.close()
 
 def shift_dataset(m,boundarynoise):

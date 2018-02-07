@@ -12,6 +12,643 @@ macs2=/srv/gsfs0/projects/kundaje/users/oursu/code/anaconda2/mypython/bin/macs2
 #=======================================
 
 
+if [[ ${step} == "simulations" ]];
+then
+    for res in 50000;
+    do
+	simulations=${DATA}/simulations
+	mkdir -p ${simulations}
+
+	mdir=/ifs/scratch/oursu/data/chr21_datasets
+	nodefile=${simulations}/nodes/nodes.${res}.chr21.gz
+	mnames="GM12878_combined,HMEC,HUVEC,IMR90,K562,KBM7,NHEK"
+	dddata=${mdir}/GM12878_combined.chr21.RAWobserved.gz
+
+	SIMULATION_DIR=${simulations}
+	mkdir -p ${SIMULATION_DIR}
+	EDGE_DIR=${SIMULATION_DIR}/EdgeNoise
+	NODE_DIR=${SIMULATION_DIR}/NodeNoise
+	B_DIR=${SIMULATION_DIR}/BoundaryNoise
+	DD_DIR=${SIMULATION_DIR}/DistanceDependence
+	NONREP_DIR=${SIMULATION_DIR}/RepNonrep
+	mkdir -p ${EDGE_DIR}
+	mkdir -p ${NODE_DIR}
+	mkdir -p ${B_DIR}
+	mkdir -p ${DD_DIR}
+	mkdir -p ${NONREP_DIR}
+	
+	bashrc=${MYCODE}/3DChromatin_ReplicateQC/configuration_files/bashrc.configuration
+	mini_coord=320 #16Mb
+	maxi_coord=720 #36Mb
+
+	if [[ ${substep} == "EdgeNoise" ]];
+	then
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for mname in $(echo ${mnames} | sed 's/,/ /g');
+		do
+	            matpath=${mdir}/${mname}.chr21.RAWobserved.gz
+		    edgenoise="0.0,0.1,0.25,0.5,0.75,0.9"
+		    nodenoise=0.0
+		    boundarynoise=0
+		    for edgenoise in 0.0 0.1 0.25 0.5 0.75 0.9;
+		    do
+			cmd="${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/genomedisco/simulations_from_real_data.py --outdir ${EDGE_DIR} --resolution ${res} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise} --mini ${mini_coord} --maxi ${maxi_coord}"
+			s=${EDGE_DIR}/script_depth${depth}.${mname}.edgenoise$(echo ${edgenoise} | sed 's/,/_/g').sh
+			echo "source ${bashrc}" > ${s}
+			echo $cmd >> ${s}
+			chmod 755 ${s}
+			echo $s
+			qsub -o ${s}.o -e ${s}.e ${s} 
+		    done
+		done
+	    done
+	fi
+
+	if [[ ${substep} == "NodeNoise" ]];
+	then
+	    for depth in 10000 100000 1000000 10000000; 
+	    do
+		for mname in $(echo ${mnames} | sed 's/,/ /g');
+		do
+		    matpath=${mdir}/${mname}.chr21.RAWobserved.gz
+		    edgenoise="0.0"
+		    boundarynoise=0
+		    for nodenoise in 0.0 0.1 0.25 0.5 0.75 0.9;
+		    do
+			cmd="${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/genomedisco//simulations_from_real_data.py --outdir ${NODE_DIR} --resolution ${res} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise} --mini ${mini_coord} --maxi ${maxi_coord}"
+			s=${NODE_DIR}/script_depth${depth}.${mname}.nodenoise${nodenoise}.sh
+			echo "source ${bashrc}" > ${s}
+			echo $cmd >> ${s}
+			chmod 755 ${s}
+			echo $s
+			qsub -o ${s}.o -e ${s}.e ${s}                                     
+		    done
+		done
+	    done
+	fi
+
+	if [[ ${substep} == "BoundaryNoise" ]];
+        then
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for mname in $(echo ${mnames} | sed 's/,/ /g');
+		do
+		    matpath=${mdir}/${mname}.chr21.RAWobserved.gz
+	            edgenoise=0.0
+		    nodenoise=0.0
+		    for boundarynoise in 0 1 2 4 8 16 32;
+		    do
+			cmd="${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/genomedisco/simulations_from_real_data.py --outdir ${B_DIR} --resolution ${res} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${dddata} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise} --mini ${mini_coord} --maxi ${maxi_coord}"
+			s=${B_DIR}/script_depth${depth}.${mname}.boundarynoise.${boundarynoise}.sh
+			echo "source ${bashrc}" > ${s}
+			echo $cmd >> ${s}
+			chmod 755 ${s}
+			echo $s
+			qsub -o ${s}.o -e ${s}.e ${s}
+		    done
+		done
+	    done
+	fi
+
+	if [[ ${substep} == "DistDep" ]];
+	then
+	    #"GM12878_combined,HMEC,HUVEC,IMR90,K562,KBM7,NHEK"
+	    d1=${mdir}/GM12878_combined.chr21.RAWobserved.gz
+	    d2=${mdir}/HMEC.chr21.RAWobserved.gz
+	    d3=${mdir}/HUVEC.chr21.RAWobserved.gz
+	    d4=${mdir}/IMR90.chr21.RAWobserved.gz
+	    d5=${mdir}/K562.chr21.RAWobserved.gz
+	    d6=${mdir}/KBM7.chr21.RAWobserved.gz
+	    d7=${mdir}/NHEK.chr21.RAWobserved.gz
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for mname in $(echo ${mnames} | sed 's/,/ /g');
+		do
+		    matpath=${mdir}/${mname}.chr21.RAWobserved.gz
+	            edgenoise=0.0
+		    nodenoise=0.0
+		    boundarynoise=0
+		    cmd="${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/genomedisco/simulations_from_real_data.py --outdir ${DD_DIR} --resolution ${res} --nodes ${nodefile} --matrices ${matpath} --matrix_names ${mname} --distDepData ${d1},${d2},${d3},${d4},${d5},${d6},${d7} --depth ${depth} --edgenoise ${edgenoise} --nodenoise ${nodenoise} --boundarynoise ${boundarynoise} --mini ${mini_coord} --maxi ${maxi_coord}"
+		    s=${DD_DIR}/script_depth${depth}.ddHIC${HICNUM}.${mname}.sh
+		    echo "source ${bashrc}" > ${s}
+		    echo $cmd >> ${s}
+	            chmod 755 ${s}
+		    echo $s
+		    qsub -o ${s}.o -e ${s}.e ${s}
+		done
+	    done
+	fi
+	
+	if [[ ${substep} == "nodes" ]];
+	then
+	    module load bedtools/2.26.0
+	    mkdir -p ${simulations}/nodes
+	    nodes=${simulations}/nodes/nodes.${res}.chr21.gz
+	    bedtools makewindows -i winnum -w ${res} -s ${res} -g ${chrSizes} | awk -v reso=${res} '{print $1"\t"$2"\t"$3"\t"$2}' | grep -w "chr21" | gzip > ${nodes}
+	    ls -lh ${nodes}
+	fi
+
+	if [[ ${substep} == "metadata" ]];
+        then
+	    edgenoise_metadata=${EDGE_DIR}/Metadata.samples
+	    edgenoise_metadata_pairs=${EDGE_DIR}/Metadata.pairs
+	    nodenoise_metadata=${NODE_DIR}/Metadata.samples
+	    nodenoise_metadata_pairs=${NODE_DIR}/Metadata.pairs
+	    boundarynoise_metadata=${B_DIR}/Metadata.samples
+	    boundarynoise_metadata_pairs=${B_DIR}/Metadata.pairs
+	    nonrep_metadata=${NONREP_DIR}/Metadata.samples
+	    nonrep_metadata_pairs=${NONREP_DIR}/Metadata.pairs
+	    dd_metadata=${DD_DIR}/Metadata.samples
+	    dd_metadata_pairs=${DD_DIR}/Metadata.pairs
+	    
+	    rm  ${edgenoise_metadata}
+	    rm ${edgenoise_metadata_pairs}
+	    nodenoise=0.0
+	    boundarynoise=0
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for edgenoise in 0.0 0.1 0.25 0.5 0.75 0.9;
+		do
+		    for mname in $(echo ${mnames} | sed 's/,/ /g');
+		    do
+			d1=Depth_${depth}.${mname}.EN_0.0.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+			d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+			echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${edgenoise_metadata_pairs}
+			
+			d1=Depth_${depth}.${mname}.EN_0.0.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+			d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+			echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${edgenoise_metadata_pairs}
+			
+			for ab in a b;
+			do
+			    chromo="simulated"
+			    dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab}.dd_0
+			    echo "${dataname_short}delim${EDGE_DIR}/${dataname_short}.gzdelimNA" | sed 's/delim/\t/g' >> ${edgenoise_metadata}
+			done
+		    done
+		done
+	    done
+
+	    rm  ${nodenoise_metadata}
+	    rm ${nodenoise_metadata_pairs}
+	    edgenoise=0.0
+	    boundarynoise=0
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for nodenoise in 0.0 0.1 0.25 0.5 0.75 0.9;
+		do
+		    for mname in $(echo ${mnames} | sed 's/,/ /g');
+		    do
+			d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_0.0.BN_${boundarynoise}.a.dd_0
+			d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+			echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${nodenoise_metadata_pairs}
+			
+			d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_0.0.BN_${boundarynoise}.b.dd_0
+			d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+			echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${nodenoise_metadata_pairs}
+			
+			for ab in a b;
+			do
+			    chromo="simulated"
+			    dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab}.dd_0
+			    echo "${dataname_short}delim${NODE_DIR}/${dataname_short}.gzdelimNA" | sed 's/delim/\t/g' >> ${nodenoise_metadata}
+			done
+		    done
+		done
+	    done
+
+	    rm  ${boundarynoise_metadata}
+	    rm ${boundarynoise_metadata_pairs}
+	    edgenoise=0.0
+	    nodenoise=0.0
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for boundarynoise in 0 1 2 4 8 16 32;
+		do
+		    for mname in $(echo ${mnames} | sed 's/,/ /g');
+		    do
+			d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_0.a.dd_0
+			d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.b.dd_0
+			echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${boundarynoise_metadata_pairs}
+			
+			d1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_0.b.dd_0
+			d2=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.a.dd_0
+			echo "${d1}delim${d2}delimchr21" | sed 's/delim/\t/g' >> ${boundarynoise_metadata_pairs}
+			
+			for ab in a b;
+			do
+			    chromo="simulated"
+			    dataname_short=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab}.dd_0
+			    echo "${dataname_short}delim${B_DIR}/${dataname_short}.gzdelimNA" | sed 's/delim/\t/g' >> ${boundarynoise_metadata}
+			done
+		    done
+		done
+	    done
+	    
+	    rm  ${nonrep_metadata}
+	    rm ${nonrep_metadata_pairs}
+	    boundarynoise=0
+	    nodenoise=0.0
+	    edgenoise=0.0
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for edgenoise in 0.0;
+		do
+		    for mname1 in $(echo ${mnames} | sed 's/,/ /g');
+		    do
+			for  ab1 in a b;
+			do
+			    dataname_short1=Depth_${depth}.${mname1}.EN_0.0.NN_${nodenoise}.BN_${boundarynoise}.${ab1}.dd_0
+			    for mname2 in $(echo ${mnames} | sed 's/,/ /g');
+			    do
+				for ab2 in a b;
+				do
+				    dataname_short2=Depth_${depth}.${mname2}.EN_0.0.NN_${nodenoise}.BN_${boundarynoise}.${ab2}.dd_0
+				    echo "${dataname_short1}delim${dataname_short2}delimsimulated" | sed 's/delim/\t/g' >> ${nonrep_metadata_pairs}.many
+				done
+			    done
+			done
+		    done
+		done
+	    done
+
+	    ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/orderpairs.py --file ${nonrep_metadata_pairs}.many --out ${nonrep_metadata_pairs}.many2
+	    cat ${nonrep_metadata_pairs}.many2 | awk '{if ($1!=$2) print $0}' | sort | uniq > ${nonrep_metadata_pairs}
+	    cp ${edgenoise_metadata} ${nonrep_metadata}
+	    rm ${nonrep_metadata_pairs}.many*
+
+	    rm  ${dd_metadata}
+	    rm ${dd_metadata_pairs}.many
+	    rm ${dd_metadata_pairs}
+	    boundarynoise=0
+	    nodenoise=0.0
+	    edgenoise=0.0
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for mname1 in $(echo ${mnames} | sed 's/,/ /g');
+		do
+		    for  dd1 in 0 1 2 3 4 5 6;
+		    do
+			for  ab1 in a b;
+			do
+			    dataname_short1=Depth_${depth}.${mname1}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab1}.dd_${dd1}
+			    for mname2 in ${mname1};
+			    do
+				for dd2 in 0 1 2 3 4 5 6;
+				do
+				    for ab2 in a b;
+				    do
+					dataname_short2=Depth_${depth}.${mname2}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab2}.dd_${dd2}
+					echo "${dataname_short1}delim${dataname_short2}delimsimulated" | sed 's/delim/\t/g' >> ${dd_metadata_pairs}.many
+				    done
+				done
+			    done
+			done
+		    done
+		done
+	    done
+
+	    cat ${dd_metadata_pairs}.many | awk '{if ($1!=$2) print $0}' | sort | uniq > ${dd_metadata_pairs}
+	    ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/orderpairs.py --file ${dd_metadata_pairs}.many --out ${dd_metadata_pairs}.many2
+	    cat ${dd_metadata_pairs}.many2 | awk '{if ($1!=$2) print $0}' | sort | uniq > ${dd_metadata_pairs}
+	    rm ${dd_metadata_pairs}.many*
+	    
+	    for depth in 10000 100000 1000000 10000000;
+	    do
+		for  dd1 in 0 1;
+		do
+		    for mname in $(echo ${mnames} | sed 's/,/ /g');
+		    do
+			for  ab1 in a b;
+			do
+			    dataname_short1=Depth_${depth}.${mname}.EN_${edgenoise}.NN_${nodenoise}.BN_${boundarynoise}.${ab1}.dd_${dd1}
+			    chromo="simulated"
+			    echo "${dataname_short1}delim${DD_DIR}/${dataname_short1}.gzdelimNA" | sed 's/delim/\t/g' >> ${dd_metadata}
+			done
+		    done
+		done
+	    done
+	fi
+
+	if [[ ${substep} == "split" ]];
+	then
+	    for spot in DistanceDependence; #RepNonrep EdgeNoise BoundaryNoise NodeNoise 
+            do
+		metadata_samples=${SIMULATION_DIR}/${spot}/Metadata.samples
+		bins=${nodefile}
+		out=${SIMULATION_DIR}/${spot}
+		${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+	    done
+	fi
+
+	if [[ ${substep} == "run" ]];
+        then
+	    for spot in DistanceDependence; #BoundaryNoise NodeNoise; #DistanceDependence EdgeNoise RepNonrep
+            do
+                metadata_pairs=${SIMULATION_DIR}/${spot}/Metadata.pairs
+		out=${SIMULATION_DIR}/${spot}
+		echo ${metadata_pairs}
+                ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods HiCRep --running_mode sge --concise_analysis
+            done
+	fi
+
+	if [[ ${substep} == "compile_scores" ]];
+	then
+	    for noisedirname in ${EDGE_DIR} ${NODE_DIR} ${B_DIR} ${DD_DIR} ${NONREP_DIR};
+	    do
+		for method in GenomeDISCO HiCRep HiC-Spector;
+		do
+		    summary=${noisedirname}/${method}.results.txt
+		    rm ${summary}
+		    echo "====="
+		    echo ${method}
+		    echo ${summary}
+		    cat  ${noisedirname}/results/reproducibility/${method}/*txt | head
+		    echo ${noisedirname}/results/reproducibility/${method}/
+		    cat  ${noisedirname}/results/reproducibility/${method}/*txt | cut -f1,2,4 | sort -k3 -n |sed 's/Depth_//g' | sed 's/[.]G/\tG/g' | sed 's/[.]K/\tK/g' | sed 's/[.]I/\tI/g' | sed 's/[.]H/\tH/g' | sed 's/[.]NH/\tNH/g' | sed 's/[.]EN_/\t/g' | sed 's/[.]NN_/\t/g' | sed 's/[.]eps_0[.]9//g' | sed 's/[.]BN_/\t/g' | sed 's/[.]dd_/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' > ${summary}
+
+		    if [[ ${noisedirname} == ${DD_DIR} ]];
+		    then
+			cat  ${noisedirname}/results/reproducibility/${method}/*.txt | cut -f1,2,4 | sort -k3 -n |sed 's/Depth_//g' | sed 's/[.]G/\tG/g' | sed 's/[.]K/\tK/g' | sed 's/[.]I/\tI/g' | sed 's/[.]H/\tH/g' | sed 's/[.]NH/\tNH/g' | sed 's/[.]EN_/\t/g' | sed 's/[.]NN_/\t/g' | sed 's/[.]eps_0[.]9//g' | sed 's/[.]BN_/\t/g' | sed 's/[.]dd_/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' > ${summary}
+		    fi
+		    
+		    if [[ ${noisedirname} == ${NONREP_DIR} ]];
+		    then
+			cat  ${noisedirname}/results/reproducibility/${method}/*.txt | cut -f1,2,4 | sort -k3 -n |sed 's/Depth_//g' | sed 's/[.]G/\tG/g' | sed 's/[.]K/\tK/g' | sed 's/[.]I/\tI/g' | sed 's/[.]H/\tH/g' | sed 's/[.]NH/\tNH/g' | sed 's/[.]EN_/\t/g' | sed 's/[.]NN_/\t/g' | sed 's/[.]BN_/\t/g' | sed 's/[.]dd_/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' > ${summary}
+		    fi
+		done
+	    done
+	fi
+    done
+fi
+
+if [[ ${step} == "encode_finalrun_downsample_189" ]];
+then
+    metadata_samples=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_downsample/Bulk.Downsample/AllChrAnon/processed/metadata/metadata.res40000
+    metadata_pairs=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_downsample/Bulk.Downsample/AllChrAnon/processed/metadata/metadata.res40000.pairs
+    nodes=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_downsample/Bulk.Downsample/AllChrAnon/processed/nodes/Nodes.w40000.bed.gz
+    outanalysis=/ifs/scratch/oursu/paper_2017-12-20/encode_downsample.final
+    mkdir -p ${outanalysis}
+
+    params=${outanalysis}/params
+    cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/10G/5G/g' > ${params}
+    cat ${params}
+
+    if [[ ${substep} == "format_scores" ]];
+    then
+	rm ${outanalysis}/results/compiled_scores.txt
+        cat ${outanalysis}/results/reproducibility/GenomeDISCO*/M*txt | sort | uniq > ${outanalysis}/results/compiled_scores.txt
+	
+	echo ${outanalysis}/results/compiled_scores.txt
+        ${mypython} /srv/gsfs0/projects/kundaje/users/oursu/code/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/2017-12-20/arrange_encode_scores.py --metadata_pairs ${metadata_pairs} --scoring_file ${outanalysis}/results/compiled_scores.txt --out ${outanalysis}/results/encode_downsample.189comparisons.2018_01_30.txt
+        echo ${outanalysis}/results/encode_downsample.189comparisons.2018_01_30.txt
+    fi
+
+    if [[ ${substep} == "split" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --running_mode sge --metadata_samples ${metadata_samples} --bins ${nodes} --outdir ${outanalysis} --parameters_file ${params} --methods GenomeDISCO --subset_chromosomes chrX
+    fi
+
+    if [[ ${substep} == "reproducibility" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${outanalysis} --methods GenomeDISCO --concise_analysis --running_mode sge --parameters_file ${params} --subset_chromosomes chrX
+    fi
+fi
+
+
+if [[ ${step} == "encode_finalrun_nonhighres_326" ]];
+then
+    metadata_samples=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/metadata/metadata.res40000
+    metadata_pairs=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/metadata/metadata.res40000.pairs
+    nodes=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/nodes/Nodes.w40000.bed.gz
+    outanalysis=/ifs/scratch/oursu/paper_2017-12-20/encode_nonhighres.final
+    mkdir -p ${outanalysis}
+
+    params=${outanalysis}/params
+    cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/10G/5G/g' > ${params}
+    cat ${params}
+
+    if [[ ${substep} == "split" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --running_mode sge --metadata_samples ${metadata_samples} --bins ${nodes} --outdir ${outanalysis} --parameters_file ${params} --methods GenomeDISCO --subset_chromosomes chrX
+    fi
+
+    if [[ ${substep} == "reproducibility" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${outanalysis} --methods GenomeDISCO --concise_analysis --running_mode sge --parameters_file ${params}
+    fi
+
+    if [[ ${substep} == "format_scores" ]];
+    then
+	cat ${outanalysis}/results/reproducibility/GenomeDISCO/M*txt | sort | uniq > ${outanalysis}/results/compiled_scores.txt
+	results=${outanalysis}/results/reproducibility/GenomeDISCO
+        compiled=${outanalysis}/results/compiled_scores.txt
+        for f in $(ls ${results}/chr*);do awk -v myfile=$(basename ${f}) '{print myfile"\t"$0}' $f | sed 's/.scores.txt//g' | awk '{gsub("[.]","\t",$1)}1' | awk '{print $5"\t"$6"\t"$1"\t"$7}' >> ${compiled};done
+	echo ${outanalysis}/results/compiled_scores.txt
+        ${mypython} /srv/gsfs0/projects/kundaje/users/oursu/code/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/2017-12-20/arrange_encode_scores.py --metadata_pairs ${metadata_pairs} --scoring_file ${outanalysis}/results/compiled_scores.txt --out ${outanalysis}/results/encode_nonhighres.326comparisons.2018_01_30.txt
+	echo ${outanalysis}/results/encode_nonhighres.326comparisons.2018_01_30.txt
+    fi
+fi
+
+
+if [[ ${step} == "encode_finalrun_highres" ]];
+then
+    for res in 10000 40000 500000;
+    do
+	metadata_samples=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_highres/AllChrAnon/processed/metadata/metadata.res${res}
+	metadata_pairs=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_highres/AllChrAnon/processed/metadata/metadata.res${res}.pairs
+	nodes=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_highres/AllChrAnon/processed/nodes/Nodes.w${res}.bed.gz
+	outanalysis=/ifs/scratch/oursu/paper_2017-12-20/encode_highres.final/res${res}
+	mkdir -p ${outanalysis}
+	
+	params=${outanalysis}/params
+	cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/10G/100G/g' > ${params}
+	cat ${params}
+
+	if [[ ${substep} == "format_scores" ]];
+	then
+	    ${mypython} /srv/gsfs0/projects/kundaje/users/oursu/code/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/2017-12-20/arrange_encode_scores.py --metadata_pairs ${metadata_pairs} --scoring_file ${outanalysis}/results/compiled_scores.txt --out ${outanalysis}/results/encode_highres.res${res}.2018_01_30.txt
+	    echo ${outanalysis}/results/encode_highres.res${res}.2018_01_30.txt
+	fi
+
+	if [[ ${substep} == "split" ]];
+	then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --running_mode sge --metadata_samples ${metadata_samples} --bins ${nodes} --outdir ${outanalysis} --parameters_file ${params} --methods GenomeDISCO
+	fi
+
+        if [[ ${substep} == "reproducibility" ]];
+	then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${outanalysis} --methods GenomeDISCO --concise_analysis --running_mode sge --parameters_file ${params}
+	fi
+
+	if [[ ${substep} == "leftovers2" ]];
+	then
+	    for chromosome in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 X;
+	    do
+		old_script=/ifs/scratch/oursu/paper_2017-12-20/encode_highres.final/res40000/scripts/GenomeDISCO/Matrix55.Matrix8.sh
+		new_script=${old_script}.${chromosome}.sh
+		rm ${new_script}
+		echo ". /srv/gsfs0/projects/kundaje/users/oursu/code/3DChromatin_ReplicateQC/configuration_files/bashrc.configuration" >> ${new_script}
+		cat ${old_script} | grep -w "chr${chromosome}" | grep mypython >> ${new_script}
+		echo "============="
+		cat ${new_script}
+		chmod 755 ${new_script}
+		qsub -l h_vmem=10G -o ${new_script}.o -e ${new_script}.e ${new_script}
+	    done
+	fi
+
+	if [[ ${substep} == "run_leftovers" ]];
+        then
+	    for mpair in $(cat ${outanalysis}/results/reproducibility/GenomeDISCO/M*txt | cut -f1,2 | awk '{print $1".vs."$2}' | sort | uniq);
+	    do
+		chromos=$(cat ${outanalysis}/results/reproducibility/GenomeDISCO/${mpair}.txt | wc -l | awk '{print $1}')
+		echo ${chromos}
+		if [[ ${chromos} != "23" ]];
+		then
+		    echo ${mpair}
+		    echo $(cat ${outanalysis}/results/reproducibility/GenomeDISCO/${mpair}.txt | cut -f3)
+		    for chromosome in 2 3 4 5 6 7 8 9 X;
+		    do
+			old_script=${outanalysis}/scripts/GenomeDISCO/$(echo ${mpair} | sed 's/[.]vs//g').sh
+			new_script=${old_script}.${chromosome}.sh
+			rm ${new_script}
+			echo ". /srv/gsfs0/projects/kundaje/users/oursu/code/3DChromatin_ReplicateQC/configuration_files/bashrc.configuration" >> ${new_script}
+			cat ${old_script} | grep -w "chr${chromosome}" | grep mypython >> ${new_script}
+			echo "============="
+			cat ${new_script}
+			chmod 755 ${new_script}
+			qsub -l h_vmem=100G -o ${new_script}.o -e ${new_script}.e ${new_script}
+		    done
+		fi
+	    done
+	fi
+
+	if [[ ${substep} == "compile_scores" ]];
+	then
+	    results=${outanalysis}/results/reproducibility/GenomeDISCO
+	    compiled=${outanalysis}/results/compiled_scores.txt
+	    rm ${compiled}
+	    for f in $(ls ${results}/chr*);do awk -v myfile=$(basename ${f}) '{print myfile"\t"$0}' $f | sed 's/.scores.txt//g' | awk '{gsub("[.]","\t",$1)}1' | awk '{print $5"\t"$6"\t"$1"\t"$7}' >> ${compiled};done
+	    cat ${results}/M*txt >> ${compiled}
+	    cat ${compiled} | sort | uniq > ${compiled}2
+	    mv ${compiled}2 ${compiled}
+	    #cat ${compiled}
+	    echo ${compiled}
+	fi
+    done
+fi
+
+if [[ ${step} == "running_time_encode_40kb_chr21" ]];
+then
+    metadata_samples=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/metadata/metadata.res40000
+    metadata_pairs=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/metadata/metadata.res40000.pairs
+    nodes=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/nodes/Nodes.w40000.bed.gz
+    outanalysis=/ifs/scratch/oursu/encode_nonhighres/running_times_res40000_by_chromo_chr21
+    chromo=chr21
+    mkdir -p ${outanalysis}
+
+    params=${outanalysis}/params
+    cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/10G/20G -l hostname=scg4-h17*/g' > ${params}
+    cat ${params}
+    echo ${params}
+
+    if [[ ${substep} == "split" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --running_mode sge --metadata_samples ${metadata_samples} --bins ${nodes} --outdir ${outanalysis} --parameters_file ${params} --methods GenomeDISCO,HiCRep,HiC-Spector,QuASAR-Rep --subset_chromosomes ${chromo} 
+    fi
+        if [[ ${substep} == "reproducibility" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${outanalysis} --methods QuASAR-Rep --timing --subset_chromosomes ${chromo} --concise_analysis --running_mode write_scripts
+    fi
+    if [[ ${substep} == "timing_analysis" ]];
+    then
+        chromo=chr21
+        cd ${outanalysis}/timing
+	echo ${outanalysis}
+        for timetype in real user sys;
+        do
+            rm ${outanalysis}/timings.${timetype}
+            for method in GenomeDISCO HiCRep HiC-Spector ;do for f in $(ls ${method}/*${chromo}.*txt);do awk -v m=${method} '{print m"\t"FILENAME"\t"$0}' ${f} | grep ${timetype} | sed 's/\///g' | awk '{gsub(/\./,"\t",$2)}1' | grep -v site | grep -v File | awk '{print $1"\t"$3"\t"$4"\t"$5"\t"$9}' | awk '{gsub("m","\t",$5)}1' | awk '{gsub("s","",$5)}1' | awk '{t=(60*$5)+$6}{print $1"\t"$2"\t"$3"\t"$4"\t"t}' >>${outanalysis}/timings.${timetype};done;done
+            #do quasar                                                                                      
+            for f in $(ls QuASAR-Rep/*txt);
+            do
+		awk '{print "QuASAR-Rep\t"FILENAME"\t"$0}' ${f} |grep ${timetype} | sed 's/\///g' | awk '{gsub(/\./,"\t",$2)}1' | grep -v site | grep -v File | awk '{print $1"\tchr21\t"$3"\t"$4"\t"$8}' | awk '{gsub("m","\t",$5)}1' | awk '{gsub("s","",$5)}1' | awk '{t=(60*$5)+$6}{print $1"\t"$2"\t"$3"\t"$4"\t"t}' >>${outanalysis}/timings.${timetype}
+	    done
+                                                            
+            cat ${outanalysis}/timings.${timetype} | sort | uniq > ${outanalysis}/timings.${timetype}.uniq
+	    mv ${outanalysis}/timings.${timetype}.uniq ${outanalysis}/timings.${timetype}
+            echo ${outanalysis}/timings.${timetype}
+            module load R/3.4.1
+            Rscript /srv/gsfs0/projects/kundaje/users/oursu/code/plot_running_time.R ${outanalysis}/timings.${timetype} ${outanalysis}/timings.${timetype}.pdf
+        done
+    fi
+fi
+
+
+
+if [[ ${step} == "running_time_encode_40kb" ]];
+then
+    metadata_samples=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/metadata/metadata.res40000
+    metadata_pairs=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/metadata/metadata.res40000.pairs
+    nodes=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_2016-12-13/Bulk/AllChrAnon/processed/nodes/Nodes.w40000.bed.gz
+    outanalysis=/ifs/scratch/oursu/encode_nonhighres/running_times_res40000_by_chromo
+    chromo=chr1
+
+    params=${outanalysis}/params
+    cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/10G/50G/g' > ${params}
+    cat ${params}
+    echo ${params}
+
+    if [[ ${substep} == "split" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --running_mode sge --metadata_samples ${metadata_samples} --bins ${nodes} --outdir ${outanalysis} --parameters_file ${params} 
+    fi
+    if [[ ${substep} == "reproducibility" ]];
+    then
+        ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --running_mode sge --metadata_pairs ${metadata_pairs} --outdir ${outanalysis} --methods GenomeDISCO --timing --concise_analysis
+    fi
+    if [[ ${substep} == "timing_analysis" ]];
+    then
+	chromo=chr21
+	cd ${outanalysis}/timing
+	for timetype in real user sys;
+	do
+	    rm ${outanalysis}/timings.${chromo}
+	    for method in GenomeDISCO HiCRep HiC-Spector ;do for f in $(ls ${method}/*${chromo}.*txt);do awk -v m=${method} '{print m"\t"FILENAME"\t"$0}' ${f} | grep ${timetype} | sed 's/\///g' | awk '{gsub(/\./,"\t",$2)}1' | grep -v site | grep -v File | awk '{print $1"\t"$3"\t"$4"\t"$5"\t"$9}' | awk '{gsub("m","\t",$5)}1' | awk '{gsub("s","",$5)}1' | awk '{t=(60*$5)+$6}{print $1"\t"$2"\t"$3"\t"$4"\t"t}' >>${outanalysis}/timings.${timetype};done;done
+	    #do quasar
+	    #for f in $(ls ${method}/*${chromo}.*txt)
+	    cat ${outanalysis}/timings.${timetype}
+	    echo ${outanalysis}/timings.${timetype}
+	    module load R/3.4.1
+	    Rscript /srv/gsfs0/projects/kundaje/users/oursu/code/plot_running_time.R ${outanalysis}/timings.${timetype} ${outanalysis}/timings.${timetype}.pdf
+	done
+    fi
+fi
+
+if [[ ${step} == "running_time_encode" ]];
+then
+    for res in 10000 40000 500000;
+    do
+	metadata_samples=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_highres/AllChrAnon/processed/metadata/metadata.res${res}
+	metadata_pairs=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_highres/AllChrAnon/processed/metadata/metadata.res${res}.pairs
+	nodes=/srv/gsfs0/projects/kundaje/users/oursu/3d/encode_highres/AllChrAnon/processed/nodes/Nodes.w${res}.bed.gz
+	outanalysis=/ifs/scratch/oursu/encode_highres/running_times_res${res}
+	chromo=chr21
+	if [[ ${substep} == "split" ]];
+	then
+	    ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --running_mode sge --metadata_samples ${metadata_samples} --bins ${nodes} --outdir ${outanalysis} --subset_chromosomes ${chromo} 
+	fi
+	if [[ ${substep} == "reproducibility" ]];
+        then
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --running_mode sge --metadata_pairs ${metadata_pairs} --outdir ${outanalysis} --subset_chromosomes chr21 --timing
+        fi
+
+	#rm test;for method in $(ls);do for f in $(ls ${method}/*txt);do awk -v m=${method} '{print m"\t"FILENAME"\t"$0}' ${f} | grep user | grep -v site | grep -v File | sed 's/0m//g' | sed 's/s$//g'>>test;done;done
+
+    done
+fi
+
 if [[ ${step} == "setup_folder" ]];
 then
     mkdir -p ${DATA}
@@ -184,6 +821,13 @@ then
         metadata_samples=${DATA}/results/metadata/metadata.samples.res${res}
 	metadata_pairs=${DATA}/results/metadata/metadata.pairs.res${res}
 
+
+	if [[ ${substep} == "split_final" ]];
+        then
+	    out=${out}.final
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+        fi
+
 	if [[ ${substep} == "split" ]];
 	then
 	    ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
@@ -194,6 +838,55 @@ then
 	    out=${DATA}/results/rao/res${res}.keepDiag.transition
             ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
         fi
+
+	if [[ ${substep} == "run_final" ]];
+        then
+	    chromo=chr21
+            out=${DATA}/results/rao/res${res}.final
+	    params=${out}/params
+	    cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/GenomeDISCO|scoresByStep\tno/GenomeDISCO|scoresByStep\tyes/g' | sed 's/tmin\t3/tmin\t1/g' | sed 's/tmax\t3/tmax\t5/g' | sed 's/10G/50G/g' > ${params}
+	    cat ${params}
+	    echo ${params}
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods GenomeDISCO --concise_analysis --running_mode sge --parameters_file ${params} --timing 
+        fi
+
+	if [[ ${substep} == "split_genomedisco_paper" ]];
+        then
+            out=${DATA}/results/rao/res${res}.final.fortiming
+	    mkdir -p ${out}
+	    echo ${out}
+	    echo "cp -r ${DATA}/results/rao/res${res}.final/data ${out}/"
+        fi
+	
+	if [[ ${substep} == "timing_genomedisco_paper" ]];
+        then
+            chromo=chr21
+            out=${DATA}/results/rao/res${res}.final.fortiming
+            params=${out}/params
+            cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/GenomeDISCO|scoresByStep\tno/GenomeDISCO|scoresByStep\tyes/g' | sed 's/tmin\t3/tmin\t1/g' | sed 's/tmax\t3/tmax\t5/g' | sed 's/10G/50G/g' > ${params}
+            cat ${params}
+            echo ${params}
+            echo "${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods GenomeDISCO --concise_analysis --parameters_file ${params} --timing "
+        fi
+
+	if [[ ${substep} == "timing_genomedisco_paper_timing" ]];
+	then
+	    outanalysis=${DATA}/results/rao/res${res}.final.fortiming
+            cd ${outanalysis}/timing
+            for timetype in real user sys;
+            do
+		echo $timetype
+		rm ${outanalysis}/timings.${timetype}
+		for method in GenomeDISCO HiCRep HiC-Spector ;do for f in $(ls ${method}/*${chromo}.*txt);do awk -v m=${method} '{print m"\t"FILENAME"\t"$0}' ${f} | grep ${timetype} | sed 's/\///g' | awk '{gsub(/\./,"\t",$2)}1' | grep -v site | grep -v File | awk '{print $1"\t"$3"\t"$4"\t"$5"\t"$9}' | awk '{gsub("m","\t",$5)}1' | awk '{gsub("s","",$5)}1' | awk '{t=(60*$5)+$6}{print $1"\t"$2"\t"$3"\t"$4"\t"t}' >>${outanalysis}/timings.${timetype};done;done
+		cat ${outanalysis}/timings.${timetype} | sort | uniq | grep -v chrY > ${outanalysis}/timings.${timetype}.uniq
+		mv ${outanalysis}/timings.${timetype}.uniq ${outanalysis}/timings.${timetype}
+		cat ${outanalysis}/timings.${timetype}
+		echo ${outanalysis}/timings.${timetype}
+		module load R/3.4.1
+		echo "Rscript /srv/gsfs0/projects/kundaje/users/oursu/code/plot_running_time_genomewide.R ${outanalysis}/timings.${timetype} ${outanalysis}/timings.${timetype}.pdf"
+            done
+	fi
+
 
 	if [[ ${substep} == "run" ]];
         then
@@ -209,16 +902,18 @@ then
             ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs} --outdir ${out} --methods GenomeDISCO --subset_chromosomes chr21 --concise_analysis --running_mode sge --parameters_file ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.bystep.10steps.transition.txt                                                   
         fi
 
-	if [[ ${substep} == "compile_scores" ]];
+	if [[ ${substep} == "compile_scores_final" ]];
         then
 	    echo "here"
-	    mkdir -p ${DATA}/results/rao/res${res}/compiled_scores
-	    echo ${DATA}/results/rao/res${res}/compiled_scores
-	    for chromo in 21;
+	    d=${DATA}/results/rao/res${res}.final
+	    mkdir -p ${d}/compiled_scores
+	    for chromo in 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 X;
 	    do
-		zcat -f ${DATA}/results/rao/res${res}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${DATA}/results/rao/res${res}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
-		zcat -f ${DATA}/results/rao/res${res}/results/reproducibility/HiCRep/chr${chromo}.*.scores.txt > ${DATA}/results/rao/res${res}/compiled_scores/chr${chromo}.HiCRep.scores.txt
-		zcat -f ${DATA}/results/rao/res${res}/results/reproducibility/HiC-Spector/chr${chromo}.*.scores.txt > ${DATA}/results/rao/res${res}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+		echo ${chromo}
+		zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+		zcat -f ${d}/results/reproducibility/HiCRep/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+		zcat -f ${d}/results/reproducibility/HiC-Spector/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+		#echo ${d}/compiled_scores
 	    done
 	fi
 
@@ -383,7 +1078,41 @@ then
     do
 	out=${DATA}/results/HiChIP/res${res}
 	bins=${DATA}/results/bins/bins.res${res}.gz
+
+	if [[ ${substep} == "split_final" ]];
+        then
+	    out=${DATA}/results/HiChIP/res${res}.final
+            params=${out}/params
+	    echo ${out}
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.res${res} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge
+	    fi
     
+	if [[ ${substep} == "run_final" ]];
+        then
+            out=${DATA}/results/HiChIP/res${res}.final
+            params=${out}/params
+            cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/GenomeDISCO|scoresByStep\tno/GenomeDISCO|scoresByStep\tyes/g' | sed 's/tmin\t3/tmin\t1/g' | sed 's/tmax\t3/tmax\t5/g' | sed 's/10G/50G/g' > ${params}
+            cat ${params}
+            echo ${params}
+	    echo "${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py"
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py reproducibility --metadata_pairs ${metadata_pairs}.res${res} --outdir ${out} --methods HiC-Spector --concise_analysis --running_mode sge --parameters_file ${params} --timing
+        fi
+
+	if [[ ${substep} == "compile_scores_final" ]];
+	then
+	    d=${DATA}/results/HiChIP/res${res}.final
+            mkdir -p ${DATA}/results/HiChIP/res${res}.final/compiled_scores
+            for chromo in 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1;
+            do
+		echo ${chromo}
+		zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+		zcat -f ${d}/results/reproducibility/HiCRep/*.txt | grep -w "chr${chromo}" | cut -f1,2,4> ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+		zcat -f ${d}/results/reproducibility/HiC-Spector/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+        done
+    fi
+
+
+
 	if [[ ${substep} == "split" ]];
 	then
             ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/3DChromatin_ReplicateQC.py split --metadata_samples ${metadata_samples}.res${res} --bins ${bins} --outdir ${out} --methods GenomeDISCO,HiCRep,HiC-Spector --running_mode sge 

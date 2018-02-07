@@ -81,7 +81,7 @@ def filter_nodes(m,to_remove):
     return csr_matrix((coo_mat.data[keep],(coo_mat.row[keep],coo_mat.col[keep])),shape=m.get_shape(),dtype=float) 
     
 
-def construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes,remove_diag=True):
+def construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes=[],remove_diag=True):
     print "GenomeDISCO | "+strftime("%c")+" | processing: Loading interaction data from "+f
 
     total_nodes=len(nodes.keys())
