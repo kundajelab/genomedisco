@@ -12,6 +12,33 @@ macs2=/srv/gsfs0/projects/kundaje/users/oursu/code/anaconda2/mypython/bin/macs2
 #=======================================
 
 
+if [[ ${step} == "supp_table1" ]];
+then
+    supp_table1=${DATA}/data/Supp_Table1.txt
+    echo "Assay__Analysis__GEO__Resolution__CellType" | sed 's/__/\t/g' > ${supp_table1}
+    #hic for simulations
+    for cell in GM12878 K562 NHEK HUVEC HMEC IMR90 KBM7;
+    do
+	echo "Hi-C__simulations__GSE63525__50000__${cell}" | sed 's/__/\t/g' >> ${supp_table1}
+    done
+    for dataset_number in {1..83};
+    do
+        dataset="HIC"$(echo "00${dataset_number}" | sed 's/.*\(...\)/\1/')
+	echo "Hi-C__Real_Hi-C_analysis__GSE63525__50000__${dataset}" | sed 's/__/\t/g' >> ${supp_table1}
+    done
+    for cell in GM12878 HCASMC K562 MyLa Naive Th17 Treg;
+    do
+	echo "HiChIP__Real_HiChIP_analysis__GSE101498__50000__${cell}" | sed 's/__/\t/g' >> ${supp_table1}
+    done
+    cat ${supp_table1}
+fi
+
+if [[ ${step} == "supp_table2" ]];
+then
+    #get it from the other table
+    cp ${DATA}/data/LA_metadata.forPaperTable.txt ${DATA}/data/Supp_Table2.txt #make sure to add the difference in distance dependence
+fi
+
 if [[ ${step} == "simulations" ]];
 then
     for res in 50000;
@@ -39,7 +66,7 @@ then
 	
 	bashrc=${MYCODE}/3DChromatin_ReplicateQC/configuration_files/bashrc.configuration
 	mini_coord=320 #16Mb
-	maxi_coord=720 #36Mb
+	maxi_coord=900 #45Mb
 
 	if [[ ${substep} == "EdgeNoise" ]];
 	then
@@ -48,7 +75,6 @@ then
 		for mname in $(echo ${mnames} | sed 's/,/ /g');
 		do
 	            matpath=${mdir}/${mname}.chr21.RAWobserved.gz
-		    edgenoise="0.0,0.1,0.25,0.5,0.75,0.9"
 		    nodenoise=0.0
 		    boundarynoise=0
 		    for edgenoise in 0.0 0.1 0.25 0.5 0.75 0.9;
@@ -316,7 +342,7 @@ then
 	    
 	    for depth in 10000 100000 1000000 10000000;
 	    do
-		for  dd1 in 0 1;
+		for  dd1 in 0 1 2 3 4 5 6;
 		do
 		    for mname in $(echo ${mnames} | sed 's/,/ /g');
 		    do
@@ -375,7 +401,7 @@ then
 		    
 		    if [[ ${noisedirname} == ${NONREP_DIR} ]];
 		    then
-			cat  ${noisedirname}/results/reproducibility/${method}/*.txt | cut -f1,2,4 | sort -k3 -n |sed 's/Depth_//g' | sed 's/[.]G/\tG/g' | sed 's/[.]K/\tK/g' | sed 's/[.]I/\tI/g' | sed 's/[.]H/\tH/g' | sed 's/[.]NH/\tNH/g' | sed 's/[.]EN_/\t/g' | sed 's/[.]NN_/\t/g' | sed 's/[.]BN_/\t/g' | sed 's/[.]dd_/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' > ${summary}
+			cat  ${noisedirname}/results/reproducibility/${method}/*.txt | cut -f1,2,4 |sed 's/Depth_//g' | sed 's/[.]G/\tG/g' | sed 's/[.]K/\tK/g' | sed 's/[.]I/\tI/g' | sed 's/[.]H/\tH/g' | sed 's/[.]NH/\tNH/g' | sed 's/[.]EN_/\t/g' | sed 's/[.]NN_/\t/g' | sed 's/[.]BN_/\t/g' | sed 's/[.]dd_/\t/g' | sed 's/[.]a/\ta/g' | sed 's/[.]b/\tb/g' | head # > ${summary}
 		    fi
 		done
 	    done
@@ -841,7 +867,6 @@ then
 
 	if [[ ${substep} == "run_final" ]];
         then
-	    chromo=chr21
             out=${DATA}/results/rao/res${res}.final
 	    params=${out}/params
 	    cat ${MYCODE}/3DChromatin_ReplicateQC/examples/example_parameters.txt | sed 's/GenomeDISCO|scoresByStep\tno/GenomeDISCO|scoresByStep\tyes/g' | sed 's/tmin\t3/tmin\t1/g' | sed 's/tmax\t3/tmax\t5/g' | sed 's/10G/50G/g' > ${params}
@@ -907,14 +932,37 @@ then
 	    echo "here"
 	    d=${DATA}/results/rao/res${res}.final
 	    mkdir -p ${d}/compiled_scores
+	    scores_genomedisco_multiple_t=""
+	    scores_genomedisco=""
+	    scores_hicrep=""
+	    scores_hicspector=""
 	    for chromo in 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 X;
 	    do
 		echo ${chromo}
-		zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
-		zcat -f ${d}/results/reproducibility/HiCRep/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
-		zcat -f ${d}/results/reproducibility/HiC-Spector/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
-		#echo ${d}/compiled_scores
+		zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$0}' | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.multiple_t.txt
+		zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$1"\t"$2"\t"$5}' | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+		zcat -f ${d}/results/reproducibility/HiCRep/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 | awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$1"\t"$2"\t"$3}' > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+		zcat -f ${d}/results/reproducibility/HiC-Spector/*.txt | grep -w "chr${chromo}" | cut -f1,2,4| awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$1"\t"$2"\t"$3}' > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+		scores_genomedisco_multiple_t=${scores_genomedisco_multiple_t}" "${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.multiple_t.txt
+		scores_genomedisco=${scores_genomedisco}" "${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+		scores_hicrep=${scores_hicrep}" "${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+		scores_hicspector=${scores_hicspector}" "${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
 	    done
+	   
+	    cat ${scores_genomedisco_multiple_t} | gzip > ${d}/compiled_scores/HiC.GenomeDISCO.scores.multiple_t.by_chromosome.txt.gz
+	    ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiC.GenomeDISCO.scores.multiple_t.by_chromosome.txt.gz --out ${d}/compiled_scores/HiC.GenomeDISCO.scores.multiple_t.genomewide.txt.gz
+	   
+	    cat ${scores_genomedisco} | gzip > ${d}/compiled_scores/HiC.GenomeDISCO.scores.by_chromosome.txt.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiC.GenomeDISCO.scores.by_chromosome.txt.gz --out ${d}/compiled_scores/HiC.GenomeDISCO.scores.genomewide.txt.gz
+
+	    cat ${scores_hicrep} | gzip > ${d}/compiled_scores/HiC.HiCRep.scores.by_chromosome.txt.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiC.HiCRep.scores.by_chromosome.txt.gz --out ${d}/compiled_scores/HiC.HiCRep.scores.genomewide.txt.gz
+
+	    cat ${scores_hicspector} | gzip > ${d}/compiled_scores/HiC.HiC-Spector.scores.by_chromosome.txt.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiC.HiC-Spector.scores.by_chromosome.txt.gz --out ${d}/compiled_scores/HiC.HiC-Spector.scores.genomewide.txt.gz
+
+	    rm ${d}/compiled_scores/chr*
+	    ls -lht ${d}/compiled_scores/
 	fi
 
 	if [[ ${substep} == "compile_scores_transition" ]];
@@ -1102,13 +1150,38 @@ then
 	then
 	    d=${DATA}/results/HiChIP/res${res}.final
             mkdir -p ${DATA}/results/HiChIP/res${res}.final/compiled_scores
-            for chromo in 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1;
+	    scores_genomedisco_multiple_t=""
+            scores_genomedisco=""
+            scores_hicrep=""
+            scores_hicspector=""
+            for chromo in 22 21 20 19 18 17 16 15 14 13 12 11 10 9 8 7 6 5 4 3 2 1 X;
             do
-		echo ${chromo}
-		zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
-		zcat -f ${d}/results/reproducibility/HiCRep/*.txt | grep -w "chr${chromo}" | cut -f1,2,4> ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
-		zcat -f ${d}/results/reproducibility/HiC-Spector/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
-        done
+                echo ${chromo}
+                zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$0}' | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.multiple_t.txt
+                zcat -f ${d}/results/reproducibility/GenomeDISCO/chr${chromo}.*.scoresByStep.txt | awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$1"\t"$2"\t"$5}' | grep -v m1 > ${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+                zcat -f ${d}/results/reproducibility/HiCRep/*.txt | grep -w "chr${chromo}" | cut -f1,2,4 | awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$1"\t"$2"\t"$3}' > ${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+                zcat -f ${d}/results/reproducibility/HiC-Spector/*.txt | grep -w "chr${chromo}" | cut -f1,2,4| awk -v chromosome=${chromo} '{print "chr"chromosome"\t"$1"\t"$2"\t"$3}' > ${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+                scores_genomedisco_multiple_t=${scores_genomedisco_multiple_t}" "${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.multiple_t.txt
+                scores_genomedisco=${scores_genomedisco}" "${d}/compiled_scores/chr${chromo}.GenomeDISCO.scores.txt
+                scores_hicrep=${scores_hicrep}" "${d}/compiled_scores/chr${chromo}.HiCRep.scores.txt
+                scores_hicspector=${scores_hicspector}" "${d}/compiled_scores/chr${chromo}.HiC-Spector.scores.txt
+            done
+
+            cat ${scores_genomedisco_multiple_t} | gzip > ${d}/compiled_scores/HiChIP.GenomeDISCO.scores.multiple_t.by_chromosome.txt.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiChIP.GenomeDISCO.scores.multiple_t.by_chromosome.txt.gz --out ${d}/compiled_scores/HiChIP.GenomeDISCO.scores.multiple_t.genomewide.txt.gz
+
+            cat ${scores_genomedisco} | gzip > ${d}/compiled_scores/HiChIP.GenomeDISCO.scores.by_chromosome.txt.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiChIP.GenomeDISCO.scores.by_chromosome.txt.gz --out ${d}/compiled_scores/HiChIP.GenomeDISCO.scores.genomewide.txt.gz
+
+            cat ${scores_hicrep} | gzip > ${d}/compiled_scores/HiChIP.HiCRep.scores.by_chromosome.txt.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiChIP.HiCRep.scores.by_chromosome.txt.gz --out ${d}/compiled_scores/HiChIP.HiCRep.scores.genomewide.txt.gz
+
+            cat ${scores_hicspector} | gzip > ${d}/compiled_scores/HiChIP.HiC-Spector.scores.by_chromosome.txt.gz
+            ${mypython} ${MYCODE}/3DChromatin_ReplicateQC/software/genomedisco/paper_analysis/average_scores_by_chromosome.py --scores_by_chromosome ${d}/compiled_scores/HiChIP.HiC-Spector.scores.by_chromosome.txt.gz --out ${d}/compiled_scores/HiChIP.HiC-Spector.scores.genomewide.txt.gz
+
+            rm ${d}/compiled_scores/chr*
+	    rm ${d}/compiled_scores/*pdf
+            ls -lht ${d}/compiled_scores/
     fi
 
 

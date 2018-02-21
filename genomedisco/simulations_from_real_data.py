@@ -45,39 +45,49 @@ def main():
         for edgenoise in args.edgenoise.split(','):
             for nodenoise in args.nodenoise.split(','):
                 for boundarynoise in args.boundarynoise.split(','):
-                    ablist=['a','b']
-                    for ab_idx in range(len(ablist)):
-                        ab=ablist[ab_idx]
-                        my_matrix=shift_dataset(my_matrix_orig,int(boundarynoise)) #============= 
-                        ddfiles=args.distDepData.split(',')
-                        print my_matrix
-                        for ddfile_idx in range(len(ddfiles)):
-                            ddfile=ddfiles[ddfile_idx]
-                            dd=read_in_data(ddfile,nodes)
-                            prob_matrix=get_probability_matrix(my_matrix,dd,float(edgenoise),float(nodenoise),args.mini,args.maxi)
-                            print prob_matrix
+                    my_matrix=shift_dataset(my_matrix_orig,int(boundarynoise))
+                    ddfiles=args.distDepData.split(',')
+                    for ddfile_idx in range(len(ddfiles)):
+                        ddfile=ddfiles[ddfile_idx]
+                        dd=read_in_data(ddfile,nodes)
+                        prob_matrix=get_probability_matrix(my_matrix,dd,float(edgenoise),float(nodenoise),args.mini,args.maxi,np.random.RandomState(hash('probability')%10000))
+                        ablist=['a','b']
+                        for ab_idx in range(len(ablist)):
+                            ab=ablist[ab_idx]
+                            if ab=='a':
+                                s=hash(mname+ddfile)%10000
+                            if ab=='b':
+                                s=hash(mname+ddfile)%10000+101
                             
                             intro=args.outdir+'/Depth_'+str(args.depth)+'.'+mname
-                            sampled_matrix=sample_interactions(prob_matrix,args.depth)
+                            sampled_matrix=sample_interactions(copy.deepcopy(prob_matrix),args.depth,np.random.RandomState(s))
                             ftowrite=intro+'.EN_'+str(edgenoise)+'.NN_'+str(nodenoise)+'.BN_'+str(boundarynoise)+'.'+ab+'.dd_'+str(ddfile_idx)+'.gz'
                             print ftowrite
                             write_matrix(sampled_matrix,ftowrite,args)
                             
-def sample_interactions(prob_matrix,depth):
-    new_m=np.zeros(prob_matrix.shape)
+def sample_interactions(prob_matrix1,depth,pet_random):
+    new_m=np.zeros(prob_matrix1.shape)
     for i in range(new_m.shape[0]):
         for j in range(i,new_m.shape[0]):
-            p=prob_matrix[i,j]
-            reads=np.random.binomial(depth, p, size=1)[0]
+            p=prob_matrix1[i,j]
+            reads=pet_random.binomial(depth, p, size=1)[0]
             new_m[i,j]=reads
             new_m[j,i]=reads
     return new_m
 
-def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,mini,maxi):#,maxdist=2000):
+def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,mini,maxi,pet_random):#,maxdist=2000):
+
+    #0 out diagonal of our matrix #==========
+    for i in range(my_matrix.shape[0]):
+        my_matrix[i,i]=0.0
+
     #convert matrix to probabilities
     total_probs=np.triu(copy.deepcopy(my_matrix)).sum()
     mat=copy.deepcopy(my_matrix)/total_probs #this is the probability matrix
     mat_dd=data_operations.get_distance_dep(csr_matrix(mat))
+    #0 out diagonal of the ddmat #================
+    for i in range(ddmat.shape[0]):
+        ddmat[i,i]=0.0
     desired_dd=data_operations.get_distance_dep(csr_matrix(ddmat))
     
     #rescale the values to obey the distance curve given
@@ -102,42 +112,43 @@ def get_probability_matrix(my_matrix,ddmat,edge_noise,node_noise,mini,maxi):#,ma
                 val=1.0*mat[i,j]*mat_total*desired_ddsums[d]/(desired_total*mat_ddsums[d])
             new_mat[i,j]=val
             new_mat[j,i]=val
+
+        
     #0 out things that are not within mini<->maxi
     for i in range(new_mat.shape[0]):
         if i>=mini and i<=maxi:
             continue
         new_mat[i,:]=0.0
-        new_mat[:,i]=0.0
+        new_mat[:,i]=0.0        
+
     #rescale the new matrix to be a probability matrix
-    new_mat=copy.deepcopy(new_mat)/np.triu(copy.deepcopy(new_mat)).sum()
+    total_probs=np.triu(copy.deepcopy(new_mat)).sum()
+    new_mat=np.triu(copy.deepcopy(new_mat))/total_probs
+    
 
     #edge noise
+    #pet_random = np.random.RandomState()
+    new_mat2=np.zeros(new_mat.shape)
+    new_mat2=new_mat
+    
     for i in range(new_mat.shape[0]):
-        for j in range(i,new_mat.shape[0]): #min(new_mat.shape[0],i+maxdist+1)):
+        for j in range(min(i,new_mat.shape[0]),new_mat.shape[0]): 
             pij=new_mat[i,j]
-            noise_addition=0.0
-            add_edge_noise=np.random.binomial(1, edge_noise, size=1)[0]
             pij_final=pij
-            if add_edge_noise>0.0 and edge_noise!=0.0:
-                '''
-                up_or_down=1
-                if np.random.binomial(1, 0.5, size=1)[0]>0.0:
-                    up_or_down=-1
-                edge_noise_addition=eps*up_or_down*pij
-                pij_final=min(1.0,max(0.0,pij+edge_noise_addition))
-                '''
-                pij_final=0.0
-
-            new_mat[i,j]=pij_final
-            new_mat[j,i]=pij_final
+            if edge_noise!=0.0:
+                boink = float(pet_random.binomial(1, edge_noise, size=1)[0]) #(pet_random.rand(1)[0] <= edge_noise)
+                if (boink>0.0):
+                    pij_final=0.0
+            new_mat2[i,j]=pij_final
+    
     #node noise
-    for i in range(new_mat.shape[0]):
-        remove_node=float(np.random.binomial(1, node_noise, size=1)[0])
+    for i in range(new_mat2.shape[0]):
+        remove_node=float(pet_random.binomial(1, node_noise, size=1)[0])
         if remove_node>0.0:
-            new_mat[i,:]=0.0
-            new_mat[:,i]=0.0
-    total_probs=np.triu(copy.deepcopy(new_mat)).sum()
-    return new_mat/total_probs
+            new_mat2[i,:]=0.0
+            new_mat2[:,i]=0.0
+    total_probs=np.triu(copy.deepcopy(new_mat2)).sum()
+    return np.triu(new_mat2)/total_probs
     
 def read_in_data(mname_full,nodes):
     mat=processing.construct_csr_matrix_from_data_and_nodes(mname_full,nodes,[],True).toarray()
@@ -149,7 +160,7 @@ def write_matrix(sampled_matrix,fname,args,chromo='chr21'):
     maxi=args.maxi
     f=gzip.open(fname,'w')
     for i in range(mini,min(maxi,sampled_matrix.shape[0])):
-        for j in range(i,min(maxi,sampled_matrix.shape[0])):
+        for j in range(min(i+1,sampled_matrix.shape[0]),min(maxi,sampled_matrix.shape[0])):
             v=sampled_matrix[i,j]
             if v>0.0:
                 n1=i*args.resolution
