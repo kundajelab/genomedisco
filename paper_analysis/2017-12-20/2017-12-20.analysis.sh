@@ -12,6 +12,58 @@ macs2=/srv/gsfs0/projects/kundaje/users/oursu/code/anaconda2/mypython/bin/macs2
 #=======================================
 
 
+if [[ ${step} == "combine_score_files" ]];
+then
+    #combine hichip files
+    hichip_dir=${DATA}/results/HiChIP/res50000.final/compiled_scores
+    all_chromo=${hichip_dir}/HiChIP.AllScores.by_chromosome.gz
+    all=${hichip_dir}/HiChIP.AllScores.genomewide.gz
+    rm ${all_chromo} ${all}
+    for method in GenomeDISCO HiCRep HiC-Spector;
+    do
+	zcat -f ${hichip_dir}/HiChIP.${method}.scores.by_chromosome.txt.gz | awk -v mymethod=${method} '{print mymethod"\t"$0}' >> ${all_chromo}.tmp
+	zcat -f ${hichip_dir}/HiChIP.${method}.scores.genomewide.txt.gz | awk -v mymethod=${method} '{print mymethod"\t"$0}' >> ${all}.tmp
+    done
+    zcat -f ${all_chromo}.tmp | gzip > ${all_chromo}
+    zcat -f ${all}.tmp | gzip > ${all}
+    rm ${all_chromo}.tmp ${all}.tmp
+    echo ${all_chromo} 
+    echo ${all}
+
+    #combine hic files
+    hic_dir=${DATA}/results/rao/res50000.final/compiled_scores
+    all_chromo=${hic_dir}/HiC.AllScores.by_chromosome.gz
+    all=${hic_dir}/HiC.AllScores.genomewide.gz
+    rm ${all_chromo} ${all}
+    for method in GenomeDISCO HiCRep HiC-Spector;
+    do
+        zcat -f ${hic_dir}/HiC.${method}.scores.by_chromosome.txt.gz | awk -v mymethod=${method} '{print mymethod"\t"$0}' >> ${all_chromo}.tmp
+	zcat -f ${hic_dir}/HiC.${method}.scores.genomewide.txt.gz | awk -v mymethod=${method} '{print mymethod"\t"$0}' >> ${all}.tmp
+    done
+    zcat -f ${all_chromo}.tmp |gzip > ${all_chromo}
+    zcat -f ${all}.tmp | gzip > ${all}
+    rm ${all_chromo}.tmp ${all}.tmp
+    echo ${all_chromo}
+    echo ${all}
+
+    #combine files from simulations
+    sim_dir=${DATA}/simulations
+    all=${sim_dir}/Simulations.AllScores.gz
+    rm ${all}
+    zcat -f zcat -f ${sim_dir}/EdgeNoise/GenomeDISCO.*.results.txt | head -n1 | awk '{print "Simulation\tMethod\t"$0}' > ${all}.tmp
+    for sim in EdgeNoise NodeNoise BoundaryNoise DistanceDependence RepNonrep;
+    do
+	for method in GenomeDISCO HiCRep HiC-Spector;
+	do
+            zcat -f ${sim_dir}/${sim}/${method}.*.results.txt | grep -v Depth | awk -v mysim=${sim} -v mymethod=${method} '{print mysim"\t"mymethod"\t"$0}' | sort | uniq >> ${all}.tmp
+	done
+    done
+    zcat -f ${all}.tmp | gzip > ${all}
+    rm ${all}.tmp
+    echo ${all}
+fi
+
+
 if [[ ${step} == "supp_table1" ]];
 then
     supp_table1=${DATA}/data/Supp_Table1.txt
