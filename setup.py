@@ -4,7 +4,7 @@ config = {
     'include_package_data': True,
     'description': 'GenomeDISCO',
     'download_url': 'https://github.com/kundajelab/genomedisco',
-    'version': '1.0.0',
+    'version': '0.0.0',
     'packages': ['genomedisco'],
     'setup_requires': [],
     'install_requires': ['numpy>=1.9', 'matplotlib>=1.5.0'],
