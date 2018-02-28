@@ -1,3 +1,0 @@
-#!/bin/sh
-. /oak/stanford/groups/akundaje/oursu/code/new_genomedisco/genomedisco/scripts/bashrc.allMethods
-Rscript /oak/stanford/groups/akundaje/oursu/code/new_genomedisco/genomedisco/reproducibility_analysis/HiCRep_wrapper.R /oak/stanford/groups/akundaje/oursu/code/new_genomedisco/genomedisco/examples/output/data/edges/HIC001/HIC001.chr21.gz /oak/stanford/groups/akundaje/oursu/code/new_genomedisco/genomedisco/examples/output/data/edges/HIC002/HIC002.chr21.gz /oak/stanford/groups/akundaje/oursu/code/new_genomedisco/genomedisco/examples/output/results/reproducibility/HIC001.vs.HIC002/HiCRep/chr21.HIC001.vs.HIC002.scores.txt 5000000 40000 /oak/stanford/groups/akundaje/oursu/code/new_genomedisco/genomedisco/examples/output/data/nodes/nodes.chr21.gz 5 HIC001 HIC002

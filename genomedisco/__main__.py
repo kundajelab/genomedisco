@@ -2,20 +2,18 @@
 from __future__ import print_function
 import argparse
 import os
-from genomedisco import genomedisco_utils
+from genomedisco import concordance_utils
 
 def main():
-    command_methods = {'split': genomedisco_utils.split_by_chromosome,
-                         'reproducibility': genomedisco_utils.reproducibility,
-                         'summary': genomedisco_utils.summary,
-                       'run_all': genomedisco_utils.run_all}
-    command, args = genomedisco_utils.parse_args()
-    global repo_dir
-    global bashrc_file
-
-    repo_dir=os.path.dirname(os.path.realpath(__file__))
-    bashrc_file=repo_dir+'/configuration_files/bashrc.configuration'
-
+    command_methods = {'preprocess': concordance_utils.preprocess,
+                         'concordance': concordance_utils.concordance,
+                         'summary': concordance_utils.summary,
+                         'cleanup':concordance_utils.clean_up,
+                       'run_all': concordance_utils.run_all}
+    #TODO: add command that just smooths
+    command, args = concordance_utils.parse_args_genomedisco()
+    if command!='cleanup':
+        args['methods']='GenomeDISCO'
     command_methods[command](**args)
 
 
