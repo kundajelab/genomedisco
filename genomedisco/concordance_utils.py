@@ -8,6 +8,7 @@ import numpy as np
 from time import gmtime, strftime
 import sys
 import copy
+import fnmatch
 
 global repo_dir
 global replicateqc_path
@@ -15,7 +16,7 @@ global python_bin_dir
 repo_dir=os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
 replicateqc_path=os.path.dirname(os.path.dirname(repo_dir))
 python_bin_dir=os.path.dirname(sys.executable)
-print('replicateqc_path')
+bashrc_file=replicateqc_path+'/configuration_files/bashrc.configuration'
 
 def parse_args_genomedisco():
     return parse_args('GenomeDISCO')
@@ -336,13 +337,14 @@ def quasar_qc_wrapper(outdir,parameters,samplename,running_mode,timing):
         timing_text1='{ time '
         timing_text2='; } 2> '+timing_file
     script_comparison.write(timing_text1+python_bin_dir+"/hifive quasar"+' '+quasar_transform+' -o '+outpath+' '+timing_text2+'\n')
-    script_comparison.write(sys.executable+' '+repo_dir+"/wrappers/QuASAR/quasar_split_by_chromosomes_qc.py"+' '+outpath+' '+samplename+'\n')
+    script_comparison.write(sys.executable+' '+replicateqc_path+"/wrappers/QuASAR/quasar_split_by_chromosomes_qc.py"+' '+outpath+' '+samplename+'\n')
     script_comparison.close()
     run_script(script_comparison_file,running_mode,parameters)
 
 def HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile,resolution,all_scores,timing):
     cmdlist=[]
     cmdlist.append("#!/bin/sh")
+    cmdlist.append('. '+bashrc_file)
     if os.path.isfile(f1) and os.path.getsize(f1)>20:
         if os.path.isfile(f2) and os.path.getsize(f2)>20:
             outpath=outdir+'/results/reproducibility/HiCRep/'+chromo+'.'+samplename1+'.vs.'+samplename2+'.scores.txt'
@@ -355,7 +357,7 @@ def HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,ch
                 timing_file=outdir+'/timing/HiCRep/HiCRep.'+chromo+'.'+samplename1+'.'+samplename2+'.timing.txt'
                 timing_text1='{ time '
                 timing_text2='; } 2> '+timing_file
-            cmd=timing_text1+"Rscript "+hicrepcode+' '+f1+' '+f2+' '+outpath+' '+parameters['HiCRep']['maxdist']+' '+str(resolution)+' '+nodefile+' '+parameters['HiCRep']['h']+' '+samplename1+' '+samplename2+' '+timing_text2
+            cmd=timing_text1+"${pathtor}script "+hicrepcode+' '+f1+' '+f2+' '+outpath+' '+parameters['HiCRep']['maxdist']+' '+str(resolution)+' '+nodefile+' '+parameters['HiCRep']['h']+' '+samplename1+' '+samplename2+' '+timing_text2
             cmdlist.append(cmd)
             cmdlist.append('cat '+outpath+" | awk -v chromosome="+chromo+" '{print "+'$1"\\t"$2"\\t"chromosome"\\t"$3}\' >> '+all_scores)
     return cmdlist
@@ -535,6 +537,7 @@ def concordance(metadata_pairs,methods,parameters_file,outdir,running_mode,conci
         run_script(f,running_mode,parameters)
 
 def get_qc(metadata_samples,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes,timing):
+    parameters_file=outdir+'/parameters.txt'
     parameters=read_parameters_file(parameters_file)
     methods_list=methods.strip().split(',')
     if 'QuASAR-QC' in methods_list or 'all' in methods_list:
