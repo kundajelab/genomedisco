@@ -83,19 +83,19 @@ def parse_args(genomedisco_or_replicateqc):
         split_parser=subparsers.add_parser('preprocess',parents=[metadata_samples_parser,bins_parser,re_fragments_parser,outdir_parser,running_mode_parser,subset_chromosomes_parser,parameter_file_parser,timing_parser],help='(step 1) split files by chromosome')
 
     if genomedisco_or_replicateqc=='replicateqc':
-        qc_parser=subparsers.add_parser('qc',parents=[metadata_samples_parser,methods_parser,parameter_file_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser,timing_parser],help='(step 2.a) compute QC per sample')
+        qc_parser=subparsers.add_parser('qc',parents=[metadata_samples_parser,methods_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser,timing_parser],help='(step 2.a) compute QC per sample')
 
     if genomedisco_or_replicateqc=='replicateqc':
-        reproducibility_parser=subparsers.add_parser('concordance',parents=[metadata_pairs_parser,methods_parser,parameter_file_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser,timing_parser],help='(step 2.b) compute reproducibility of replicate pairs')
+        reproducibility_parser=subparsers.add_parser('concordance',parents=[metadata_pairs_parser,methods_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser,timing_parser],help='(step 2.b) compute reproducibility of replicate pairs')
 
     if genomedisco_or_replicateqc=='GenomeDISCO':
-        reproducibility_parser=subparsers.add_parser('concordance',parents=[metadata_pairs_parser,parameter_file_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser,timing_parser],help='(step 2) compute concordance of replicate pairs')
+        reproducibility_parser=subparsers.add_parser('concordance',parents=[metadata_pairs_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser,timing_parser],help='(step 2) compute concordance of replicate pairs')
 
     if genomedisco_or_replicateqc=='replicateqc':
-        summary_parser=subparsers.add_parser('summary',parents=[metadata_samples_parser,metadata_pairs_parser,bins_parser,re_fragments_parser,methods_parser,parameter_file_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser],help='(step 3) create html report of the results')
+        summary_parser=subparsers.add_parser('summary',parents=[metadata_samples_parser,metadata_pairs_parser,bins_parser,re_fragments_parser,methods_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser],help='(step 3) create html report of the results')
 
     if genomedisco_or_replicateqc=='GenomeDISCO':
-        summary_parser=subparsers.add_parser('summary',parents=[metadata_samples_parser,metadata_pairs_parser,bins_parser,re_fragments_parser,parameter_file_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser],help='(step 3) create html report of the results')
+        summary_parser=subparsers.add_parser('summary',parents=[metadata_samples_parser,metadata_pairs_parser,bins_parser,re_fragments_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser],help='(step 3) create html report of the results')
 
     cleanup_parser=subparsers.add_parser('cleanup',parents=[outdir_parser],help='(step 4) clean up files')
 
@@ -201,11 +201,7 @@ def nonquasar_preprocess(metadata_samples,outdir,subset_chromosomes,running_mode
 
 def quasar_preprocess(metadata_samples,outdir,subset_chromosomes,running_mode,timing,parameters,resolution,nodes):
     #setup parameters
-    print('parameters')
-    print(parameters)
     rebinning=parameters['QuASAR']['rebinning']
-    print('rebinning is')
-    print(rebinning)
     if rebinning=='resolution':
         rebinning=resolution
 
@@ -217,10 +213,8 @@ def quasar_preprocess(metadata_samples,outdir,subset_chromosomes,running_mode,ti
     subp.check_output(['bash','-c','mkdir -p '+os.path.dirname(script_forquasar_file)])
     script_forquasar=open(script_forquasar_file,'w')
     script_forquasar.write("#!/bin/sh"+'\n')
-    print('resolution is')
-    print(str(resolution))
     script_forquasar.write(sys.executable+' '+replicateqc_path+"/wrappers/QuASAR/make_partition_from_bedfile.py --nodes "+nodes+' --partition '+nodes_partition+' --subset_chromosomes '+subset_chromosomes+' --resolution '+resolution+'\n')
-    print('got here')
+    
 
     #go through each sample, and process it for QuASAR
     for line in open(metadata_samples,'r').readlines():
@@ -277,14 +271,6 @@ def run_script(script_name,running_mode,parameters):
         print(output)
 
 def read_parameters_file(parameters_file):
-    print('params')
-    print(parameters_file)
-    '''
-    if parameters_file=="NA":
-        print('parameters file')
-        parameters_file=os.path.dirname(os.path.realpath(__file__))+"/example_parameters.txt"
-        print(parameters_file)
-    '''
     parameters={}
     for line in open(parameters_file,'r').readlines():
         items=re.sub('\|','\t',line).strip().split('\t')
@@ -412,7 +398,7 @@ def GenomeDISCO_wrapper(outdir,parameters,concise_analysis,samplename1,samplenam
             timing_text1=''
             timing_text2=''
             cmdlist.append('cd '+os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-            print(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+            
             if timing:
                 cmdlist.append('mkdir -p '+outdir+'/timing/GenomeDISCO')
                 timing_file=outdir+'/timing/GenomeDISCO/GenomeDISCO.'+chromo+'.'+samplename1+'.'+samplename2+'.timing.txt'
@@ -432,7 +418,7 @@ def add_cmds_to_file(cmds,cmds_filename):
         cmds_file.write(cmds[i]+'\n')
     cmds_file.close()
 
-def concordance(metadata_pairs,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes,timing):
+def concordance(metadata_pairs,methods,outdir,running_mode,concise_analysis,subset_chromosomes,timing):
     #todo: remove parameters file from the arguments here
     parameters_file=outdir+'/parameters.txt'
 
@@ -455,6 +441,7 @@ def concordance(metadata_pairs,methods,parameters_file,outdir,running_mode,conci
     for line in open(metadata_pairs,'r').readlines():                                                     
         items=line.strip().split()                                                                       
         samplename1,samplename2=items[0],items[1]
+        print('Step: concordance | '+strftime("%c")+' | '+'computing concordance between '+samplename1+' and '+samplename2)
 
         #total scores per sample
         GenomeDISCO_scores=outdir+'/results/reproducibility/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'.txt'
@@ -536,7 +523,7 @@ def concordance(metadata_pairs,methods,parameters_file,outdir,running_mode,conci
         #add_cmds_to_file(['rm '+f],f)
         run_script(f,running_mode,parameters)
 
-def get_qc(metadata_samples,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes,timing):
+def get_qc(metadata_samples,methods,outdir,running_mode,concise_analysis,subset_chromosomes,timing):
     parameters_file=outdir+'/parameters.txt'
     parameters=read_parameters_file(parameters_file)
     methods_list=methods.strip().split(',')
@@ -546,12 +533,13 @@ def get_qc(metadata_samples,methods,parameters_file,outdir,running_mode,concise_
             items=line.strip().split()
             samplename=items[0]
             samplefile=items[1]
-            print(strftime("%c")+'\n'+'running QuASAR-QC | computing QC for '+samplename)
+            print('Step: qc | '+strftime("%c")+' | '+'running QuASAR-QC | computing QC for '+samplename)
             quasar_qc_wrapper(outdir,parameters,samplename,running_mode,timing)
 
-def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes):
+def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,outdir,running_mode,concise_analysis,subset_chromosomes):
     methods_list=methods.split(',')
 
+    print('Step: summary | '+strftime("%c"))
     #compile scores across methods per chromosome, + genomewide                                            
     #for reproducbility measures =============================================
     scores={}
@@ -840,7 +828,7 @@ def clean_up(outdir):
 
 def run_all(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes,timing):
     preprocess(metadata_samples,bins,re_fragments,methods,outdir,running_mode,subset_chromosomes,parameters_file,timing)
-    get_qc(metadata_samples,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes,timing)
-    concordance(metadata_pairs,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes,timing)
-    summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes)
+    get_qc(metadata_samples,methods,outdir,running_mode,concise_analysis,subset_chromosomes,timing)
+    concordance(metadata_pairs,methods,outdir,running_mode,concise_analysis,subset_chromosomes,timing)
+    summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,outdir,running_mode,concise_analysis,subset_chromosomes)
     clean_up(outdir)
