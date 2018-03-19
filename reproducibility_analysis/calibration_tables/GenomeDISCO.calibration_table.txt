@@ -1,5 +1,0 @@
-#resolution	threshold_score
-10000		0.7
-40000		0.8
-500000		0.8
-
