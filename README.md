@@ -117,6 +117,66 @@ Here are details about setting these parameters:
 
 - `GenomeDISCO|transition` Whether to convert the normalized contact map to an appropriate transition matrix before running the random walks. By default (GenomeDISCO|transition yes) the normalized contact map is converted to a proper transition matrix, such that all rows sum to 1 exactly.
 
+Running GenomeDISCO step by step
+============================================
+GenomeDISCO consists of multiple steps, which are run in sequence by default. However, the user may decide to run the steps individually, which can be useful for instance when running GenomeDISCO with job submission engines that runs the comparisons in parallel as separate jobs.
+
+**GenomeDISCO steps**
+
+**preprocess**
+
+Preprocesses all datasets provided in `--metadata_samples`.
+
+Example command: 
+```
+genomedisco preprocess --metadata_samples examples/metadata.samples --bins examples/Bins.w40000.bed.gz --outdir examples/output --parameters_file examples/example_parameters.txt
+```
+
+**concordance**
+
+Runs GenomeDISCO on all samples pairs provided in `--metadata_pairs`. 
+
+Example command: 
+```
+genomedisco concordance --metadata_pairs examples/metadata.pairs --outdir examples/output 
+```
+
+**summary**
+
+Summarizes scores across all comparisons.
+
+Example command: 
+```
+genomedisco summary --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
+```
+
+**cleanup**
+
+Clean up superfluous files, leaving only the scores.
+
+Example command: 
+```
+genomedisco cleanup --outdir examples/output
+```
+
+Running GenomeDISCO with job submission engines
+============
+
+It is possible to run GenomeDISCO with job submission engines, specifically either SGE or slurm.
+To do so, modify the parameters `SGE|text` or `slurm|text` respectively, to add any additional parameters to the job run.
+
+Then, run the steps sequentially (that is, wait for all jobs of a given step to complete before launching the next step), while specifying `--running_mode` to either `sge` or `slurm`.
+
+For instance, an example analysis workflow for SGE would be:
+```
+genomedisco preprocess --running_mode sge --metadata_samples examples/metadata.samples --bins examples/Bins.w40000.bed.gz --outdir examples/output --parameters_file examples/example_parameters.txt
+genomedisco concordance --running_mode sge --metadata_pairs examples/metadata.pairs --outdir examples/output 
+genomedisco summary --running_mode sge --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
+genomedisco cleanup --running_mode sge --outdir examples/output
+```
+
+Similarly, for slurm, change sge to slurm for the `--running_mode`.
+
 More questions?
 ====
 Contact Oana Ursu
