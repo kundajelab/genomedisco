@@ -98,7 +98,7 @@ GenomeDISCO|norm	sqrtvc
 GenomeDISCO|scoresByStep	no
 GenomeDISCO|removeDiag	yes
 GenomeDISCO|transition	yes
-SGE|text	"-l h_vmem=10G"
+SGE|text	"-l h_vmem=3G"
 slurm|text	"--mem 3G"
 ```
 Note: all of the above parameters need to be specified in the parameters file.
