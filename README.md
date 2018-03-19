@@ -5,7 +5,8 @@
 `GenomeDISCO` (**DI**fferences between **S**moothed **CO**ntact maps) is a package for comparing contact maps of 3D genome structures, obtained from experiments such as Hi-C, Capture-C, ChIA-PET, HiChip, etc. It uses random walks on the contact map graph for smoothing before comparing the contact maps, resulting in a concordance score that can be used for quality control of biological replicates.
 
 Read the full paper here: 
-*GenomeDISCO: A concordance score for chromosome conformation capture experiments using random walks on contact map graphs.* Oana Ursu, Nathan Boley, Maryna Taranova, Y. X. Rachel Wang, Galip Gurkan Yardimci, William Stafford Noble, Anshul Kundaje. bioRxiv: http://www.biorxiv.org/content/early/2017/08/29/181842
+*GenomeDISCO: A concordance score for chromosome conformation capture experiments using random walks on contact map graphs.* Oana Ursu, Nathan Boley, Maryna Taranova, Y. X. Rachel Wang, Galip Gurkan Yardimci, William Stafford Noble, Anshul Kundaje. Bioinformatics, 2018. https://academic.oup.com/bioinformatics/advance-article-abstract/doi/10.1093/bioinformatics/bty164/4938489?redirectedFrom=fulltext
+
 
 Installation
 ===
@@ -14,13 +15,7 @@ Installation
 2. Obtain and install GenomeDISCO with the following commands:
 ```
 git clone http://github.com/kundajelab/genomedisco
-genomedisco/install_scripts/install_genomedisco.sh
-```
-
-**Note if you are installing these locally**: There are a few parameters you can provide to the installation script, to point it to your desired python installation, R installation, R library, modules and bedtools installation. Thus, you can run the above script as follows:
-
-```
-genomedisco/install_scripts/install_genomedisco.sh --pathtopython /path/to/your/python --pathtor /path/to/your/R --rlib /path/to/your/Rlibrary --modules modulename --pathtobedtools path/to/your/bedtools
+pip install --editable genomedisco/
 ```
 
 Quick start
@@ -37,8 +32,7 @@ genomedisco/examples/configure_example.sh
 Then run the concordance analysis:
 
 ```
-cd genomedisco
-python reproducibility_analysis/3DChromatin_ReplicateQC.py run_all --method GenomeDISCO --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Nodes.w40000.bed.gz --outdir examples/output 
+genomedisco run_all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
 ```
 
 For detailed explanations of all inputs to GenomeDISCO, see the ["Inputs" section below](#inputs)
@@ -55,6 +49,8 @@ The reproducibility methods supported in 3DChromatin_ReplicateQC are:
 - HiCRep (http://github.com/qunhualilab/hicrep) 
 - HiC-Spector (http://github.com/gersteinlab/HiC-spector) 
 - QuASAR-Rep (part of the hifive suite at http://github.com/bxlab/hifive) 
+
+Note: given that both GenomeDISCO and 3DChromatin_ReplicateQC use the same underlying base code, they share the parameter options below, resulting in shared README sections for these.
 
 Inputs
 =============
@@ -75,8 +71,6 @@ GenomeDISCO takes the following inputs:
 
 - `--re_fragments` Add this flag if the bins are not uniform bins in the genome (e.g. if they are restriction-fragment-based).By default, the code assumes the bins are of uniform length.
 
-- `--methods` Which method to use for measuring concordance or QC. Set this to "GenomeDISCO". For other methods, refer to the repository "http://github.com/kundajelab/3DChromatin_ReplicateQC"
-
 - `--parameters_file` File with parameters for reproducibility and QC analysis. For details see ["Parameters file"](#parameters-file)
 
 - `--outdir` Name of output directory. DEFAULT: replicateQC
@@ -89,7 +83,7 @@ GenomeDISCO takes the following inputs:
 
 Analyzing multiple dataset pairs
 ======
-To analyze multiple pairs of contact maps (or multiple contact maps if just computing QC), all you need to do is add any additional datasets you want to analyze to the `--metadata_samples` file and any additional pairs of datasets you want to compare to the `--metadata_pairs` files. 
+To analyze multiple pairs of contact maps, all you need to do is add any additional datasets you want to analyze to the `--metadata_samples` file and any additional pairs of datasets you want to compare to the `--metadata_pairs` files. 
 
 Parameters file
 ======
@@ -97,21 +91,38 @@ Parameters file
 The parameters file specifies the parameters to be used with GenomeDISCO (and any of the other methods GenomeDISCO supports). The format of the file is: `method_name parameter_name parameter_value`. The default parameters file used by GenomeDISCO is:
 
 ```
-GenomeDISCO		subsampling	lowest
-GenomeDISCO		tmin		3
-GenomeDISCO		tmax		3
-GenomeDISCO		norm		sqrtvc
-HiCRep  h       5
-HiCRep  maxdist 5000000
-HiC-Spector		n			20
+GenomeDISCO|subsampling	lowest
+GenomeDISCO|tmin	3
+GenomeDISCO|tmax	3
+GenomeDISCO|norm	sqrtvc
+GenomeDISCO|scoresByStep	no
+GenomeDISCO|removeDiag		yes
+GenomeDISCO|transition		yes
 ```
 Note: all of the above parameters need to be specified in the parameters file.
+
+Here are details about setting these parameters:
+
+- `GenomeDISCO|subsampling` This allows subsampling the datasets to a specific desired sequencing depth. Possible values are: `lowest` (subsample to the depth of the sample with the lower sequencing depth from the pair being compared), `<samplename>` where <samplename> is the name of the sample that is used to determine the sequencing depth to subsample from. 
+
+- `GenomeDISCO|tmin` The minimum number of steps of random walk to perform. Integer, > 0.
+
+- `GenomeDISCO|tmax` The max number of steps of random walk to perform. Integer, > tmin.
+ 
+- `GenomeDISCO|norm` The normalization to use on the data when running GenomeDISCO. Possible values include: `uniform` (no normalization), `sqrtvc`.
+
+- `GenomeDISCO|scoresByStep` Whether to report the score at each t. By default (GenomeDISCO|scoresByStep no), only the final reproducibility score is returned.
+
+- `GenomeDISCO|removeDiag` Whether to set the diagonal to entries in the contact map to 0. By default (GenomeDISCO|removeDiag yes), the diagonal entries are set to 0.
+
+- `GenomeDISCO|transition` Whether to convert the normalized contact map to an appropriate transition matrix before running the random walks. By default (GenomeDISCO|transition yes) the normalized contact map is converted to a proper transition matrix, such that all rows sum to 1 exactly.
 
 More questions?
 ====
 Contact Oana Ursu
 
 oursu@stanford.edu
+
 
 
 
