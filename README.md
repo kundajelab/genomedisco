@@ -23,7 +23,7 @@ Quick start
 
 Say you want to compare 2 contact maps. For this example, we will use a subset of datasets from Rao et al., 2014. 
 
-First, configure the files used in the example:
+First, configure the files used in the example: (this will create all input files necessary for the example on which we will run GenomeDISCO)
 
 ```
 genomedisco/examples/configure_example.sh
