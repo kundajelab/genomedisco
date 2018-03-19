@@ -32,6 +32,7 @@ genomedisco/examples/configure_example.sh
 Then run the concordance analysis:
 
 ```
+cd genomedisco
 genomedisco run_all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
 ```
 
