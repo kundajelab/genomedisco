@@ -117,6 +117,10 @@ Here are details about setting these parameters:
 
 - `GenomeDISCO|transition` Whether to convert the normalized contact map to an appropriate transition matrix before running the random walks. By default (GenomeDISCO|transition yes) the normalized contact map is converted to a proper transition matrix, such that all rows sum to 1 exactly.
 
+- `SGE|text` Text to append to the job submission for SGE. The default is "-l h_vmem=3G".
+
+- `slurm|text` Text to append to the job submission for slurm. The default is "--mem 3G". 
+
 Running GenomeDISCO step by step
 ============================================
 GenomeDISCO consists of multiple steps, which are run in sequence by default. However, the user may decide to run the steps individually, which can be useful for instance when running GenomeDISCO with job submission engines that runs the comparisons in parallel as separate jobs.
