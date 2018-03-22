@@ -227,13 +227,14 @@ def quasar_preprocess(metadata_samples,outdir,subset_chromosomes,running_mode,ti
         quasar_transform=quasar_data+'/'+samplename+'.quasar_transform'
         if subset_chromosomes=='NA':
             #all chromosomes                                                                                
-            script_forquasar.write('gunzip -c  '+samplefile+' | sed \'s/chr//g\' | awk \'{print "chr"$1"\\t"$2"\\tchr"$3"\\t"$4"\\t"$5}\' | gzip > '+full_dataset+'\n')
+            script_forquasar.write('gunzip -c  '+samplefile+' | sed \'s/chr//g\' | awk \'{print "chr"$1"'+'\\'+'t'+'"$2"\\tchr"$3"\\t"$4"\\t"$5}\' | gzip > '+full_dataset+'\n')
         else:
             script_forquasar.write('if [ ! '+full_dataset+'.tmp ];then rm '+full_dataset+'.tmp;fi'+'\n')
             for chromosome in subset_chromosomes.split(','):
                 #TODO: keep inter-chromosomals                                                              
-                script_forquasar.write('gunzip -c  '+samplefile+' | awk \'{print "chr"$1"\t"$2"\tchr"$3"\t"$4"\t"$5}\' | sed \'s/chrchr/chr/g\' | awk -v chromo='+chromosome+' \'{if (($1==$3) && ($1==chromo)) print $0}\' >> '+full_dataset+'.tmp'+'\n')
-            script_forquasar.write('gunzip -c  '+full_dataset+'.tmp | gzip > '+full_dataset+'\n')
+                script_forquasar.write('gunzip -c  '+samplefile+' | awk \'{print "chr"$1"\\t"$2"\\tchr"$3"\\t"$4"\\t"$5}\' | sed \'s/chrchr/chr/g\' | awk -v chromo='+chromosome+' \'{if (($1==$3) && ($1==chromo)) print $0}\' >> '+full_dataset+'.tmp'+'\n')
+            script_forquasar.write('gzip '+full_dataset+'.tmp'+'\n')
+            script_forquasar.write('gunzip -c  '+full_dataset+'.tmp.gz | gzip > '+full_dataset+'\n')
             script_forquasar.write('rm '+full_dataset+'.tmp'+'\n')
 
         #make quasar dataset
@@ -348,7 +349,7 @@ def HiCRep_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,ch
             cmdlist.append('cat '+outpath+" | awk -v chromosome="+chromo+" '{print "+'$1"\\t"$2"\\t"chromosome"\\t"$3}\' >> '+all_scores)
     return cmdlist
     
-def HiCSpector_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile,all_scores,timing):
+def HiCSpector_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile,all_scores,timing,resolution):
     cmdlist=[]
     cmdlist.append("#!/bin/sh")
     if os.path.isfile(f1) and os.path.getsize(f1)>20:
@@ -362,8 +363,12 @@ def HiCSpector_wrapper(outdir,parameters,concise_analysis,samplename1,samplename
                 timing_file=outdir+'/timing/HiC-Spector/HiC-Spector.'+chromo+'.'+samplename1+'.'+samplename2+'.timing.txt'
                 timing_text1='{ time '
                 timing_text2='; } 2> '+timing_file
-            cmdlist.append(timing_text1+sys.executable+" -W ignore "+replicateqc_path+"/wrappers/HiC-Spector/hic-spector_wrapper.py --m1 "+f1+" --m2 "+f2+" --out "+outpath+".printout --node_file "+nodefile+" --num_evec "+parameters['HiC-Spector']['n']+' '+timing_text2)
-            cmdlist.append("cat "+outpath+".printout | grep reproducibility | cut -f2 | awk '{print \""+samplename1+"\\t"+samplename2+"\\t\"$3}' > "+outpath)
+            #cmdlist.append(timing_text1+sys.executable+" -W ignore "+replicateqc_path+"/wrappers/HiC-Spector/hic-spector_wrapper.py --m1 "+f1+" --m2 "+f2+" --out "+outpath+".printout --node_file "+nodefile+" --num_evec "+parameters['HiC-Spector']['n']+' '+timing_text2)
+            #cmdlist.append("cat "+outpath+".printout | grep reproducibility | cut -f2 | awk '{print \""+samplename1+"\\t"+samplename2+"\\t\"$3}' > "+outpath)
+            #cmdlist.append("rm "+outpath+".printout")
+            #cmdlist.append('cat '+outpath+" | awk -v chromosome="+chromo+" '{print "+'$1"\\t"$2"\\t"chromosome"\\t"$3}\' >> '+all_scores)
+            cmdlist.append(timing_text1+sys.executable+" -W ignore "+replicateqc_path+"/wrappers/HiC-Spector/run_reproducibility_v1.py t "+f1+" "+f2+" "+outpath+".printout "+str(resolution)+" "+parameters['HiC-Spector']['n']+' '+timing_text2)
+            cmdlist.append("cat "+outpath+".printout | tail -n1 | cut -f2 | awk '{print \""+samplename1+"\\t"+samplename2+"\\t\"$3}' > "+outpath)
             cmdlist.append("rm "+outpath+".printout")
             cmdlist.append('cat '+outpath+" | awk -v chromosome="+chromo+" '{print "+'$1"\\t"$2"\\t"chromosome"\\t"$3}\' >> '+all_scores)
     return cmdlist
@@ -497,7 +502,7 @@ def concordance(metadata_pairs,methods,outdir,running_mode,concise_analysis,subs
 
             if "HiC-Spector" in methods_list or "all" in methods_list:
                 scripts_to_run.add(cmds_file['HiC-Spector'])
-                HiCSpector_cmds=HiCSpector_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile,HiCSpector_scores,timing)
+                HiCSpector_cmds=HiCSpector_wrapper(outdir,parameters,concise_analysis,samplename1,samplename2,chromo,running_mode,f1,f2,nodefile,HiCSpector_scores,timing,resolution)
                 add_cmds_to_file(HiCSpector_cmds,cmds_file['HiC-Spector'])
 
         #remove files with scores for individual chromosomes
@@ -634,7 +639,7 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,outdir,run
                 for line in open(metadata_samples,'r').readlines():
                     items=line.strip().split()
                     samplename=items[0]
-                    to_write=[samplename1]
+                    to_write=[samplename]
                     cur_score=str(0.001*int(1000*np.mean(np.array(scores_qc['QuASAR-QC'][samplename][chromo]))))
                     to_write.append(cur_score)
                     chromofile.write('\t'.join(to_write)+'\n')
