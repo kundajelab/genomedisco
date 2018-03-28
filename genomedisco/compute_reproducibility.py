@@ -21,7 +21,7 @@ def main():
     parser.add_argument('--m2name',type=str,default='HIC001')
     parser.add_argument('--outdir',type=str,default='OUT')
     parser.add_argument('--outpref',type=str,default='outpref')
-    parser.add_argument('--m_subsample',type=str,default='lowest')
+    parser.add_argument('--subsampling_depth',type=str,default='lowest')
     parser.add_argument('--concise_analysis',action='store_true',help='Add this flag to only output the reproducibility score, and not perform the distance dependence analyses.')
     parser.add_argument('--norm',type=str,default='uniform')
     parser.add_argument('--method',type=str,default='RandomWalks')
@@ -52,18 +52,16 @@ def main():
 
     m1_subsample=copy.deepcopy(m1)
     m2_subsample=copy.deepcopy(m2)
-    if args.m_subsample!='NA':
-        if args.m_subsample=='lowest':
+    if args.subsampling_depth!='NA':
+        if args.subsampling_depth=='lowest':
             if stats[args.m1name]['depth']>=stats[args.m2name]['depth']:
                 m_subsample=copy.deepcopy(m2)
             if stats[args.m1name]['depth']<stats[args.m2name]['depth']:
                 m_subsample=copy.deepcopy(m1)
+            desired_depth=m_subsample.sum()
         else:
-            m_subsample=processing.construct_csr_matrix_from_data_and_nodes(args.m_subsample,nodes,blacklist_nodes,args.remove_diagonal)
-        print "GenomeDISCO | "+strftime("%c")+" | Subsampling to the depth of "+args.m_subsample
-        print "GenomeDISCO | "+strftime("%c")+" | Subsampling depth = "+str(m_subsample.sum())
-        desired_depth=m_subsample.sum()
-        #desired_depth=156023
+            desired_depth=int(float(args.subsampling_depth))
+        print "GenomeDISCO | "+strftime("%c")+" | Subsampling depth = "+str(desired_depth)
         if m1.sum()>desired_depth:
             m1_subsample=data_operations.subsample_to_depth(m1,desired_depth)
         if m2.sum()>desired_depth:

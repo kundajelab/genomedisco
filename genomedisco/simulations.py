@@ -48,7 +48,10 @@ def simulate(args):
     maxdist_in_nodes=int(1.0*args.maxdist/args.resolution)
 
     tads=read_bed_into_interval(args.tadfile)
-    real_data=read_in_data(args.realdatafile)
+
+    nodes,nodes_idx,blacklist_nodes=processing.read_nodes_from_bed(args.nodefile)
+    real_data=processing.construct_csr_matrix_from_data_and_nodes(args.realdatafile,nodes,blacklist_nodes,True)
+
     original_tad_boundary_var=0
     original_tadmatrix=tadfile_to_tadmatrix(args.tadfile,original_tad_boundary_var,args.resolution,args.nodefile)
     dd=get_2_distance_dependence_curves(real_data,maxdist_in_nodes,original_tadmatrix)
@@ -61,7 +64,7 @@ def simulate(args):
             ddfile=ddfiles[ddfile_idx]
             ddtad=ddtads[ddfile_idx]
             ddtad_matrix=tadfile_to_tadmatrix(ddtad,original_tad_boundary_var,args.resolution,args.nodefile)
-            ddata=read_in_data(ddfile)
+            ddata=processing.construct_csr_matrix_from_data_and_nodes(ddfile,nodes,blacklist_nodes,True)
             print 'done'
             dds[ddfile_idx]=get_2_distance_dependence_curves(ddata,maxdist_in_nodes,ddtad_matrix)
     
@@ -100,15 +103,12 @@ def write_matrix(sampled_matrix,fname,args):
         for j in range(i,sampled_matrix.shape[0]):
             v=sampled_matrix[i,j]
             if v>0.0:
-                n1=i*args.resolution+int(args.resolution/2)
-                n2=j*args.resolution+int(args.resolution/2)
+                n1=i*args.resolution#+int(args.resolution/2)
+                n2=j*args.resolution#+int(args.resolution/2)
                 f.write(str(n1)+'\t'+str(n2)+'\t'+str(v)+'\n')
     f.close()
 
-def read_in_data(mname_full):
-    mat=processing.load_sparse_csr(mname_full).toarray()
-    mat=mat + mat.T
-    return mat
+    
 
 def get_median_size_of_intervals(intervals,resolution):
     vals=[]
@@ -122,7 +122,7 @@ def get_median_size_of_intervals(intervals,resolution):
 #so, tadfile and nodefile need to refer to the exact same chromosome!
 def simulate_tadfile(tad_size,tad_distance,resolution,nodefile,outfile,chrname='simulated'):
     #read in the nodes to learn the dimensions of the TAD matrix
-    nodes,nodes_idx=processing.read_nodes_from_bed(nodefile)
+    nodes,nodes_idx,blacklist_nodes=processing.read_nodes_from_bed(nodefile)
     n=len(nodes_idx)
     
     tad_size_n=int(1.0*tad_size/resolution)
@@ -151,7 +151,7 @@ def simulate_tadfile(tad_size,tad_distance,resolution,nodefile,outfile,chrname='
         
 def tadfile_to_tadmatrix(tadfile,var_boundary_diff_init,resolution,nodefile):
     #read in the nodes to learn the dimensions of the TAD matrix
-    nodes,nodes_idx=processing.read_nodes_from_bed(nodefile)
+    nodes,nodes_idx,blacklist_nodes=processing.read_nodes_from_bed(nodefile)
     n=len(nodes_idx)
     
     var_boundary_diff=int(var_boundary_diff_init/resolution)

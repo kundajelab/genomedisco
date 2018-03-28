@@ -195,9 +195,13 @@ def nonquasar_preprocess(metadata_samples,outdir,subset_chromosomes,running_mode
                 edgefile=outdir+'/data/edges/'+samplename+'/'+samplename+'.'+chromo+'.gz'
                 script_edges.write('mkdir -p '+os.path.dirname(edgefile)+'\n')
                 script_edges.write('gunzip -c '+samplefile+' | awk \'{print "chr"$1"\\t"$2"\\tchr"$3"\\t"$4"\\t"$5}\' | sed \'s/chrchr/chr/g\' | awk -v chromosome='+chromo+' \'{if ($1==chromosome && $3==chromosome) print $2"\\t"$4"\\t"$5}\' | gzip > '+edgefile+'\n')
+                #write down total counts per chromosome
+                script_edges.write('gunzip -c '+edgefile+' | awk \'{ sum += $3} END { print sum }\' > '+outdir+'/data/edges/'+samplename+'/'+samplename+'.'+chromo+'.counts'+'\n') 
                 script_edges.write('rm '+script_edges_file+'*'+'\n')
                 script_edges.close()
                 run_script(script_edges_file,running_mode,parameters)
+
+    #for genomedisco, we need to get the 
 
 def quasar_preprocess(metadata_samples,outdir,subset_chromosomes,running_mode,timing,parameters,resolution,nodes):
     #setup parameters
