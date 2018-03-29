@@ -136,7 +136,7 @@ Preprocesses all datasets provided in `--metadata_samples`.
 
 Example command: 
 ```
-genomedisco preprocess --metadata_samples examples/metadata.samples --bins examples/Bins.w40000.bed.gz --outdir examples/output --parameters_file examples/example_parameters.txt
+genomedisco preprocess --metadata_samples examples/metadata.samples --bins examples/Bins.w50000.bed.gz --outdir examples/output --parameters_file examples/example_parameters.txt
 ```
 
 **concordance**
@@ -154,7 +154,7 @@ Summarizes scores across all comparisons.
 
 Example command: 
 ```
-genomedisco summary --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
+genomedisco summary --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w50000.bed.gz --outdir examples/output 
 ```
 
 **cleanup**
@@ -176,7 +176,7 @@ Then, run the steps sequentially (that is, wait for all jobs of a given step to 
 
 For instance, an example analysis workflow for SGE would be:
 ```
-genomedisco preprocess --running_mode sge --metadata_samples examples/metadata.samples --bins examples/Bins.w40000.bed.gz --outdir examples/output --parameters_file examples/example_parameters.txt
+genomedisco preprocess --running_mode sge --metadata_samples examples/metadata.samples --bins examples/Bins.w50000.bed.gz --outdir examples/output --parameters_file examples/example_parameters.txt
 genomedisco concordance --running_mode sge --metadata_pairs examples/metadata.pairs --outdir examples/output 
 genomedisco summary --running_mode sge --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
 genomedisco cleanup --running_mode sge --outdir examples/output
@@ -186,9 +186,11 @@ Similarly, for slurm, change sge to slurm for the `--running_mode`.
 
 More questions?
 ====
-Contact Oana Ursu
+Submit an issue for this repository.
 
-oursu@stanford.edu
+This code was put together by Oana Ursu (oursu@stanford.edu).
+
+
 
 
 
