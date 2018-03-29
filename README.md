@@ -33,7 +33,7 @@ Then run the concordance analysis:
 
 ```
 cd genomedisco
-genomedisco run_all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
+genomedisco run_all --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w50000.bed.gz --outdir examples/output 
 ```
 
 For detailed explanations of all inputs to GenomeDISCO, see the ["Inputs" section below](#inputs)
@@ -178,7 +178,7 @@ For instance, an example analysis workflow for SGE would be:
 ```
 genomedisco preprocess --running_mode sge --metadata_samples examples/metadata.samples --bins examples/Bins.w50000.bed.gz --outdir examples/output --parameters_file examples/example_parameters.txt
 genomedisco concordance --running_mode sge --metadata_pairs examples/metadata.pairs --outdir examples/output 
-genomedisco summary --running_mode sge --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w40000.bed.gz --outdir examples/output 
+genomedisco summary --running_mode sge --metadata_samples examples/metadata.samples --metadata_pairs examples/metadata.pairs --bins examples/Bins.w50000.bed.gz --outdir examples/output 
 genomedisco cleanup --running_mode sge --outdir examples/output
 ```
 
