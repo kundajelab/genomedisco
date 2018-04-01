@@ -106,6 +106,21 @@ def construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes=[],remove
         csr_m.setdiag(0)
     return filter_nodes(csr_m,blacklisted_nodes)
 
+def write_matrix_from_csr_and_nodes(csr_m,nodes_idx,outname):
+
+    coo_m=coo_matrix(csr_m)
+    i=coo_m.row
+    j=coo_m.col
+    v=coo_m.data
+
+    out=gzip.open(outname,'w')
+
+    #convert i, j into node names
+    for idx in range(len(i)):
+        n1,n2,val=nodes_idx[i[idx]],nodes_idx[j[idx]],v[idx]
+        out.write('\t'.join([str(n1),str(n2),str(val)])+'\n')
+    out.close()
+
 def old_construct_csr_matrix_from_data_and_nodes(f,nodes,blacklisted_nodes,remove_diag=True):
     print "GenomeDISCO | "+strftime("%c")+" | processing: Loading interaction data from "+f
 
