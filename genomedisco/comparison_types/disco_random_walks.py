@@ -14,9 +14,13 @@ from pylab import rcParams
 from time import gmtime, strftime
 from scipy.sparse import csr_matrix
 from scipy import sparse
-import h5py
 import psutil
 import scipy.sparse as sps
+from genomedisco import processing
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.ticker import MultipleLocator
+from decimal import Decimal
+#from statsmodels import robust
 
 def to_transition(mtogether):
     sums=mtogether.sum(axis=1)
@@ -30,242 +34,13 @@ def random_walk(m_input,t):
     #return np.linalg.matrix_power(m_input,t)
     return m_input.__pow__(t)
 
-def fill_hdf5_with_sparse_by_chunk(mym1,mym2,fname,chunksize):
-    start1=0
-    end1=0
-    n=mym1.shape[0]
-
-    f=h5py.File(fname,'w')
-    m1hdf5=f.create_dataset('m1',shape=(n,n),dtype='float')
-    m2hdf5=f.create_dataset('m2',shape=(n,n),dtype='float')
-
-    while end1<n:
-        end1=np.min([n,(start1+chunksize)])
-        print 'start1: '+str(start1)
-
-        if (end1-start1)==1:
-            m1hdf5[start1,:]=mym1[start1,:].toarray()
-            m2hdf5[start1,:]=mym2[start1,:].toarray()
-        else:
-            m1hdf5[start1:end1,:]=mym1[start1:end1,:].toarray()
-            m2hdf5[start1:end1,:]=mym2[start1:end1,:].toarray()
-        start1=end1
-    print 'sum of 1'
-    print m1hdf5[:,:].sum()
-    print m2hdf5[:,:].sum()
-    f.close()
-
-
-def random_walks_by_chunk_get_score_sparse_matrix(mym1,mym2,tmin,tmax,nonzero_total,chunksize):
-    scores=[]
-    n=mym1.shape[0]
-    m1_t=mym1.transpose()
-    m2_t=mym2.transpose()
-
-    mat_names[1]='mats'
-
-    for t in range(1,(tmax+1)):
-        if t!=1:
-            compute_current_matrices(t,mat_names)
-        if t>=tmin:
-            pass
-            #scores.append(1.0*abs_diff_by_chunk_sparse_matrix(t)/nonzero_total)
-        print 'done '+str(t)+' '+strftime("%c")
-    return scores
-
-def compute_current_matrices(t,mat_names):
-    n=mym11.shape[0]
-
-    m12_t=mym12.transpose()
-    m22_t=mym22.transpose()
-
-    while end1<n:
-        end1=np.min([n,(start1+chunksize)])
-        print 'start1: '+str(start1)
-      
-        if (end1-start1)==1:
-            m11_small=mym11[start1,]
-            m21_small=mym21[start1,]
-        else:
-            m11_small=mym11[start1:end1,]
-            m21_small=mym21[start1:end1,]
-        start1=end1
-
-        start2=0
-        end2=0
-        while end2<n:
-            end2=np.min([n,(start2+chunksize)])
-            #print 'start2: '+str(start2)                                                                                                                                   
-            #print 'end2: '+str(end2)                                                                                                                                       
-            if (end2-start2)==1:
-                m12_t_small=m12_t[start2,].transpose()
-                m22_t_small=m22_t[start2,].transpose()
-            else:
-                m12_t_small=m12_t[start2:end2,].transpose()
-                m22_t_small=m22_t[start2:end2,].transpose()
-            start2=end2
-
-def random_walks_by_chunk_get_score(mym1,mym2,tmin,tmax,nonzero_total,chunksize):
-    scores=[]
-    hdf5_names={}
-    n=mym1.shape[0]
-    m1_t=mym1.transpose()
-    m2_t=mym2.transpose()
-
-    #write the ms into hdf5s
-    #todo: make name more specific
-    #print 'filling hdf5 '+strftime("%c")
-    hdf5_names[1]='hdf5s'
-    fill_hdf5_with_sparse_by_chunk(mym1,mym2,hdf5_names[1],chunksize)
-
-    for t in range(1,(tmax+1)):
-        if t!=1:
-            hdf5_names[t]='hdf5s_'+str(t)
-            #t=1, t=(t-1) and the new t=t that we want to compute
-            multiply_by_chunk(hdf5_names[1],hdf5_names[t-1],hdf5_names[t],chunksize)
-        if t>=tmin:
-            scores.append(1.0*abs_diff_by_chunk(hdf5_names[t],'m1','m2',chunksize)/nonzero_total)
-        print 'done '+str(t)+' '+strftime("%c")
-    return scores
-
-def get_rss_prop():  # this is quite expensive
-    process = psutil.Process(os.getpid())
-    return (process.memory_info().rss - process.memory_info().shared) / 10**6
-
-def multiply_by_chunk(hdf5_names_1,hdf5_names_tminus1,hdf5_names_t,chunksize):
-    start1=0
-    end1=0
-    
-    f1=h5py.File(hdf5_names_1,'r')
-    n=f1['m1'].shape[0]
-    f1.close()
-    
-    ftminus1=h5py.File(hdf5_names_tminus1,'r')
-    ft=h5py.File(hdf5_names_t,'w')
-    m1t=ft.create_dataset('m1',shape=(n,n),dtype='float')
-    m2t=ft.create_dataset('m2',shape=(n,n),dtype='float')
-    ftminus1.close()
-    ft.close()
-
-    while end1<n:
-        end1=np.min([n,(start1+chunksize)])
-        print 'start1: '+str(start1)
-        print 'memory: '+str(get_rss_prop())
-
-        f1=h5py.File(hdf5_names_1,'r')
-        if (end1-start1)==1:
-            m11_small=f1['m1'][start1,:]
-            m21_small=f1['m2'][start1,:]
-        else:
-            m11_small=f1['m1'][start1:end1,:]
-            m21_small=f1['m2'][start1:end1,:]
-        f1.close()
-
-        start2=0
-        end2=0
-        while end2<n:
-            end2=np.min([n,(start2+chunksize)])
-            
-            ftminus1=h5py.File(hdf5_names_tminus1,'r')
-            ft=h5py.File(hdf5_names_t,'r+')
-            m1t=ft['m1']
-            m2t=ft['m2']
-            if (end2-start2)==1:
-                m12_small=ftminus1['m1'][:,start2]
-                m22_small=ftminus1['m2'][:,start2]
-                ftminus1.close()
-                if (end1-start1)==1:
-                    m1t[start1,start2]+=m11_small[:,:].dot(m12_small[:,:])
-                    m2t[start1,start2]+=m21_small[:,:].dot(m22_small[:,:])
-                else:
-                    m1t[start1:end1,start2]+=m11_small[:,:].dot(m12_small[:,:])
-                    m2t[start1:end1,start2]+=m21_small[:,:].dot(m22_small[:,:])
-            else:
-                m12_small=ftminus1['m1'][:,start2:end2]
-                m22_small=ftminus1['m2'][:,start2:end2]
-                ftminus1.close()
-                if (end1-start1)==1:
-                    m1t[start1,start2:end2]+=m11_small[:,:].dot(m12_small[:,:])
-                    m2t[start1,start2:end2]+=m21_small[:,:].dot(m22_small[:,:])
-                else:
-                    m1t[start1:end1,start2:end2]+=m11_small[:,:].dot(m12_small[:,:])
-                    m2t[start1:end1,start2:end2]+=m21_small[:,:].dot(m22_small[:,:])
-            start2=end2
-            ft.close()
-            #ftminus1.close()
-            
-        start1=end1
-        #f1.close()
-    #f1.close()
-    #ftminus1.close()
-    #ft.close()
-
-def abs_diff_by_chunk(hdf5_name,m1name,m2name,chunksize):
-    start1=0
-    end1=0
-
-    f=h5py.File(hdf5_name,'r')
-    absdiff=0.0
-    n=f[m1name].shape[0]
-
-    print 'm1 sum in diff function'
-    print f[m1name][:,:].sum()
-
-    while end1<n:
-        end1=np.min([n,(start1+chunksize)])
-        print 'start1: '+str(start1)
-
-        if (end1-start1)==1:
-            m1_small=f[m1name][start1,:]
-            m2_small=f[m2name][start1,:]
-        else:
-            m1_small=f[m1name][start1:end1,:]
-            m2_small=f[m2name][start1:end1,:]
-        start1=end1
-        
-        #print m1_small-m2_small
-        print m1_small[:,:].sum()
-        absdiff+=abs(m1_small[:,:]-m2_small[:,:]).sum()
-        print "===="+str(absdiff)
-    return absdiff
-
-def process_by_chunk(mym11,mym12,mym21,mym22,chunksize=1000):
-    start1=0
-    end1=0
-    absdiff=0.0
-    n=mym11.shape[0]
-
-    m12_t=mym12.transpose()
-    m22_t=mym22.transpose()
-
-    while end1<n:
-        end1=np.min([n,(start1+chunksize)])
-        print 'start1: '+str(start1)
-        #print 'end1: '+str(end1)
-        if (end1-start1)==1:
-            m11_small=mym11[start1,]
-            m21_small=mym21[start1,]
-        else:
-            m11_small=mym11[start1:end1,]
-            m21_small=mym21[start1:end1,]
-        start1=end1
-    
-        start2=0
-        end2=0
-        while end2<n:
-            end2=np.min([n,(start2+chunksize)])
-            #print 'start2: '+str(start2)
-            #print 'end2: '+str(end2)
-            if (end2-start2)==1:
-                m12_t_small=m12_t[start2,].transpose()
-                m22_t_small=m22_t[start2,].transpose()
-            else:
-                m12_t_small=m12_t[start2:end2,].transpose()
-                m22_t_small=m22_t[start2:end2,].transpose()
-            start2=end2
-            
-            absdiff+=abs(m11_small.dot(m12_t_small)-m21_small.dot(m22_t_small)).sum()
-    return absdiff
+def write_diff_vector_bedfile(diff_vector,nodes,nodes_idx,out_filename):
+    out=gzip.open(out_filename,'w')
+    for i in range(diff_vector.shape[0]):
+        node_name=nodes_idx[i]
+        node_dict=nodes[node_name]
+        out.write(str(node_dict['chr'])+'\t'+str(node_dict['start'])+'\t'+str(node_dict['end'])+'\t'+node_name+'\t'+str(diff_vector[i][0])+'\n')
+    out.close()
 
 class DiscoRandomWalks:
 
@@ -299,11 +74,8 @@ class DiscoRandomWalks:
         nonzero_total=0.5*(1.0*len(list(set(nonzero_1)))+1.0*len(list(set(nonzero_2))))
 
         scores=[]
-        big_threshold=30000
-        if nonzero_total>big_threshold: #big matrix, process it in chunks
-            chunksize=2000
-            scores=random_walks_by_chunk_get_score(m1,m2,args.tmin,args.tmax,nonzero_total,chunksize)
-        else:
+        if True:
+            diff_vector=np.zeros((m1.shape[0],1))
             for t in range(1,args.tmax+1): #range(args.tmin,args.tmax+1):     
                 extra_text=' (not included in score calculation)'
                 if t==1:
@@ -313,32 +85,12 @@ class DiscoRandomWalks:
                     rw1=rw1.dot(m1)
                     rw2=rw2.dot(m2)
                 if t>=args.tmin:
+                    diff_vector+=abs(rw1-rw2).sum(axis=1)
                     diff=abs(rw1-rw2).sum()#+euclidean(rw1.toarray().flatten(),rw2.toarray().flatten()))
                     scores.append(1.0*float(diff)/float(nonzero_total))
                     extra_text=' | score='+str('{:.3f}'.format(1.0-float(diff)/float(nonzero_total)))
                 print 'GenomeDISCO | '+strftime("%c")+' | done t='+str(t)+extra_text
-            
-                #plot the random walk data
-                if not args.concise_analysis:
-                    rw1a=rw1.toarray()
-                    rw2a=rw2.toarray()
-                    combined=np.triu(rw1a)-np.triu(rw2a).T
-                    #np.fill_diagonal(combined,0.0)
-                    combined=rw1a-rw2a
-                    x=mquantiles(abs(combined.flatten()),0.99)
-                    plt.matshow(combined,vmin=-x,vmax=x,cmap='bwr')
-                    plt.colorbar()
-                    #plt.title('Random walk \nt='+str(t))
-                    plt.title(args.m1name,fontsize=25,y=1.1,color='red')
-                    plt.ylabel(args.m2name,fontsize=25,color='blue')
-                    plt.xlabel('random walk iteration '+str(t),fontsize=25)
-                    plt.gcf().subplots_adjust(top=0.2)
-                    plt.gcf().subplots_adjust(left=0.2)
-                    plt.gcf().subplots_adjust(left=0.4)
-                    plt.show()
-                    fname=args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.DiscoRandomWalks.'+str(t)+'.png'
-                    plt.savefig(fname)
-            
+
         #compute final score
         ts=range(args.tmin,args.tmax+1)
         denom=len(ts)-1
@@ -348,6 +100,131 @@ class DiscoRandomWalks:
             auc=metrics.auc(range(len(ts)),scores)/denom
         reproducibility=1.0-auc
 
+        
+        #compute final diff vector
+        if not args.concise_analysis:
+            #save the difference vector (then the main method will convert it to a bed file)
+            final_diff_vector=diff_vector
+            if denom>0:
+                final_diff_vector=(1.0/denom)*diff_vector
+            #write difference vector as a bed file
+            diff_vector_file=args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.diffScore.bed.gz'
+            #nodes,nodes_idx,blacklist_nodes=processing.read_nodes_from_bed(args.node_file,args.blacklist)
+            #write_diff_vector_bedfile(final_diff_vector,nodes,nodes_idx,diff_vector_file)
+        
+        #now, make 1 plot
+        if not args.concise_analysis:
+            originals=np.triu(m1.toarray())-np.triu(m2.toarray()).T
+            rw=np.triu(rw1.toarray())-np.triu(rw2.toarray()).T
+            diff_mat=(rw1-rw2).toarray()
+            diff_vector=final_diff_vector
+            #==================
+            figwidth=40
+            figheight=8
+            #read in resolution
+            resolution_file=args.outdir+'/../../../data/metadata/resolution.txt'
+            resolution=0.000001*float(open(resolution_file,'r').readlines()[0].split()[0])
+            range_originals=[-0.01,0.01]
+            range_rw=[-0.01,0.01]
+            range_diff_mat=[-0.01,0.01]
+            #==================
+
+            #set ticks
+            nnodes=originals.shape[0]
+            start=0
+            ticklist=[]
+            ticknames=[]
+            ticksize=10.0
+            last_tick=-10.0
+            current_tick=0.0
+            while start<=nnodes:
+                if Decimal(str(current_tick))-Decimal(str(last_tick))==Decimal(ticksize) or start==nnodes:
+                    ticklist.append(start)
+                    ticknames.append(str(1.0*(start*resolution))+' Mb')
+                    last_tick+=1.0*ticksize
+                current_tick+=1.0*resolution
+                start+=1
+            
+            fig, plots = plt.subplots(1,3)
+            fig.set_size_inches(figwidth,figheight)
+            
+            #original data
+            #=============
+            colorbar_ticks=[range_originals[0],0,range_originals[1]]
+            im1 = plots[0].matshow(originals,vmin=range_originals[0],vmax=range_originals[1],cmap='bwr')
+            plots[0].set_title('Original data')
+            # Create divider for existing axes instance
+            divider = make_axes_locatable(plots[0])
+            cax = divider.append_axes("right", size="10%", pad=1.5)
+            cbar = plt.colorbar(im1, cax=cax, ticks=MultipleLocator(0.2), format="%.3f",orientation='vertical')
+            cax = divider.append_axes("right", size="20%", pad=0.7)
+            plt.yticks([])
+            plt.xticks([])
+            cax.spines['right'].set_visible(False)
+            cax.spines['top'].set_visible(False)
+            cax.spines['left'].set_visible(False)
+            cax.spines['bottom'].set_visible(False)
+            cbar.set_ticks(colorbar_ticks)
+            cbar.set_ticklabels(colorbar_ticks)
+            cbar.ax.tick_params(labelsize=15)
+            plots[0].set_xticks([])
+            plots[0].set_yticks(ticklist)
+            plots[0].set_xticklabels([],size=15)
+            plots[0].set_yticklabels(ticknames,size=15)
+            plots[0].yaxis.tick_right()
+            
+            #random walk data
+            #================
+            colorbar_ticks=[range_rw[0],0,range_rw[1]]
+            im1 = plots[1].matshow(rw,vmin=range_rw[0],vmax=range_rw[1],cmap='bwr')
+            plots[1].set_title('Smoothed data')
+            # Create divider for existing axes instance
+            divider = make_axes_locatable(plots[1])
+            cax = divider.append_axes("right", size="10%", pad=1.5)
+            cbar = plt.colorbar(im1, cax=cax, ticks=MultipleLocator(0.2), format="%.3f",orientation='vertical')
+            cax = divider.append_axes("right", size="20%", pad=0.7)
+            plt.yticks([])
+            plt.xticks([])
+            cax.spines['right'].set_visible(False)
+            cax.spines['top'].set_visible(False)
+            cax.spines['left'].set_visible(False)
+            cax.spines['bottom'].set_visible(False)
+            cbar.set_ticks(colorbar_ticks)
+            cbar.set_ticklabels(colorbar_ticks)
+            cbar.ax.tick_params(labelsize=15)
+            plots[1].set_xticks([])
+            plots[1].set_yticks(ticklist)
+            plots[1].set_xticklabels([],size=15)
+            plots[1].set_yticklabels(ticknames,size=15)
+            plots[1].yaxis.tick_right()
+            
+            #random walk data differences
+            #============================
+            colorbar_ticks=[range_diff_mat[0],0,range_diff_mat[1]]
+            im1 = plots[2].matshow(diff_mat,vmin=range_diff_mat[0],vmax=range_diff_mat[1],cmap='bwr')
+            plots[2].set_title('Diff matrix (smoothed data)')
+            # Create divider for existing axes instance
+            divider = make_axes_locatable(plots[2])
+            cax = divider.append_axes("right", size="20%", pad=1.5)
+            plt.plot(diff_vector,range(len(diff_vector)))
+            plt.ylim(0,len(diff_vector))
+            plt.xlim(0,1.5)
+            plt.gca().invert_yaxis()
+            plt.yticks(ticklist,[])
+            cax = divider.append_axes("right", size="10%", pad=0.7)
+            cbar = plt.colorbar(im1, cax=cax, ticks=MultipleLocator(0.2), format="%.3f",orientation='vertical')
+            cbar.set_ticks(colorbar_ticks)
+            cbar.set_ticklabels(colorbar_ticks)
+            cbar.ax.tick_params(labelsize=15)
+            plots[2].set_xticks([])
+            plots[2].set_yticks(ticklist)
+            plots[2].set_xticklabels([],size=15)
+            plots[2].set_yticklabels(ticknames,size=15)
+            plots[2].yaxis.tick_right()
+            fname=args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.GenomeDISCO.png'
+            plt.savefig(fname)
+
+            
         #for the report
         reproducibility_text=''
         if not args.concise_analysis:
@@ -355,6 +232,7 @@ class DiscoRandomWalks:
             reproducibility_text=reproducibility_text+'<br>\n'
             reproducibility_text=reproducibility_text+'Reproducibility score = '+str(reproducibility)+'\n'
             reproducibility_text=reproducibility_text+'<br>\n'
+            '''
             rcParams['font.size']= 30
             rcParams['figure.figsize'] = 7,7
             rcParams['xtick.labelsize'] = 20
@@ -379,10 +257,11 @@ class DiscoRandomWalks:
             plt.gcf().subplots_adjust(bottom=adj)
             plt.gcf().subplots_adjust(left=adj)
             fname=args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.DiscoRandomWalks.Differences.png'
+            
         if not args.concise_analysis:
             plt.savefig(fname)
             reproducibility_text=reproducibility_text+'<img src="'+os.path.basename(fname)+'" width="400" height="400"></td>'+'\n'
-
+        '''
         reproducibility_text_rw=''
         if not args.concise_analysis:
             reproducibility_text_rw="<table>"+'\n'

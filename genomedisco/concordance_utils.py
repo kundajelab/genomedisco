@@ -10,6 +10,11 @@ import sys
 import copy
 import fnmatch
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from pylab import rcParams
+
 global repo_dir
 global replicateqc_path
 global python_bin_dir
@@ -97,8 +102,8 @@ def parse_args(genomedisco_or_replicateqc):
     if genomedisco_or_replicateqc=='GenomeDISCO':
         summary_parser=subparsers.add_parser('summary',parents=[metadata_samples_parser,metadata_pairs_parser,bins_parser,re_fragments_parser,outdir_parser,running_mode_parser,concise_analysis_parser,subset_chromosomes_parser],help='(step 3) create html report of the results')
 
-    cleanup_parser=subparsers.add_parser('cleanup',parents=[outdir_parser],help='(step 4) clean up files')
-
+    cleanup_parser=subparsers.add_parser('cleanup',parents=[outdir_parser,concise_analysis_parser],help='(step 4) clean up files')
+    
     args = vars(parser.parse_args())
     command = args.pop("command", None)
     return command, args
@@ -544,7 +549,7 @@ def get_qc(metadata_samples,methods,outdir,running_mode,concise_analysis,subset_
 
 def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,outdir,running_mode,concise_analysis,subset_chromosomes):
     methods_list=methods.split(',')
-
+    
     print('Step: summary | '+strftime("%c"))
     #compile scores across methods per chromosome, + genomewide                                            
     #for reproducbility measures =============================================
@@ -646,19 +651,21 @@ def summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,outdir,run
                     chromofile.write('\t'.join(to_write)+'\n')
                 chromofile.close()
 
-def visualize(outdir,parameters_file,metadata_pairs):
+    #todo: only if concise analysis is off
+    #visualize(outdir,metadata_pairs,methods_list)
+
+def visualize(outdir,metadata_pairs,methods_list):
     header_col='FF0000'
     picsize="200"
     topscores=0.85    
     #TODO: add input from the calibration tables
 
+    print(methods_list)
+    
     for line in open(metadata_pairs,'r').readlines():
 
         items=line.strip().split()
         samplename1,samplename2=items[0],items[1]
-
-        #file_all_scores=open(outdir+'/results/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'/genomewide_scores.'+samplename1+'.vs.'+samplename2+'.txt','w')
-        print('GenomeDISCO | '+strftime("%c")+' | Writing report for '+samplename1+'.vs.'+samplename2)
         
         html_name=outdir+'/results/summary/report/'+samplename1+'.vs.'+samplename2+'.report.html'
         if not os.path.exists(os.path.dirname(html_name)):
@@ -667,19 +674,22 @@ def visualize(outdir,parameters_file,metadata_pairs):
     
         html.write("<html>"+'\n')
         html.write("<head>"+'\n')
-        html.write("<font color=\""+header_col+"\"> <strong>GenomeDISCO | Genomewide report </font></strong>"+'\n')
+        html.write("<font color=\""+header_col+"\"> <strong>Genomewide report </font></strong>"+'\n')
         html.write("<br>"+'\n')
         html.write("Report generated on "+strftime("%c")+'\n')
         html.write("<br>"+'\n')
-        html.write("Code: <a href=\"http://github.com/kundajelab/genomedisco\">http://github.com/kundajelab/genomedisco</a>."+'\n')
+        html.write("Code: <a href=\"http://github.com/kundajelab/genomedisco\">http://github.com/kundajelab/genomedisco</a>."+"<a href=\"http://github.com/kundajelab/3DChromatin_ReplicateQC\">http://github.com/kundajelab/3DChromatin_ReplicateQC</a>."+'\n')
         html.write("<br>"+'\n')
-        html.write("Contact: Oana Ursu oursu@stanford.edu"+'\n')
+        html.write("Contact: Oana Ursu oanamursu@gmail.com"+'\n')
         html.write("<br>"+'\n')
         html.write("<strong>"+samplename1+" vs "+samplename2+"</strong>"+'\n')
         html.write("</head>"+'\n')
         html.write("<body>"+'\n')
         html.write("<br>"+'\n')
         html.write("<br>"+'\n')
+
+        #==========================================
+
         
         #genomewide score
         html.write("<font color=\""+header_col+"\"> <strong>Reproducibility analysis</font></strong>"+'\n')
@@ -691,7 +701,7 @@ def visualize(outdir,parameters_file,metadata_pairs):
         scoredict={}
         for chromo_line in gzip.open(outdir+'/data/metadata/chromosomes.gz','r').readlines():
             chromo=chromo_line.strip()
-            f=outdir+'/results/reproducibility/'+samplename1+".vs."+samplename2+'/GenomeDISCO/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
+            f=outdir+'/results/reproducibility/GenomeDISCO/'+chromo+'.'+samplename1+".vs."+samplename2+'.scores.txt'
             if os.path.isfile(f):
                 score_num+=1
                 score=float(open(f,'r').readlines()[0].split('\t')[2])
@@ -718,7 +728,7 @@ def visualize(outdir,parameters_file,metadata_pairs):
         plt.gcf().subplots_adjust(left=0.25)
         plt.legend(loc=3,fontsize=25)
         plt.show()
-        chrscores=outdir+'/results/reproducibility/'+samplename1+".vs."+samplename2+'/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'.chrScores.png'
+        chrscores=outdir+'/results/reproducibility/GenomeDISCO/'+samplename1+'.vs.'+samplename2+'.chrScores.png'
         plt.savefig(chrscores)
         plt.close()
 
@@ -827,9 +837,10 @@ def visualize(outdir,parameters_file,metadata_pairs):
         html.write("</body>"+'\n')
         html.write("</html>"+'\n')
 
-def clean_up(outdir):
-    subp.check_output(['bash','-c','rm -r '+outdir+'/results'])
-    subp.check_output(['bash','-c','rm -r '+outdir+'/data'])
+def clean_up(outdir,concise_analysis):
+    if concise_analysis:
+        subp.check_output(['bash','-c','rm -r '+outdir+'/results'])
+        subp.check_output(['bash','-c','rm -r '+outdir+'/data'])
     subp.check_output(['bash','-c','rm -r '+outdir+'/scripts'])
 
 def run_all(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters_file,outdir,running_mode,concise_analysis,subset_chromosomes,timing):
@@ -837,4 +848,4 @@ def run_all(metadata_samples,metadata_pairs,bins,re_fragments,methods,parameters
     get_qc(metadata_samples,methods,outdir,running_mode,concise_analysis,subset_chromosomes,timing)
     concordance(metadata_pairs,methods,outdir,running_mode,concise_analysis,subset_chromosomes,timing)
     summary(metadata_samples,metadata_pairs,bins,re_fragments,methods,outdir,running_mode,concise_analysis,subset_chromosomes)
-    clean_up(outdir)
+    clean_up(outdir,concise_analysis)

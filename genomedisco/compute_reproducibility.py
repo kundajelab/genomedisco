@@ -93,9 +93,11 @@ def main():
     reproducibility_text,score,scores=comparer.compute_reproducibility(m1_norm,m2_norm,args)
 
     '''
-    print "GenomeDISCO | "+strftime("%c")+" | Writing results"
-    write_html_report(stats,args,reproducibility_text,score)
+    if not args.concise_analysis:
+        print "GenomeDISCO | "+strftime("%c")+" | Writing html report"
+        write_html_report(stats,args,reproducibility_text,score)
     '''
+    
     out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.scores.txt','w')
     out.write(args.m1name+'\t'+args.m2name+'\t'+str('{:.3f}'.format(score))+'\n')
     out.close()
@@ -115,6 +117,7 @@ def main():
         out.write('#m1'+'\t'+'m2'+'\t'+'\t'.join(t_strings)+'\n')
         out.write(args.m1name+'\t'+args.m2name+'\t'+'\t'.join(score_strings)+'\n')
         out.close()
+        
     if not args.concise_analysis:
         out=open(args.outdir+'/'+args.outpref+'.'+args.m1name+'.vs.'+args.m2name+'.datastats.txt','w')
         out.write('#m1name'+'\t'+'m2name'+'\t'+'SeqDepth.m1'+'\t'+'SeqDepth.m2'+'\t'+'SubsampledSeqDepth.m1'+'\t'+'SubsampledSeqDepth.m2'+'\t'+'DistDepDiff'+'\n')
@@ -124,6 +127,7 @@ def main():
         out.write(args.m1name+'\t'+args.m2name+'\t'+str(stats[args.m1name]['depth'])+'\t'+str(stats[args.m2name]['depth'])+'\t'+str(stats[args.m1name]['subsampled_depth'])+'\t'+str(stats[args.m2name]['subsampled_depth'])+'\t'+dd_value+'\n')
         out.close()
 
+        
 def get_dd_diff(m1dd,m2dd):
     d=0.0
     k=set(m1dd.keys()).union(set(m2dd.keys()))

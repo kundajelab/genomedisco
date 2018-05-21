@@ -63,7 +63,7 @@ def read_nodes_from_bed(bedfile,blacklistfile='NA'):
             node_c+=1
             
     return nodes,nodes_idx,blacklisted_nodes
-
+        
 def filter_nodes(m,to_remove):
     
     if len(to_remove)==0:
